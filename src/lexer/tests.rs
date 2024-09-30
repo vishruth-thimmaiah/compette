@@ -9,6 +9,16 @@ mod tests {
         let a = 1
         let b = 2
 
+        if a == 1 {
+            c = 1
+        }
+        else if a == 2 {
+            c = 2
+        }
+        else {
+            c = 3
+        }
+
         func add(x, y) {
             return x + y
         }
@@ -27,6 +37,43 @@ mod tests {
             Token::new(IDENTIFIER, Some("b".to_string())),
             Token::new(ASSIGN, None),
             Token::new(NUMBER, Some("2".to_string())),
+            Token::new(NL, None),
+            Token::new(NL, None),
+            Token::new(IF, None),
+            Token::new(IDENTIFIER, Some("a".to_string())),
+            Token::new(ASSIGN, None),
+            Token::new(ASSIGN, None),
+            Token::new(NUMBER, Some("1".to_string())),
+            Token::new(LBRACE, None),
+            Token::new(NL, None),
+            Token::new(IDENTIFIER, Some("c".to_string())),
+            Token::new(ASSIGN, None),
+            Token::new(NUMBER, Some("1".to_string())),
+            Token::new(NL, None),
+            Token::new(RBRACE, None),
+            Token::new(NL, None),
+            Token::new(ELSE, None),
+            Token::new(IF, None),
+            Token::new(IDENTIFIER, Some("a".to_string())),
+            Token::new(ASSIGN, None),
+            Token::new(ASSIGN, None),
+            Token::new(NUMBER, Some("2".to_string())),
+            Token::new(LBRACE, None),
+            Token::new(NL, None),
+            Token::new(IDENTIFIER, Some("c".to_string())),
+            Token::new(ASSIGN, None),
+            Token::new(NUMBER, Some("2".to_string())),
+            Token::new(NL, None),
+            Token::new(RBRACE, None),
+            Token::new(NL, None),
+            Token::new(ELSE, None),
+            Token::new(LBRACE, None),
+            Token::new(NL, None),
+            Token::new(IDENTIFIER, Some("c".to_string())),
+            Token::new(ASSIGN, None),
+            Token::new(NUMBER, Some("3".to_string())),
+            Token::new(NL, None),
+            Token::new(RBRACE, None),
             Token::new(NL, None),
             Token::new(NL, None),
             Token::new(FUNCTION, None),

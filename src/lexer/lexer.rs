@@ -115,6 +115,8 @@ impl Lexer {
             "func" => Token::new(Types::FUNCTION, None),
             "let" => Token::new(Types::LET, None),
             "return" => Token::new(Types::RETURN, None),
+            "if" => Token::new(Types::IF, None),
+            "else" => Token::new(Types::ELSE, None),
             _ => Token::new(Types::IDENTIFIER, Some(result)),
         }
     }

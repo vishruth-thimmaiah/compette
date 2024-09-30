@@ -23,6 +23,9 @@ pub enum Types {
     FUNCTION,
     LET,
     RETURN,
+    IF,
+    ELSE,
+
 
     // Identifiers
     IDENTIFIER,
