@@ -2,7 +2,7 @@ let a = 1
 let b = 2 + 1
 
 func add(x, y) {
-    let c = x + y
+    return x + y
 }
 
 add(a, b)

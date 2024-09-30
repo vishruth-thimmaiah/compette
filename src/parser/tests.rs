@@ -14,7 +14,7 @@ mod tests {
         let b = 2
 
         func add(x, y) {
-            x + y
+            return x + y
         }
 
         add(a, b)

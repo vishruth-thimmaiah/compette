@@ -10,7 +10,7 @@ mod tests {
         let b = 2
 
         func add(x, y) {
-            x + y
+            return x + y
         }
 
         add(a, b)
@@ -38,6 +38,7 @@ mod tests {
             Token::new(RPAREN, None),
             Token::new(LBRACE, None),
             Token::new(NL, None),
+            Token::new(RETURN, None),
             Token::new(IDENTIFIER, Some("x".to_string())),
             Token::new(PLUS, None),
             Token::new(IDENTIFIER, Some("y".to_string())),

@@ -114,6 +114,7 @@ impl Lexer {
         match result.as_str() {
             "func" => Token::new(Types::FUNCTION, None),
             "let" => Token::new(Types::LET, None),
+            "return" => Token::new(Types::RETURN, None),
             _ => Token::new(Types::IDENTIFIER, Some(result)),
         }
     }

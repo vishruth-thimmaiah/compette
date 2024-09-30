@@ -22,6 +22,7 @@ pub enum Types {
     // Keywords
     FUNCTION,
     LET,
+    RETURN,
 
     // Identifiers
     IDENTIFIER,
