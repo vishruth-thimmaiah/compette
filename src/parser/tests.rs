@@ -13,6 +13,16 @@ mod tests {
         let a = 1
         let b = 2
 
+        if a == 1 {
+            c = 1
+        }
+        else if a == 2 {
+            c = 2
+        }
+        else {
+            c = 3
+        }
+
         func add(x, y) {
             return x + y
         }

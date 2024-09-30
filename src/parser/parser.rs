@@ -1,7 +1,8 @@
 use crate::lexer::{lexer::Token, types::Types};
 
 use super::nodes::{
-    AssignmentParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
+    AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
+    ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
     ParserType,
 };
 
@@ -55,6 +56,7 @@ impl Parser {
                 Types::NL => (),
                 Types::EOF => break,
                 Types::LET => tokens.push(Self::parse_assignment(self)),
+                Types::IF => tokens.push(Self::parse_conditional_if(self)),
                 Types::FUNCTION => tokens.push(Self::parse_function(self)),
                 Types::IDENTIFIER => tokens.push(Self::parse_function_call(self)),
                 _ => panic!("Invalid token: {:?}\n Current: {:#?}", token_type, tokens),
@@ -184,5 +186,112 @@ impl Parser {
         Self::set_next_position(self);
 
         return Box::new(FunctionCallParserNode { func_name, args });
+    }
+
+    fn parse_conditional_if(&mut self) -> Box<ConditionalIfParserNode> {
+        if Self::get_prev_token(&self).r#type != Types::NL {
+            panic!("Invalid token");
+        }
+
+        loop {
+            let token = Self::get_next_token(&self);
+            Self::set_next_position(self);
+            if token.r#type == Types::LBRACE {
+                break;
+            }
+        }
+        Self::set_next_position(self);
+
+        let body: Vec<Box<dyn ParserType>> = vec![];
+
+        loop {
+            let token = Self::get_next_token(&self);
+            Self::set_next_position(self);
+            if token.r#type == Types::RBRACE {
+                break;
+            }
+        }
+
+        return Box::new(ConditionalIfParserNode {
+            condition: ExpressionParserNode {
+                left: Token::default(),
+                right: None,
+                operator: None,
+            },
+            body,
+            else_if_body: Self::parse_conditional_else_if(self),
+            else_body: self.parse_conditional_else(),
+        });
+    }
+
+    fn parse_conditional_else_if(&mut self) -> Vec<ConditionalElseIfParserNode> {
+        let mut else_if_body = vec![];
+
+        loop {
+            let token = Self::get_next_token(&self);
+            if token.r#type != Types::ELSE {
+                break;
+            }
+            Self::set_next_position(self);
+
+            let token = Self::get_next_token(&self);
+            if token.r#type != Types::IF {
+                break;
+            }
+            Self::set_next_position(self);
+
+            loop {
+                let token = Self::get_next_token(&self);
+                Self::set_next_position(self);
+                if token.r#type == Types::LBRACE {
+                    break;
+                }
+            }
+            Self::set_next_position(self);
+
+            let body: Vec<Box<dyn ParserType>> = vec![];
+
+            loop {
+                let token = Self::get_next_token(&self);
+                Self::set_next_position(self);
+                if token.r#type == Types::RBRACE {
+                    break;
+                }
+            }
+
+            else_if_body.push(ConditionalElseIfParserNode {
+                condition: ExpressionParserNode {
+                    left: Token::default(),
+                    right: None,
+                    operator: None,
+                },
+                body,
+            });
+        }
+
+        else_if_body
+    }
+
+    fn parse_conditional_else(&mut self) -> Option<ConditionalElseParserNode> {
+        if Self::get_current_token(self).r#type != Types::ELSE {
+            return None;
+        }
+
+        if Self::get_next_token(self).r#type != Types::LBRACE {
+            panic!("Invalid token");
+        }
+        Self::set_next_position(self);
+
+        let body = vec![];
+
+        loop {
+            let token = Self::get_next_token(self);
+            Self::set_next_position(self);
+            if token.r#type == Types::RBRACE {
+                break;
+            }
+        }
+
+        return Some(ConditionalElseParserNode { body });
     }
 }

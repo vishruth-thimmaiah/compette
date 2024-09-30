@@ -53,3 +53,38 @@ impl ParserType for FunctionCallParserNode {
         ParserTypes::FUNCTION_CALL
     }
 }
+
+#[derive(Debug)]
+pub struct ConditionalIfParserNode {
+    pub condition: ExpressionParserNode,
+    pub body: Vec<Box<dyn ParserType>>,
+    pub else_if_body: Vec<ConditionalElseIfParserNode>,
+    pub else_body: Option<ConditionalElseParserNode>,
+}
+impl ParserType for ConditionalIfParserNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::CONDITIONAL
+    }
+}
+
+#[derive(Debug)]
+pub struct ConditionalElseIfParserNode {
+    pub condition: ExpressionParserNode,
+    pub body: Vec<Box<dyn ParserType>>,
+}
+impl ParserType for ConditionalElseIfParserNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::CONDITIONAL
+    }
+}
+
+
+#[derive(Debug)]
+pub struct ConditionalElseParserNode {
+    pub body: Vec<Box<dyn ParserType>>,
+}
+impl ParserType for ConditionalElseParserNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::CONDITIONAL
+    }
+}
