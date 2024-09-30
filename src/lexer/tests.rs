@@ -52,6 +52,7 @@ mod tests {
             Token::new(IDENTIFIER, Some("b".to_string())),
             Token::new(RPAREN, None),
             Token::new(NL, None),
+            Token::new(EOF, None),
         ];
         let resutlt = Lexer::new(contents).tokenize();
 

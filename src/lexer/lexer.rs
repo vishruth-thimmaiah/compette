@@ -2,15 +2,24 @@ use core::str;
 
 use super::types::Types;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
-    r#type: Types,
-    value: Option<String>,
+    pub r#type: Types,
+    pub value: Option<String>,
 }
 
 impl Token {
     pub fn new(r#type: Types, value: Option<String>) -> Self {
         Self { r#type, value }
+    }
+}
+
+impl Default for Token {
+    fn default() -> Self {
+        Self {
+            r#type: Types::NL,
+            value: None,
+        }
     }
 }
 
