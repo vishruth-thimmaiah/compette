@@ -32,6 +32,7 @@ pub enum Types {
     RETURN,
     IF,
     ELSE,
+    LOOP,
 
     // Identifiers
     IDENTIFIER,

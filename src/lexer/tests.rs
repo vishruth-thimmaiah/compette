@@ -19,6 +19,10 @@ mod tests {
             c = 3
         }
 
+        loop a == 5 {
+            let c = c + 1
+        }
+
         func add(x, y) {
             return x + y
         }
@@ -70,6 +74,22 @@ mod tests {
             Token::new(IDENTIFIER, Some("c".to_string()), 0, 0),
             Token::new(ASSIGN, None, 0, 0),
             Token::new(NUMBER, Some("3".to_string()), 0, 0),
+            Token::new(NL, None, 0, 0),
+            Token::new(RBRACE, None, 0, 0),
+            Token::new(NL, None, 0, 0),
+            Token::new(NL, None, 0, 0),
+            Token::new(LOOP, None, 0, 0),
+            Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
+            Token::new(EQUAL, None, 0, 0),
+            Token::new(NUMBER, Some("5".to_string()), 0, 0),
+            Token::new(LBRACE, None, 0, 0),
+            Token::new(NL, None, 0, 0),
+            Token::new(LET, None, 0, 0),
+            Token::new(IDENTIFIER, Some("c".to_string()), 0, 0),
+            Token::new(ASSIGN, None, 0, 0),
+            Token::new(IDENTIFIER, Some("c".to_string()), 0, 0),
+            Token::new(PLUS, None, 0, 0),
+            Token::new(NUMBER, Some("1".to_string()), 0, 0),
             Token::new(NL, None, 0, 0),
             Token::new(RBRACE, None, 0, 0),
             Token::new(NL, None, 0, 0),

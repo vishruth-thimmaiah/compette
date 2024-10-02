@@ -160,6 +160,7 @@ impl Lexer {
             "return" => Token::new(Types::RETURN, None, self.line, self.column),
             "if" => Token::new(Types::IF, None, self.line, self.column),
             "else" => Token::new(Types::ELSE, None, self.line, self.column),
+            "loop" => Token::new(Types::LOOP, None, self.line, self.column),
             _ => Token::new(Types::IDENTIFIER, Some(result), self.line, self.column),
         }
     }

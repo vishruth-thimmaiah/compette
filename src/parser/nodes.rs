@@ -88,3 +88,14 @@ impl ParserType for ConditionalElseParserNode {
         ParserTypes::CONDITIONAL
     }
 }
+
+#[derive(Debug)]
+pub struct LoopParserNode {
+    pub condition: Box<ExpressionParserNode>,
+    pub body: Vec<Box<dyn ParserType>>,
+}
+impl ParserType for LoopParserNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::LOOP
+    }
+}

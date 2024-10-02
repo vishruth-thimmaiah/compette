@@ -9,6 +9,10 @@ if a == 1 {
 	let c = 3
 }
 
+loop a == 5 {
+	let c = c + 1
+}
+
 func add(x, y) {
 	let q = x + y
 }

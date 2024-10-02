@@ -21,6 +21,10 @@ mod tests {
             let c = 3
         }
 
+        loop a == 5 {
+            let c = c + 1
+        }
+
         func add(x, y) {
             let q = x + y
         }
@@ -137,6 +141,49 @@ mod tests {
                         }),
                     })],
                 }),
+            }),
+            Box::new(LoopParserNode {
+                condition: Box::new(ExpressionParserNode {
+                    left: Token {
+                        line: 0,
+                        column: 0,
+                        r#type: IDENTIFIER,
+                        value: Some("a".to_string()),
+                    },
+                    right: Some(Box::new(ExpressionParserNode {
+                        left: Token {
+                            line: 0,
+                            column: 0,
+                            r#type: NUMBER,
+                            value: Some("5".to_string()),
+                        },
+                        right: None,
+                        operator: None,
+                    })),
+                    operator: Some(EQUAL),
+                }),
+                body: vec![Box::new(AssignmentParserNode {
+                    var_name: "c".to_string(),
+                    value: Box::new(ExpressionParserNode {
+                        left: Token {
+                            line: 0,
+                            column: 0,
+                            r#type: IDENTIFIER,
+                            value: Some("c".to_string()),
+                        },
+                        right: Some(Box::new(ExpressionParserNode {
+                            left: Token {
+                                line: 0,
+                                column: 0,
+                                r#type: NUMBER,
+                                value: Some("1".to_string()),
+                            },
+                            right: None,
+                            operator: None,
+                        })),
+                        operator: Some(ASSIGN),
+                    }),
+                })],
             }),
             Box::new(FunctionParserNode {
                 func_name: "add".to_string(),

@@ -5,7 +5,7 @@ use crate::lexer::{lexer::Token, types::Types};
 use super::nodes::{
     AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
     ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
-    ParserType,
+    LoopParserNode, ParserType,
 };
 
 pub struct Parser {
@@ -77,6 +77,7 @@ impl Parser {
                 Types::IF => tokens.push(self.parse_conditional_if()),
                 Types::FUNCTION => tokens.push(self.parse_function()),
                 Types::IDENTIFIER => tokens.push(self.parse_function_call()),
+                Types::LOOP => tokens.push(self.parse_loop()),
                 Types::LBRACE => nested = true,
                 Types::RBRACE => {
                     if !nested {
@@ -274,5 +275,18 @@ impl Parser {
         let body = self.parse_scope();
 
         return Some(ConditionalElseParserNode { body });
+    }
+
+    fn parse_loop(&mut self) -> Box<LoopParserNode> {
+        if self.get_prev_token().r#type != Types::NL {
+            self.handle_error("invalid token")
+        }
+
+        let condition = self.parse_expression();
+        self.set_next_position();
+
+        let body = self.parse_scope();
+
+        return Box::new(LoopParserNode { condition, body });
     }
 }
