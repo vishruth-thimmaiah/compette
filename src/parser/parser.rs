@@ -48,17 +48,30 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Vec<Box<dyn ParserType>> {
+        self.parse_scope()
+    }
+
+    fn parse_scope(&mut self) -> Vec<Box<dyn ParserType>> {
         let mut tokens: Vec<Box<dyn ParserType>> = vec![];
 
+        let mut nested = false;
+
         loop {
-            let token_type = &self.tree[self.position].r#type;
+            let token_type = self.get_current_token().r#type;
             match token_type {
                 Types::NL => (),
                 Types::EOF => break,
-                Types::LET => tokens.push(Self::parse_assignment(self)),
-                Types::IF => tokens.push(Self::parse_conditional_if(self)),
-                Types::FUNCTION => tokens.push(Self::parse_function(self)),
-                Types::IDENTIFIER => tokens.push(Self::parse_function_call(self)),
+                Types::LET => tokens.push(self.parse_assignment()),
+                Types::IF => tokens.push(self.parse_conditional_if()),
+                Types::FUNCTION => tokens.push(self.parse_function()),
+                Types::IDENTIFIER => tokens.push(self.parse_function_call()),
+                Types::LBRACE => nested = true,
+                Types::RBRACE  => {
+                    if !nested {
+                        panic!("Invalid close brace, {:#?}", tokens);
+                    }
+                    break;
+                }
                 _ => panic!("Invalid token: {:?}\n Current: {:#?}", token_type, tokens),
             }
 
@@ -69,94 +82,94 @@ impl Parser {
     }
 
     fn parse_assignment(&mut self) -> Box<AssignmentParserNode> {
-        if Self::get_prev_token(&self).r#type != Types::NL {
-            panic!("Invalid token: {:?}", Self::get_prev_token(&self));
+        if self.get_prev_token().r#type != Types::NL {
+            panic!("Invalid token: {:?}", self.get_prev_token());
         }
 
-        let var_name = Self::get_next_token(&self).value.unwrap();
-        Self::set_next_position(self);
+        let var_name = self.get_next_token().value.unwrap();
+        self.set_next_position();
 
-        if Self::get_next_token(&self).r#type != Types::ASSIGN {
+        if self.get_next_token().r#type != Types::ASSIGN {
             panic!("Invalid token");
         }
-        Self::set_next_position(self);
+        self.set_next_position();
 
-        let value = Self::parse_expression(self);
-        Self::set_next_position(self);
+        let value = self.parse_expression();
+        self.set_next_position();
 
         return Box::new(AssignmentParserNode { var_name, value });
     }
 
     // TODO: Add support for parenthesis
     fn parse_expression(&mut self) -> Box<ExpressionParserNode> {
-        let left = Self::get_next_token(&self);
-        Self::set_next_position(self);
+        let left = self.get_next_token();
+        self.set_next_position();
 
-        let operator = Self::get_next_token(&self).r#type;
+        let operator = self.get_next_token().r#type;
         match operator {
-            Types::PLUS | Types::MINUS | Types::MULTIPLY | Types::DIVIDE => {
-                Self::set_next_position(self);
-                let right = Self::parse_expression(self);
+            Types::PLUS
+            | Types::MINUS
+            | Types::MULTIPLY
+            | Types::DIVIDE
+            | Types::EQUAL
+            | Types::NOT_EQUAL
+            | Types::GREATER
+            | Types::LESSER
+            | Types::GREATER_EQUAL
+            | Types::LESSER_EQUAL => {
+                self.set_next_position();
+                let right = self.parse_expression();
                 return Box::new(ExpressionParserNode {
                     left,
                     right: Some(right),
                     operator: Some(operator),
                 });
             }
-            Types::NL => {
+            Types::NL | Types::LBRACE => {
                 return Box::new(ExpressionParserNode {
                     left,
                     right: None,
                     operator: None,
                 });
             }
-            _ => panic!("Invalid token"),
+            _ => panic!("Invalid token: {:?}", self.get_next_token()),
         }
     }
 
     fn parse_function(&mut self) -> Box<FunctionParserNode> {
-        if Self::get_prev_token(&self).r#type != Types::NL {
+        if self.get_prev_token().r#type != Types::NL {
             panic!("Invalid token");
         }
 
-        let func_name = Self::get_next_token(&self).value.unwrap();
-        Self::set_next_position(self);
+        let func_name = self.get_next_token().value.unwrap();
+        self.set_next_position();
 
-        if Self::get_next_token(&self).r#type != Types::LPAREN {
+        if self.get_next_token().r#type != Types::LPAREN {
             panic!("Invalid token");
         }
-        Self::set_next_position(self);
+        self.set_next_position();
 
         let mut args: Vec<String> = vec![];
         loop {
-            let token = Self::get_next_token(&self);
+            let token = self.get_next_token();
             if token.r#type == Types::RPAREN {
                 break;
             }
             if token.r#type == Types::IDENTIFIER {
                 args.push(token.value.unwrap());
             }
-            Self::set_next_position(self);
+            self.set_next_position();
         }
 
-        Self::set_next_position(self);
+        self.set_next_position();
 
-        if Self::get_next_token(&self).r#type != Types::LBRACE {
+        if self.get_next_token().r#type != Types::LBRACE {
             panic!("Invalid token");
         }
-        Self::set_next_position(self);
+        self.set_next_position();
 
-        let body: Vec<Box<dyn ParserType>> = vec![];
-
-        //TODO: Add support for nested functions
-        loop {
-            let token = Self::get_next_token(&self);
-            if token.r#type == Types::RBRACE {
-                break;
-            }
-            Self::set_next_position(self);
-        }
-        Self::set_next_position(self);
+        let body = self.parse_scope();
+        self.set_next_position();
 
         return Box::new(FunctionParserNode {
             func_name,
@@ -166,60 +179,42 @@ impl Parser {
     }
 
     fn parse_function_call(&mut self) -> Box<FunctionCallParserNode> {
-        if Self::get_prev_token(&self).r#type != Types::NL {
+        if self.get_prev_token().r#type != Types::NL {
             panic!("Invalid token");
         }
 
-        let func_name = Self::get_current_token(&self).value.unwrap();
+        let func_name = self.get_current_token().value.unwrap();
 
         let mut args: Vec<String> = vec![];
         loop {
-            let token = Self::get_next_token(&self);
+            let token = self.get_next_token();
             if token.r#type == Types::RPAREN {
                 break;
             }
             if token.r#type == Types::IDENTIFIER {
                 args.push(token.value.unwrap());
             }
-            Self::set_next_position(self);
+            self.set_next_position();
         }
-        Self::set_next_position(self);
+        self.set_next_position();
 
         return Box::new(FunctionCallParserNode { func_name, args });
     }
 
     fn parse_conditional_if(&mut self) -> Box<ConditionalIfParserNode> {
-        if Self::get_prev_token(&self).r#type != Types::NL {
+        if self.get_prev_token().r#type != Types::NL {
             panic!("Invalid token");
         }
 
-        loop {
-            let token = Self::get_next_token(&self);
-            Self::set_next_position(self);
-            if token.r#type == Types::LBRACE {
-                break;
-            }
-        }
-        Self::set_next_position(self);
+        let condition = self.parse_expression();
+        self.set_next_position();
 
-        let body: Vec<Box<dyn ParserType>> = vec![];
-
-        loop {
-            let token = Self::get_next_token(&self);
-            Self::set_next_position(self);
-            if token.r#type == Types::RBRACE {
-                break;
-            }
-        }
+        let body = self.parse_scope();
 
         return Box::new(ConditionalIfParserNode {
-            condition: ExpressionParserNode {
-                left: Token::default(),
-                right: None,
-                operator: None,
-            },
+            condition,
             body,
-            else_if_body: Self::parse_conditional_else_if(self),
+            else_if_body: self.parse_conditional_else_if(),
             else_body: self.parse_conditional_else(),
         });
     }
@@ -228,69 +223,40 @@ impl Parser {
         let mut else_if_body = vec![];
 
         loop {
-            let token = Self::get_next_token(&self);
+            let token = self.get_next_token();
             if token.r#type != Types::ELSE {
                 break;
             }
-            Self::set_next_position(self);
+            self.set_next_position();
 
-            let token = Self::get_next_token(&self);
+            let token = self.get_next_token();
             if token.r#type != Types::IF {
                 break;
             }
-            Self::set_next_position(self);
+            self.set_next_position();
 
-            loop {
-                let token = Self::get_next_token(&self);
-                Self::set_next_position(self);
-                if token.r#type == Types::LBRACE {
-                    break;
-                }
-            }
-            Self::set_next_position(self);
+            let condition = self.parse_expression();
+            self.set_next_position();
 
-            let body: Vec<Box<dyn ParserType>> = vec![];
+            let body = self.parse_scope();
 
-            loop {
-                let token = Self::get_next_token(&self);
-                Self::set_next_position(self);
-                if token.r#type == Types::RBRACE {
-                    break;
-                }
-            }
-
-            else_if_body.push(ConditionalElseIfParserNode {
-                condition: ExpressionParserNode {
-                    left: Token::default(),
-                    right: None,
-                    operator: None,
-                },
-                body,
-            });
+            else_if_body.push(ConditionalElseIfParserNode { condition, body });
         }
 
         else_if_body
     }
 
     fn parse_conditional_else(&mut self) -> Option<ConditionalElseParserNode> {
-        if Self::get_current_token(self).r#type != Types::ELSE {
+        if self.get_current_token().r#type != Types::ELSE {
             return None;
         }
 
-        if Self::get_next_token(self).r#type != Types::LBRACE {
+        if self.get_next_token().r#type != Types::LBRACE {
             panic!("Invalid token");
         }
-        Self::set_next_position(self);
+        self.set_next_position();
 
-        let body = vec![];
-
-        loop {
-            let token = Self::get_next_token(self);
-            Self::set_next_position(self);
-            if token.r#type == Types::RBRACE {
-                break;
-            }
-        }
+        let body = self.parse_scope();
 
         return Some(ConditionalElseParserNode { body });
     }

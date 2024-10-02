@@ -14,17 +14,15 @@ mod tests {
         let b = 2
 
         if a == 1 {
-            c = 1
-        }
-        else if a == 2 {
-            c = 2
-        }
-        else {
-            c = 3
+            let c = 1
+        } else if a == 2 {
+            let c = 2
+        } else {
+            let c = 3
         }
 
         func add(x, y) {
-            return x + y
+            let q = x + y
         }
 
         add(a, b)
@@ -53,10 +51,96 @@ mod tests {
                     operator: None,
                 }),
             }),
+            Box::new(ConditionalIfParserNode {
+                condition: Box::new(ExpressionParserNode {
+                    left: Token {
+                        r#type: IDENTIFIER,
+                        value: Some("a".to_string()),
+                    },
+                    right: Some(Box::new(ExpressionParserNode {
+                        left: Token {
+                            r#type: NUMBER,
+                            value: Some("1".to_string()),
+                        },
+                        right: None,
+                        operator: None,
+                    })),
+                    operator: Some(EQUAL),
+                }),
+                body: vec![Box::new(AssignmentParserNode {
+                    var_name: "c".to_string(),
+                    value: Box::new(ExpressionParserNode {
+                        left: Token {
+                            r#type: NUMBER,
+                            value: Some("1".to_string()),
+                        },
+                        right: None,
+                        operator: None,
+                    }),
+                })],
+                else_if_body: vec![ConditionalElseIfParserNode {
+                    condition: Box::new(ExpressionParserNode {
+                        left: Token {
+                            r#type: IDENTIFIER,
+                            value: Some("a".to_string()),
+                        },
+                        right: Some(Box::new(ExpressionParserNode {
+                            left: Token {
+                                r#type: NUMBER,
+                                value: Some("2".to_string()),
+                            },
+                            right: None,
+                            operator: None,
+                        })),
+                        operator: Some(EQUAL),
+                    }),
+                    body: vec![Box::new(AssignmentParserNode {
+                        var_name: "c".to_string(),
+                        value: Box::new(ExpressionParserNode {
+                            left: Token {
+                                r#type: NUMBER,
+                                value: Some("2".to_string()),
+                            },
+                            right: None,
+                            operator: None,
+                        }),
+                    })],
+                }],
+                else_body: Some(ConditionalElseParserNode {
+                    body: vec![Box::new(AssignmentParserNode {
+                        var_name: "c".to_string(),
+                        value: Box::new(ExpressionParserNode {
+                            left: Token {
+                                r#type: NUMBER,
+                                value: Some("3".to_string()),
+                            },
+                            right: None,
+                            operator: None,
+                        }),
+                    })],
+                }),
+            }),
             Box::new(FunctionParserNode {
                 func_name: "add".to_string(),
                 args: vec!["x".to_string(), "y".to_string()],
-                body: vec![],
+                body: vec![Box::new(AssignmentParserNode {
+                    var_name: "q".to_string(),
+                    value: Box::new(ExpressionParserNode {
+                        left: Token {
+                            r#type: IDENTIFIER,
+                            value: Some("x".to_string()),
+                        },
+                        right: Some(Box::new(ExpressionParserNode {
+                            left: Token {
+                                r#type: IDENTIFIER,
+                                value: Some("y".to_string()),
+                            },
+                            right: None,
+                            operator: None,
+                        })),
+                        operator: Some(PLUS),
+                    }),
+                })],
             }),
             Box::new(FunctionCallParserNode {
                 func_name: "add".to_string(),

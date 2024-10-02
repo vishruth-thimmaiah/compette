@@ -56,7 +56,7 @@ impl ParserType for FunctionCallParserNode {
 
 #[derive(Debug)]
 pub struct ConditionalIfParserNode {
-    pub condition: ExpressionParserNode,
+    pub condition: Box<ExpressionParserNode>,
     pub body: Vec<Box<dyn ParserType>>,
     pub else_if_body: Vec<ConditionalElseIfParserNode>,
     pub else_body: Option<ConditionalElseParserNode>,
@@ -69,7 +69,7 @@ impl ParserType for ConditionalIfParserNode {
 
 #[derive(Debug)]
 pub struct ConditionalElseIfParserNode {
-    pub condition: ExpressionParserNode,
+    pub condition: Box<ExpressionParserNode>,
     pub body: Vec<Box<dyn ParserType>>,
 }
 impl ParserType for ConditionalElseIfParserNode {
