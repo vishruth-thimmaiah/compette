@@ -7,15 +7,29 @@ mod lexer;
 mod parser;
 
 fn main() {
-    let file: Vec<String> = args().collect();
+    let args: Vec<String> = args().collect();
 
-    if file.len() == 2 {
-        let contents = fs::read_to_string(&file[1]).unwrap();
+    if args.len() > 1 {
+        let contents = fs::read_to_string(&args[1]).unwrap();
 
-        let tokens = Lexer::new(&contents).tokenize();
-        // println!("{:#?}", tokens);
+        let lexer = Lexer::new(&contents).tokenize();
 
-        let parser = Parser::new(tokens).parse();
-        println!("{:#?}", parser);
+        let parser = Parser::new(lexer.clone()).parse();
+
+        if args.len() == 3 {
+            if args[2] == "lexer" {
+                println!("{:#?}", lexer);
+            }
+            else if args[2] == "ast" {
+                println!("{:#?}", parser);
+            }
+            else if args[2] == "lexer-ast" {
+                println!("Lexer{:#?}\n", lexer);
+                println!("ast{:#?}", parser);
+            }
+        }
+
+    } else {
+        println!("Usage: comp <file>");
     }
 }
