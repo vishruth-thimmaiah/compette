@@ -30,6 +30,6 @@ fn main() {
         }
 
     } else {
-        println!("Usage: comp <file>");
+        println!("Usage: sloppee <file>");
     }
 }
