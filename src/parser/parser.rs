@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use crate::lexer::{lexer::Token, types::Types};
 
 use super::nodes::{
@@ -47,6 +49,16 @@ impl Parser {
         self.position += 1;
     }
 
+    fn handle_error(&self, message: &str) {
+        let curr = self.get_current_token();
+        let prev = self.get_prev_token();
+        let next = self.get_next_token();
+        panic!(
+            "\nError at line: {}, column: {}\nError type: {}\nstopped at: {:?}, {:?}\nprev: {:?}, {:?},\nnext: {:?}, {:?}\n",
+            curr.line+1, curr.column+1, message, curr.r#type, curr.value, prev.r#type, prev.value, next.r#type, next.value
+        );
+    }
+
     pub fn parse(&mut self) -> Vec<Box<dyn ParserType>> {
         self.parse_scope()
     }
@@ -68,11 +80,11 @@ impl Parser {
                 Types::LBRACE => nested = true,
                 Types::RBRACE => {
                     if !nested {
-                        panic!("Invalid close brace, {:#?}", tokens);
+                        self.handle_error("Invalid close brace");
                     }
                     break;
                 }
-                _ => panic!("Invalid token: {:?}\n Current: {:#?}", token_type, tokens),
+                _ => self.handle_error("invalid token"),
             }
 
             self.position += 1;
@@ -83,14 +95,14 @@ impl Parser {
 
     fn parse_assignment(&mut self) -> Box<AssignmentParserNode> {
         if self.get_prev_token().r#type != Types::NL {
-            panic!("Invalid token: {:?}", self.get_prev_token());
+            self.handle_error("invalid token")
         }
 
         let var_name = self.get_next_token().value.unwrap();
         self.set_next_position();
 
         if self.get_next_token().r#type != Types::ASSIGN {
-            panic!("Invalid token");
+            self.handle_error("invalid token")
         }
         self.set_next_position();
 
@@ -132,20 +144,23 @@ impl Parser {
                     operator: None,
                 });
             }
-            _ => panic!("Invalid token: {:?}", self.get_next_token()),
+            _ => {
+                self.handle_error("invalid token");
+                exit(1)
+            }
         }
     }
 
     fn parse_function(&mut self) -> Box<FunctionParserNode> {
         if self.get_prev_token().r#type != Types::NL {
-            panic!("Invalid token");
+            self.handle_error("invalid token")
         }
 
         let func_name = self.get_next_token().value.unwrap();
         self.set_next_position();
 
         if self.get_next_token().r#type != Types::LPAREN {
-            panic!("Invalid token");
+            self.handle_error("invalid token")
         }
         self.set_next_position();
 
@@ -164,7 +179,7 @@ impl Parser {
         self.set_next_position();
 
         if self.get_next_token().r#type != Types::LBRACE {
-            panic!("Invalid token");
+            self.handle_error("invalid token")
         }
         self.set_next_position();
 
@@ -180,7 +195,7 @@ impl Parser {
 
     fn parse_function_call(&mut self) -> Box<FunctionCallParserNode> {
         if self.get_prev_token().r#type != Types::NL {
-            panic!("Invalid token");
+            self.handle_error("invalid token")
         }
 
         let func_name = self.get_current_token().value.unwrap();
@@ -203,7 +218,7 @@ impl Parser {
 
     fn parse_conditional_if(&mut self) -> Box<ConditionalIfParserNode> {
         if self.get_prev_token().r#type != Types::NL {
-            panic!("Invalid token");
+            self.handle_error("invalid token")
         }
 
         let condition = self.parse_expression();
@@ -252,7 +267,7 @@ impl Parser {
         }
 
         if self.get_next_token().r#type != Types::LBRACE {
-            panic!("Invalid token");
+            self.handle_error("invalid token")
         }
         self.set_next_position();
 
