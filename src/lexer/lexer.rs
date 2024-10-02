@@ -67,7 +67,6 @@ impl Lexer {
                 return None;
             }
             "\n" => return Some(Token::new(Types::NL, None)),
-            "=" => return Some(Token::new(Types::ASSIGN, None)),
             "+" => return Some(Token::new(Types::PLUS, None)),
             "-" => return Some(Token::new(Types::MINUS, None)),
             "*" => return Some(Token::new(Types::MULTIPLY, None)),
@@ -78,6 +77,7 @@ impl Lexer {
             ")" => return Some(Token::new(Types::RPAREN, None)),
             "{" => return Some(Token::new(Types::LBRACE, None)),
             "}" => return Some(Token::new(Types::RBRACE, None)),
+            "=" | "<" | ">" | "!" => return Some(self.check_operator()),
             "\"" | "'" => return Some(Self::check_string(self)),
 
             _ => {
@@ -93,6 +93,28 @@ impl Lexer {
                     );
                 }
             }
+        }
+    }
+
+    fn check_operator(&mut self) -> Token {
+        let first_char = self.content.as_bytes()[self.index];
+        let second_char = self.content.as_bytes()[self.index + 1];
+
+        self.index += 2;
+
+        match (first_char, second_char) {
+            (61, 61) => return Token::new(Types::EQUAL, None),
+            (33, 61) => return Token::new(Types::NOT_EQUAL, None),
+            (60, 61) => return Token::new(Types::LESSER_EQUAL, None),
+            (62, 61) => return Token::new(Types::GREATER_EQUAL, None),
+            _ => self.index -= 1,
+        }
+
+        match first_char {
+            61 => Token::new(Types::ASSIGN, None),
+            60 => Token::new(Types::LESSER, None),
+            62 => Token::new(Types::GREATER, None),
+            _ => panic!("Unexpected token"),
         }
     }
 

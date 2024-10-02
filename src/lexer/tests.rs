@@ -12,7 +12,7 @@ mod tests {
         if a == 1 {
             c = 1
         }
-        else if a == 2 {
+        else if a != 2 {
             c = 2
         }
         else {
@@ -41,8 +41,7 @@ mod tests {
             Token::new(NL, None),
             Token::new(IF, None),
             Token::new(IDENTIFIER, Some("a".to_string())),
-            Token::new(ASSIGN, None),
-            Token::new(ASSIGN, None),
+            Token::new(EQUAL, None),
             Token::new(NUMBER, Some("1".to_string())),
             Token::new(LBRACE, None),
             Token::new(NL, None),
@@ -55,8 +54,7 @@ mod tests {
             Token::new(ELSE, None),
             Token::new(IF, None),
             Token::new(IDENTIFIER, Some("a".to_string())),
-            Token::new(ASSIGN, None),
-            Token::new(ASSIGN, None),
+            Token::new(NOT_EQUAL, None),
             Token::new(NUMBER, Some("2".to_string())),
             Token::new(LBRACE, None),
             Token::new(NL, None),

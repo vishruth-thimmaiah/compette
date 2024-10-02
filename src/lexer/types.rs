@@ -9,6 +9,12 @@ pub enum Types {
     MINUS,
     MULTIPLY,
     DIVIDE,
+    EQUAL,
+    LESSER,
+    GREATER,
+    LESSER_EQUAL,
+    GREATER_EQUAL,
+    NOT_EQUAL,
 
     // Delimiters
     COMMA,
@@ -25,7 +31,6 @@ pub enum Types {
     RETURN,
     IF,
     ELSE,
-
 
     // Identifiers
     IDENTIFIER,
