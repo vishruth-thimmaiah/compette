@@ -33,6 +33,8 @@ mod tests {
                 var_name: "a".to_string(),
                 value: Box::new(ExpressionParserNode {
                     left: Token {
+                        line: 0,
+                        column: 0,
                         r#type: NUMBER,
                         value: Some("1".to_string()),
                     },
@@ -44,6 +46,8 @@ mod tests {
                 var_name: "b".to_string(),
                 value: Box::new(ExpressionParserNode {
                     left: Token {
+                        line: 0,
+                        column: 0,
                         r#type: NUMBER,
                         value: Some("2".to_string()),
                     },
@@ -54,11 +58,15 @@ mod tests {
             Box::new(ConditionalIfParserNode {
                 condition: Box::new(ExpressionParserNode {
                     left: Token {
+                        line: 0,
+                        column: 0,
                         r#type: IDENTIFIER,
                         value: Some("a".to_string()),
                     },
                     right: Some(Box::new(ExpressionParserNode {
                         left: Token {
+                            line: 0,
+                            column: 0,
                             r#type: NUMBER,
                             value: Some("1".to_string()),
                         },
@@ -71,6 +79,8 @@ mod tests {
                     var_name: "c".to_string(),
                     value: Box::new(ExpressionParserNode {
                         left: Token {
+                            line: 0,
+                            column: 0,
                             r#type: NUMBER,
                             value: Some("1".to_string()),
                         },
@@ -81,11 +91,15 @@ mod tests {
                 else_if_body: vec![ConditionalElseIfParserNode {
                     condition: Box::new(ExpressionParserNode {
                         left: Token {
+                            line: 0,
+                            column: 0,
                             r#type: IDENTIFIER,
                             value: Some("a".to_string()),
                         },
                         right: Some(Box::new(ExpressionParserNode {
                             left: Token {
+                                line: 0,
+                                column: 0,
                                 r#type: NUMBER,
                                 value: Some("2".to_string()),
                             },
@@ -98,6 +112,8 @@ mod tests {
                         var_name: "c".to_string(),
                         value: Box::new(ExpressionParserNode {
                             left: Token {
+                                line: 0,
+                                column: 0,
                                 r#type: NUMBER,
                                 value: Some("2".to_string()),
                             },
@@ -111,6 +127,8 @@ mod tests {
                         var_name: "c".to_string(),
                         value: Box::new(ExpressionParserNode {
                             left: Token {
+                                line: 0,
+                                column: 0,
                                 r#type: NUMBER,
                                 value: Some("3".to_string()),
                             },
@@ -127,11 +145,15 @@ mod tests {
                     var_name: "q".to_string(),
                     value: Box::new(ExpressionParserNode {
                         left: Token {
+                            line: 0,
+                            column: 0,
                             r#type: IDENTIFIER,
                             value: Some("x".to_string()),
                         },
                         right: Some(Box::new(ExpressionParserNode {
                             left: Token {
+                                line: 0,
+                                column: 0,
                                 r#type: IDENTIFIER,
                                 value: Some("y".to_string()),
                             },

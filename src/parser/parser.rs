@@ -66,7 +66,7 @@ impl Parser {
                 Types::FUNCTION => tokens.push(self.parse_function()),
                 Types::IDENTIFIER => tokens.push(self.parse_function_call()),
                 Types::LBRACE => nested = true,
-                Types::RBRACE  => {
+                Types::RBRACE => {
                     if !nested {
                         panic!("Invalid close brace, {:#?}", tokens);
                     }

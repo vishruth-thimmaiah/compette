@@ -13,6 +13,7 @@ fn main() {
         let contents = fs::read_to_string(&file[1]).unwrap();
 
         let tokens = Lexer::new(&contents).tokenize();
+        // println!("{:#?}", tokens);
 
         let parser = Parser::new(tokens).parse();
         println!("{:#?}", parser);

@@ -6,11 +6,18 @@ use super::types::Types;
 pub struct Token {
     pub r#type: Types,
     pub value: Option<String>,
+    pub line: usize,
+    pub column: usize,
 }
 
 impl Token {
-    pub fn new(r#type: Types, value: Option<String>) -> Self {
-        Self { r#type, value }
+    pub fn new(r#type: Types, value: Option<String>, line: usize, column: usize) -> Self {
+        Self {
+            r#type,
+            value,
+            line,
+            column,
+        }
     }
 }
 
@@ -19,6 +26,8 @@ impl Default for Token {
         Self {
             r#type: Types::NL,
             value: None,
+            line: 0,
+            column: 0,
         }
     }
 }
@@ -27,6 +36,9 @@ impl Default for Token {
 pub struct Lexer {
     content: String,
     index: usize,
+    prev_index: usize,
+    line: usize,
+    column: usize,
 }
 
 impl Lexer {
@@ -34,6 +46,9 @@ impl Lexer {
         Self {
             content: content.to_string(),
             index: 0,
+            prev_index: 0,
+            line: 0,
+            column: 0,
         }
     }
 
@@ -57,26 +72,32 @@ impl Lexer {
             Self::next_token(self);
         }
 
-        tokens.push(Token::new(Types::EOF, None));
+        tokens.push(Token::new(Types::EOF, None, self.line, self.column));
         tokens
     }
 
     fn check_char(&mut self, char: u8) -> Option<Token> {
+        self.column += self.index - self.prev_index;
+        self.prev_index = self.index;
         match str::from_utf8(&[char]).unwrap() {
             " " | "\t" => {
                 return None;
             }
-            "\n" => return Some(Token::new(Types::NL, None)),
-            "+" => return Some(Token::new(Types::PLUS, None)),
-            "-" => return Some(Token::new(Types::MINUS, None)),
-            "*" => return Some(Token::new(Types::MULTIPLY, None)),
-            "/" => return Some(Token::new(Types::DIVIDE, None)),
-            "," => return Some(Token::new(Types::COMMA, None)),
-            ";" => return Some(Token::new(Types::SEMICOLON, None)),
-            "(" => return Some(Token::new(Types::LPAREN, None)),
-            ")" => return Some(Token::new(Types::RPAREN, None)),
-            "{" => return Some(Token::new(Types::LBRACE, None)),
-            "}" => return Some(Token::new(Types::RBRACE, None)),
+            "\n" => {
+                self.line += 1;
+                self.column = 0;
+                return Some(Token::new(Types::NL, None, self.line, self.column));
+            }
+            "+" => return Some(Token::new(Types::PLUS, None, self.line, self.column)),
+            "-" => return Some(Token::new(Types::MINUS, None, self.line, self.column)),
+            "*" => return Some(Token::new(Types::MULTIPLY, None, self.line, self.column)),
+            "/" => return Some(Token::new(Types::DIVIDE, None, self.line, self.column)),
+            "," => return Some(Token::new(Types::COMMA, None, self.line, self.column)),
+            ";" => return Some(Token::new(Types::SEMICOLON, None, self.line, self.column)),
+            "(" => return Some(Token::new(Types::LPAREN, None, self.line, self.column)),
+            ")" => return Some(Token::new(Types::RPAREN, None, self.line, self.column)),
+            "{" => return Some(Token::new(Types::LBRACE, None, self.line, self.column)),
+            "}" => return Some(Token::new(Types::RBRACE, None, self.line, self.column)),
             "=" | "<" | ">" | "!" => return Some(self.check_operator()),
             "\"" | "'" => return Some(Self::check_string(self)),
 
@@ -103,17 +124,17 @@ impl Lexer {
         self.index += 2;
 
         match (first_char, second_char) {
-            (61, 61) => return Token::new(Types::EQUAL, None),
-            (33, 61) => return Token::new(Types::NOT_EQUAL, None),
-            (60, 61) => return Token::new(Types::LESSER_EQUAL, None),
-            (62, 61) => return Token::new(Types::GREATER_EQUAL, None),
+            (61, 61) => return Token::new(Types::EQUAL, None, self.line, self.column),
+            (33, 61) => return Token::new(Types::NOT_EQUAL, None, self.line, self.column),
+            (60, 61) => return Token::new(Types::LESSER_EQUAL, None, self.line, self.column),
+            (62, 61) => return Token::new(Types::GREATER_EQUAL, None, self.line, self.column),
             _ => self.index -= 1,
         }
 
         match first_char {
-            61 => Token::new(Types::ASSIGN, None),
-            60 => Token::new(Types::LESSER, None),
-            62 => Token::new(Types::GREATER, None),
+            61 => Token::new(Types::ASSIGN, None, self.line, self.column),
+            60 => Token::new(Types::LESSER, None, self.line, self.column),
+            62 => Token::new(Types::GREATER, None, self.line, self.column),
             _ => panic!("Unexpected token"),
         }
     }
@@ -134,12 +155,12 @@ impl Lexer {
         self.index = end - 1;
 
         match result.as_str() {
-            "func" => Token::new(Types::FUNCTION, None),
-            "let" => Token::new(Types::LET, None),
-            "return" => Token::new(Types::RETURN, None),
-            "if" => Token::new(Types::IF, None),
-            "else" => Token::new(Types::ELSE, None),
-            _ => Token::new(Types::IDENTIFIER, Some(result)),
+            "func" => Token::new(Types::FUNCTION, None, self.line, self.column),
+            "let" => Token::new(Types::LET, None, self.line, self.column),
+            "return" => Token::new(Types::RETURN, None, self.line, self.column),
+            "if" => Token::new(Types::IF, None, self.line, self.column),
+            "else" => Token::new(Types::ELSE, None, self.line, self.column),
+            _ => Token::new(Types::IDENTIFIER, Some(result), self.line, self.column),
         }
     }
 
@@ -158,7 +179,7 @@ impl Lexer {
 
         self.index = end - 1;
 
-        return Token::new(Types::NUMBER, Some(result));
+        return Token::new(Types::NUMBER, Some(result), self.line, self.column);
     }
 
     fn check_string(&mut self) -> Token {
@@ -176,6 +197,6 @@ impl Lexer {
 
         self.index = end - 1;
 
-        return Token::new(Types::STRING, Some(result));
+        return Token::new(Types::STRING, Some(result), self.line, self.column);
     }
 }
