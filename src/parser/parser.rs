@@ -5,7 +5,7 @@ use crate::lexer::{lexer::Token, types::Types};
 use super::nodes::{
     AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
     ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
-    LoopParserNode, ParserType,
+    LoopParserNode, ParserType, VariableCallParserNode,
 };
 
 pub struct Parser {
@@ -76,7 +76,7 @@ impl Parser {
                 Types::LET => tokens.push(self.parse_assignment()),
                 Types::IF => tokens.push(self.parse_conditional_if()),
                 Types::FUNCTION => tokens.push(self.parse_function()),
-                Types::IDENTIFIER => tokens.push(self.parse_function_call()),
+                Types::IDENTIFIER => tokens.push(self.parse_identifier_call()),
                 Types::LOOP => tokens.push(self.parse_loop()),
                 Types::LBRACE => nested = true,
                 Types::RBRACE => {
@@ -194,27 +194,43 @@ impl Parser {
         });
     }
 
-    fn parse_function_call(&mut self) -> Box<FunctionCallParserNode> {
+    fn parse_identifier_call(&mut self) -> Box<dyn ParserType> {
         if self.get_prev_token().r#type != Types::NL {
             self.handle_error("invalid token")
         }
 
-        let func_name = self.get_current_token().value.unwrap();
+        let name = self.get_current_token().value.unwrap();
 
-        let mut args: Vec<String> = vec![];
-        loop {
-            let token = self.get_next_token();
-            if token.r#type == Types::RPAREN {
-                break;
-            }
-            if token.r#type == Types::IDENTIFIER {
-                args.push(token.value.unwrap());
+        // Handle function call
+        if self.get_next_token().r#type == Types::LPAREN {
+            let mut args: Vec<String> = vec![];
+            loop {
+                let token = self.get_next_token();
+                if token.r#type == Types::RPAREN {
+                    break;
+                }
+                if token.r#type == Types::IDENTIFIER {
+                    args.push(token.value.unwrap());
+                }
+                self.set_next_position();
             }
             self.set_next_position();
-        }
-        self.set_next_position();
 
-        return Box::new(FunctionCallParserNode { func_name, args });
+            return Box::new(FunctionCallParserNode {
+                func_name: name,
+                args,
+            });
+        } else {
+            self.set_next_position();
+
+            if self.get_next_token().r#type != Types::ASSIGN {
+                self.handle_error("invalid token");
+            }
+            return Box::new(VariableCallParserNode {
+                var_name: name,
+                rhs: self.parse_expression(),
+            });
+        }
     }
 
     fn parse_conditional_if(&mut self) -> Box<ConditionalIfParserNode> {

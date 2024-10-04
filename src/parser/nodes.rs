@@ -55,6 +55,17 @@ impl ParserType for FunctionCallParserNode {
 }
 
 #[derive(Debug)]
+pub struct VariableCallParserNode {
+    pub var_name: String,
+    pub rhs: Box<ExpressionParserNode>
+}
+impl ParserType for VariableCallParserNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::VARIABLE_CALL
+    }
+}
+
+#[derive(Debug)]
 pub struct ConditionalIfParserNode {
     pub condition: Box<ExpressionParserNode>,
     pub body: Vec<Box<dyn ParserType>>,

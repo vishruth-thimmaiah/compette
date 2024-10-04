@@ -7,4 +7,5 @@ pub enum ParserTypes {
     FUNCTION_CALL,
     VARIABLE,
     EXPRESSION,
+    VARIABLE_CALL,
 }
