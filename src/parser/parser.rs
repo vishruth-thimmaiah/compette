@@ -221,11 +221,11 @@ impl Parser {
                 args,
             });
         } else {
-            self.set_next_position();
 
             if self.get_next_token().r#type != Types::ASSIGN {
                 self.handle_error("invalid token");
             }
+            self.set_next_position();
             return Box::new(VariableCallParserNode {
                 var_name: name,
                 rhs: self.parse_expression(),
