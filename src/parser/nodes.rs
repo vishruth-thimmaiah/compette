@@ -4,6 +4,24 @@ use crate::lexer::{lexer::Token, types::Types};
 
 use super::types::ParserTypes;
 
+#[derive(Debug)]
+pub struct ParserToken {
+    pub value: String,
+    pub r#type: Types,
+}
+
+impl ParserToken {
+    pub fn from(token: Token) -> Self {
+        if None == token.value {
+            panic!("invalid Token")
+        }
+        Self {
+            value: token.value.unwrap(),
+            r#type: token.r#type,
+        }
+    }
+}
+
 pub trait ParserType: Debug {
     fn get_type(&self) -> ParserTypes;
 }
@@ -21,7 +39,7 @@ impl ParserType for AssignmentParserNode {
 
 #[derive(Debug)]
 pub struct ExpressionParserNode {
-    pub left: Token,
+    pub left: ParserToken,
     pub right: Option<Box<dyn ParserType>>,
     pub operator: Option<Types>,
 }
@@ -57,7 +75,7 @@ impl ParserType for FunctionCallParserNode {
 #[derive(Debug)]
 pub struct VariableCallParserNode {
     pub var_name: String,
-    pub rhs: Box<ExpressionParserNode>
+    pub rhs: Box<ExpressionParserNode>,
 }
 impl ParserType for VariableCallParserNode {
     fn get_type(&self) -> ParserTypes {
@@ -88,7 +106,6 @@ impl ParserType for ConditionalElseIfParserNode {
         ParserTypes::CONDITIONAL
     }
 }
-
 
 #[derive(Debug)]
 pub struct ConditionalElseParserNode {

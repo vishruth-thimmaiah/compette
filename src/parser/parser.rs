@@ -3,9 +3,7 @@ use std::process::exit;
 use crate::lexer::{lexer::Token, types::Types};
 
 use super::nodes::{
-    AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
-    ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
-    LoopParserNode, ParserType, VariableCallParserNode,
+    AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode, ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, LoopParserNode, ParserToken, ParserType, VariableCallParserNode
 };
 
 pub struct Parser {
@@ -133,14 +131,14 @@ impl Parser {
                 self.set_next_position();
                 let right = self.parse_expression();
                 return Box::new(ExpressionParserNode {
-                    left,
+                    left: ParserToken::from(left),
                     right: Some(right),
                     operator: Some(operator),
                 });
             }
             Types::NL | Types::LBRACE => {
                 return Box::new(ExpressionParserNode {
-                    left,
+                    left: ParserToken::from(left),
                     right: None,
                     operator: None,
                 });

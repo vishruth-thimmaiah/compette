@@ -1,9 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::lexer::{
-        lexer::{Lexer, Token},
-        types::Types::*,
-    };
+    use crate::lexer::{lexer::Lexer, types::Types::*};
 
     use super::super::{nodes::*, parser};
 
@@ -36,11 +33,9 @@ mod tests {
             Box::new(AssignmentParserNode {
                 var_name: "a".to_string(),
                 value: Box::new(ExpressionParserNode {
-                    left: Token {
-                        line: 0,
-                        column: 0,
+                    left: ParserToken {
                         r#type: NUMBER,
-                        value: Some("1".to_string()),
+                        value: "1".to_string(),
                     },
                     right: None,
                     operator: None,
@@ -49,11 +44,9 @@ mod tests {
             Box::new(AssignmentParserNode {
                 var_name: "b".to_string(),
                 value: Box::new(ExpressionParserNode {
-                    left: Token {
-                        line: 0,
-                        column: 0,
+                    left: ParserToken {
                         r#type: NUMBER,
-                        value: Some("2".to_string()),
+                        value: "2".to_string(),
                     },
                     right: None,
                     operator: None,
@@ -61,18 +54,14 @@ mod tests {
             }),
             Box::new(ConditionalIfParserNode {
                 condition: Box::new(ExpressionParserNode {
-                    left: Token {
-                        line: 0,
-                        column: 0,
+                    left: ParserToken {
                         r#type: IDENTIFIER,
-                        value: Some("a".to_string()),
+                        value: "a".to_string(),
                     },
                     right: Some(Box::new(ExpressionParserNode {
-                        left: Token {
-                            line: 0,
-                            column: 0,
+                        left: ParserToken {
                             r#type: NUMBER,
-                            value: Some("1".to_string()),
+                            value: "1".to_string(),
                         },
                         right: None,
                         operator: None,
@@ -82,11 +71,9 @@ mod tests {
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "c".to_string(),
                     value: Box::new(ExpressionParserNode {
-                        left: Token {
-                            line: 0,
-                            column: 0,
+                        left: ParserToken {
                             r#type: NUMBER,
-                            value: Some("1".to_string()),
+                            value: "1".to_string(),
                         },
                         right: None,
                         operator: None,
@@ -94,18 +81,14 @@ mod tests {
                 })],
                 else_if_body: vec![ConditionalElseIfParserNode {
                     condition: Box::new(ExpressionParserNode {
-                        left: Token {
-                            line: 0,
-                            column: 0,
+                        left: ParserToken {
                             r#type: IDENTIFIER,
-                            value: Some("a".to_string()),
+                            value: "a".to_string(),
                         },
                         right: Some(Box::new(ExpressionParserNode {
-                            left: Token {
-                                line: 0,
-                                column: 0,
+                            left: ParserToken {
                                 r#type: NUMBER,
-                                value: Some("2".to_string()),
+                                value: "2".to_string(),
                             },
                             right: None,
                             operator: None,
@@ -115,11 +98,9 @@ mod tests {
                     body: vec![Box::new(AssignmentParserNode {
                         var_name: "c".to_string(),
                         value: Box::new(ExpressionParserNode {
-                            left: Token {
-                                line: 0,
-                                column: 0,
+                            left: ParserToken {
                                 r#type: NUMBER,
-                                value: Some("2".to_string()),
+                                value: "2".to_string(),
                             },
                             right: None,
                             operator: None,
@@ -130,11 +111,9 @@ mod tests {
                     body: vec![Box::new(AssignmentParserNode {
                         var_name: "c".to_string(),
                         value: Box::new(ExpressionParserNode {
-                            left: Token {
-                                line: 0,
-                                column: 0,
+                            left: ParserToken {
                                 r#type: NUMBER,
-                                value: Some("3".to_string()),
+                                value: "3".to_string(),
                             },
                             right: None,
                             operator: None,
@@ -144,18 +123,14 @@ mod tests {
             }),
             Box::new(LoopParserNode {
                 condition: Box::new(ExpressionParserNode {
-                    left: Token {
-                        line: 0,
-                        column: 0,
+                    left: ParserToken {
                         r#type: IDENTIFIER,
-                        value: Some("a".to_string()),
+                        value: "a".to_string(),
                     },
                     right: Some(Box::new(ExpressionParserNode {
-                        left: Token {
-                            line: 0,
-                            column: 0,
+                        left: ParserToken {
                             r#type: NUMBER,
-                            value: Some("5".to_string()),
+                            value: "5".to_string(),
                         },
                         right: None,
                         operator: None,
@@ -165,18 +140,14 @@ mod tests {
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "c".to_string(),
                     value: Box::new(ExpressionParserNode {
-                        left: Token {
-                            line: 0,
-                            column: 0,
+                        left: ParserToken {
                             r#type: IDENTIFIER,
-                            value: Some("c".to_string()),
+                            value: "c".to_string(),
                         },
                         right: Some(Box::new(ExpressionParserNode {
-                            left: Token {
-                                line: 0,
-                                column: 0,
+                            left: ParserToken {
                                 r#type: NUMBER,
-                                value: Some("1".to_string()),
+                                value: "1".to_string(),
                             },
                             right: None,
                             operator: None,
@@ -191,18 +162,14 @@ mod tests {
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "q".to_string(),
                     value: Box::new(ExpressionParserNode {
-                        left: Token {
-                            line: 0,
-                            column: 0,
+                        left: ParserToken {
                             r#type: IDENTIFIER,
-                            value: Some("x".to_string()),
+                            value: "x".to_string(),
                         },
                         right: Some(Box::new(ExpressionParserNode {
-                            left: Token {
-                                line: 0,
-                                column: 0,
+                            left: ParserToken {
                                 r#type: IDENTIFIER,
-                                value: Some("y".to_string()),
+                                value: "y".to_string(),
                             },
                             right: None,
                             operator: None,
@@ -248,11 +215,9 @@ mod tests {
             Box::new(AssignmentParserNode {
                 var_name: "a".to_string(),
                 value: Box::new(ExpressionParserNode {
-                    left: Token {
-                        line: 0,
-                        column: 0,
+                    left: ParserToken {
                         r#type: NUMBER,
-                        value: Some("1".to_string()),
+                        value: "1".to_string(),
                     },
                     right: None,
                     operator: None,
@@ -261,11 +226,9 @@ mod tests {
             Box::new(VariableCallParserNode {
                 var_name: "a".to_string(),
                 rhs: Box::new(ExpressionParserNode {
-                    left: Token {
+                    left: ParserToken {
                         r#type: NUMBER,
-                        value: Some("4".to_string()),
-                        line: 0,
-                        column: 0,
+                        value: "4".to_string(),
                     },
                     right: None,
                     operator: None,
@@ -274,11 +237,9 @@ mod tests {
             Box::new(AssignmentParserNode {
                 var_name: "b".to_string(),
                 value: Box::new(ExpressionParserNode {
-                    left: Token {
-                        line: 0,
-                        column: 0,
+                    left: ParserToken {
                         r#type: NUMBER,
-                        value: Some("2".to_string()),
+                        value: "2".to_string(),
                     },
                     right: None,
                     operator: None,
@@ -290,18 +251,14 @@ mod tests {
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "q".to_string(),
                     value: Box::new(ExpressionParserNode {
-                        left: Token {
-                            line: 0,
-                            column: 0,
+                        left: ParserToken {
                             r#type: IDENTIFIER,
-                            value: Some("x".to_string()),
+                            value: "x".to_string(),
                         },
                         right: Some(Box::new(ExpressionParserNode {
-                            left: Token {
-                                line: 0,
-                                column: 0,
+                            left: ParserToken {
                                 r#type: IDENTIFIER,
-                                value: Some("y".to_string()),
+                                value: "y".to_string(),
                             },
                             right: None,
                             operator: None,
