@@ -91,7 +91,7 @@ impl Lexer {
             "+" => return Some(Token::new(Types::PLUS, None, self.line, self.column)),
             "-" => return Some(Token::new(Types::MINUS, None, self.line, self.column)),
             "*" => return Some(Token::new(Types::MULTIPLY, None, self.line, self.column)),
-            "/" => return Some(Token::new(Types::DIVIDE, None, self.line, self.column)),
+            "/" => return self.skip_comment(),
             "," => return Some(Token::new(Types::COMMA, None, self.line, self.column)),
             ";" => return Some(Token::new(Types::SEMICOLON, None, self.line, self.column)),
             "(" => return Some(Token::new(Types::LPAREN, None, self.line, self.column)),
@@ -100,7 +100,6 @@ impl Lexer {
             "}" => return Some(Token::new(Types::RBRACE, None, self.line, self.column)),
             "=" | "<" | ">" | "!" => return Some(self.check_operator()),
             "\"" | "'" => return Some(Self::check_string(self)),
-
             _ => {
                 if 48 <= char && char <= 57 {
                     return Some(Self::check_number(self));
@@ -115,6 +114,20 @@ impl Lexer {
                 }
             }
         }
+    }
+
+    fn skip_comment(&mut self) -> Option<Token> {
+        let second_char = self.content.as_bytes()[self.index + 1];
+
+        if second_char == 47 {
+            while self.content.as_bytes()[self.index + 1] != 10 {
+                self.index += 1;
+            }
+            self.index += 2;
+            return None;
+        }
+
+        return Some(Token::new(Types::DIVIDE, None, self.line, self.column));
     }
 
     fn check_operator(&mut self) -> Token {
