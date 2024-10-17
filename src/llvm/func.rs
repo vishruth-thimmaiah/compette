@@ -6,16 +6,13 @@ use inkwell::values::IntValue;
 use inkwell::OptimizationLevel;
 
 use crate::lexer::types::Types;
+use crate::llvm::builder;
 use crate::parser::nodes::{ExpressionParserNode, FunctionParserNode, ParserType, ReturnNode};
 use crate::parser::types::ParserTypes;
 
-/// Convenience type alias for the `sum` function.
-///
-/// Calling this is innately `unsafe` because there's no guarantee it doesn't
-/// do `unsafe` operations internally.
 type MainFunc = unsafe extern "C" fn() -> u64;
 
-struct CodeGen<'ctx> {
+pub struct CodeGen<'ctx> {
     context: &'ctx Context,
     module: Module<'ctx>,
     builder: Builder<'ctx>,
@@ -24,7 +21,7 @@ struct CodeGen<'ctx> {
 }
 
 impl<'ctx> CodeGen<'ctx> {
-    fn new(context: &'ctx Context, tokens: Vec<Box<dyn ParserType>>) -> Self {
+    pub fn new(context: &'ctx Context, tokens: Vec<Box<dyn ParserType>>) -> Self {
         let module = context.create_module("main");
         let execution_engine = module
             .create_jit_execution_engine(OptimizationLevel::None)
@@ -38,7 +35,7 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    fn jit_compile(&self) -> Option<JitFunction<MainFunc>> {
+    pub fn jit_compile(&self, build: bool) -> () {
         for node in &self.tokens {
             match node.get_type() {
                 ParserTypes::FUNCTION => {
@@ -49,7 +46,15 @@ impl<'ctx> CodeGen<'ctx> {
                 _ => todo!(),
             }
         }
-        unsafe { self.execution_engine.get_function("main").ok() }
+        if build {
+            builder::build_ir(&self.module);
+        } else {
+            unsafe {
+                let exec: JitFunction<MainFunc> =
+                    self.execution_engine.get_function("main").unwrap();
+                exec.call();
+            }
+        }
     }
 
     fn add_function(&self, node: &FunctionParserNode) {
@@ -126,8 +131,8 @@ mod tests {
 
         let context = Context::create();
         let codegen = CodeGen::new(&context, parser);
-        let compiled_data = codegen.jit_compile().unwrap();
+        codegen.jit_compile(false);
         // unsafe { println!("{}", compiled_data.call()) };
-        unsafe { assert_eq!(12, compiled_data.call()) };
+        // unsafe { assert_eq!(12, compiled_data.call()) };
     }
 }

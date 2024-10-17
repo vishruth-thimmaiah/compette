@@ -1,11 +1,13 @@
 use std::{env::args, fs};
 
+use inkwell::context::Context;
 use lexer::lexer::Lexer;
+use llvm::func::CodeGen;
 use parser::parser::Parser;
 
 mod lexer;
-mod parser;
 mod llvm;
+mod parser;
 
 fn main() {
     let args: Vec<String> = args().collect();
@@ -27,6 +29,10 @@ fn main() {
                 println!("ast{:#?}", parser);
             }
         }
+
+        let context = Context::create();
+        let codegen = CodeGen::new(&context, parser);
+        let _ = codegen.jit_compile(true);
     } else {
         println!("Usage: sloppee <file>");
     }

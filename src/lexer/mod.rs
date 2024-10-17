@@ -1,3 +1,3 @@
 pub mod lexer;
-pub mod types;
 mod tests;
+pub mod types;
