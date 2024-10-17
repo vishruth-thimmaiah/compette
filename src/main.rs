@@ -5,6 +5,7 @@ use parser::parser::Parser;
 
 mod lexer;
 mod parser;
+mod llvm;
 
 fn main() {
     let args: Vec<String> = args().collect();
@@ -19,16 +20,13 @@ fn main() {
         if args.len() == 3 {
             if args[2] == "lexer" {
                 println!("{:#?}", lexer);
-            }
-            else if args[2] == "ast" {
+            } else if args[2] == "ast" {
                 println!("{:#?}", parser);
-            }
-            else if args[2] == "lexer-ast" {
+            } else if args[2] == "lexer-ast" {
                 println!("Lexer{:#?}\n", lexer);
                 println!("ast{:#?}", parser);
             }
         }
-
     } else {
         println!("Usage: sloppee <file>");
     }

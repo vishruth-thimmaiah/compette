@@ -1,4 +1,4 @@
 pub mod parser;
-mod types;
-mod nodes;
+pub mod nodes;
+pub mod types;
 mod tests;

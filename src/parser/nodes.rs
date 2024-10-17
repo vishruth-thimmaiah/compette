@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{any::Any, fmt::Debug};
 
 use crate::lexer::{lexer::Token, types::Types};
 
@@ -24,6 +24,7 @@ impl ParserToken {
 
 pub trait ParserType: Debug {
     fn get_type(&self) -> ParserTypes;
+    fn any(&self) -> &dyn Any;
 }
 
 #[derive(Debug)]
@@ -34,6 +35,9 @@ pub struct AssignmentParserNode {
 impl ParserType for AssignmentParserNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::VARIABLE
+    }
+    fn any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -47,6 +51,9 @@ impl ParserType for ExpressionParserNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::EXPRESSION
     }
+    fn any(&self) -> &dyn Any {
+        self
+    }
 }
 
 #[derive(Debug)]
@@ -59,6 +66,9 @@ impl ParserType for FunctionParserNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::FUNCTION
     }
+    fn any(&self) -> &dyn Any {
+        self
+    }
 }
 
 #[derive(Debug)]
@@ -68,6 +78,9 @@ pub struct ReturnNode {
 impl ParserType for ReturnNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::RETURN
+    }
+    fn any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -80,6 +93,9 @@ impl ParserType for FunctionCallParserNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::FUNCTION_CALL
     }
+    fn any(&self) -> &dyn Any {
+        self
+    }
 }
 
 #[derive(Debug)]
@@ -90,6 +106,9 @@ pub struct VariableCallParserNode {
 impl ParserType for VariableCallParserNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::VARIABLE_CALL
+    }
+    fn any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -104,6 +123,9 @@ impl ParserType for ConditionalIfParserNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::CONDITIONAL
     }
+    fn any(&self) -> &dyn Any {
+        self
+    }
 }
 
 #[derive(Debug)]
@@ -115,6 +137,9 @@ impl ParserType for ConditionalElseIfParserNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::CONDITIONAL
     }
+    fn any(&self) -> &dyn Any {
+        self
+    }
 }
 
 #[derive(Debug)]
@@ -124,6 +149,9 @@ pub struct ConditionalElseParserNode {
 impl ParserType for ConditionalElseParserNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::CONDITIONAL
+    }
+    fn any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -135,5 +163,8 @@ pub struct LoopParserNode {
 impl ParserType for LoopParserNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::LOOP
+    }
+    fn any(&self) -> &dyn Any {
+        self
     }
 }

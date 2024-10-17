@@ -3,7 +3,9 @@ use std::process::exit;
 use crate::lexer::{lexer::Token, types::Types};
 
 use super::nodes::{
-    AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode, ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, LoopParserNode, ParserToken, ParserType, ReturnNode, VariableCallParserNode
+    AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
+    ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
+    LoopParserNode, ParserToken, ParserType, ReturnNode, VariableCallParserNode,
 };
 
 pub struct Parser {
@@ -78,7 +80,11 @@ impl Parser {
                 Types::LOOP => tokens.push(self.parse_loop()),
                 Types::LBRACE => nested = true,
                 // TODO: better function detecting
-                Types::RETURN => if nested { tokens.push(self.parse_return()) },
+                Types::RETURN => {
+                    if nested {
+                        tokens.push(self.parse_return())
+                    }
+                }
                 Types::RBRACE => {
                     if !nested {
                         self.handle_error("Invalid close brace");
@@ -234,7 +240,6 @@ impl Parser {
                 args,
             });
         } else {
-
             if self.get_next_token().r#type != Types::ASSIGN {
                 self.handle_error("invalid token");
             }
