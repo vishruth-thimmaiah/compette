@@ -10,11 +10,18 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  tests:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v4
+    - name: Install LLVM and Clang
+      uses: KyleMayes/install-llvm-action@v2
+      with:
+        version: "18"
+    - name: llvm-config
+      run: llvm-config --version --bindir --libdir
     - name: Run tests
       run: cargo test --verbose
