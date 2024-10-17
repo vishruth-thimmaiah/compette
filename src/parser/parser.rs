@@ -3,7 +3,7 @@ use std::process::exit;
 use crate::lexer::{lexer::Token, types::Types};
 
 use super::nodes::{
-    AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode, ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, LoopParserNode, ParserToken, ParserType, VariableCallParserNode
+    AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode, ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, LoopParserNode, ParserToken, ParserType, ReturnNode, VariableCallParserNode
 };
 
 pub struct Parser {
@@ -77,6 +77,8 @@ impl Parser {
                 Types::IDENTIFIER => tokens.push(self.parse_identifier_call()),
                 Types::LOOP => tokens.push(self.parse_loop()),
                 Types::LBRACE => nested = true,
+                // TODO: better function detecting
+                Types::RETURN => if nested { tokens.push(self.parse_return()) },
                 Types::RBRACE => {
                     if !nested {
                         self.handle_error("Invalid close brace");
@@ -190,6 +192,19 @@ impl Parser {
             args,
             body,
         });
+    }
+
+    fn parse_return(&mut self) -> Box<ReturnNode> {
+        if self.get_prev_token().r#type != Types::NL {
+            self.handle_error("invalid token")
+        }
+
+        let condition = self.parse_expression();
+        self.set_next_position();
+
+        Box::new(ReturnNode {
+            return_value: condition,
+        })
     }
 
     fn parse_identifier_call(&mut self) -> Box<dyn ParserType> {

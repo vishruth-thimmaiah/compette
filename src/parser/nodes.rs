@@ -62,6 +62,16 @@ impl ParserType for FunctionParserNode {
 }
 
 #[derive(Debug)]
+pub struct ReturnNode {
+    pub return_value: Box<dyn ParserType>,
+}
+impl ParserType for ReturnNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::RETURN
+    }
+}
+
+#[derive(Debug)]
 pub struct FunctionCallParserNode {
     pub func_name: String,
     pub args: Vec<String>,

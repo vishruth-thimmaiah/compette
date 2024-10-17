@@ -5,6 +5,7 @@ pub enum ParserTypes {
     LOOP,
     FUNCTION,
     FUNCTION_CALL,
+    RETURN,
     VARIABLE,
     EXPRESSION,
     VARIABLE_CALL,

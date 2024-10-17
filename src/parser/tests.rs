@@ -24,6 +24,7 @@ mod tests {
 
         func add(x, y) {
             let q = x + y
+            return q
         }
 
         add(a, b)
@@ -159,24 +160,36 @@ mod tests {
             Box::new(FunctionParserNode {
                 func_name: "add".to_string(),
                 args: vec!["x".to_string(), "y".to_string()],
-                body: vec![Box::new(AssignmentParserNode {
-                    var_name: "q".to_string(),
-                    value: Box::new(ExpressionParserNode {
-                        left: ParserToken {
-                            r#type: IDENTIFIER,
-                            value: "x".to_string(),
-                        },
-                        right: Some(Box::new(ExpressionParserNode {
+                body: vec![
+                    Box::new(AssignmentParserNode {
+                        var_name: "q".to_string(),
+                        value: Box::new(ExpressionParserNode {
                             left: ParserToken {
                                 r#type: IDENTIFIER,
-                                value: "y".to_string(),
+                                value: "x".to_string(),
+                            },
+                            right: Some(Box::new(ExpressionParserNode {
+                                left: ParserToken {
+                                    r#type: IDENTIFIER,
+                                    value: "y".to_string(),
+                                },
+                                right: None,
+                                operator: None,
+                            })),
+                            operator: Some(PLUS),
+                        }),
+                    }),
+                    Box::new(ReturnNode {
+                        return_value: Box::new(ExpressionParserNode {
+                            left: ParserToken {
+                                r#type: IDENTIFIER,
+                                value: "a".to_string(),
                             },
                             right: None,
                             operator: None,
-                        })),
-                        operator: Some(PLUS),
+                        }),
                     }),
-                })],
+                ],
             }),
             Box::new(FunctionCallParserNode {
                 func_name: "add".to_string(),
@@ -190,6 +203,7 @@ mod tests {
         let result = parser.parse();
 
         assert_eq!(result.len(), req_result.len());
+        // println!("{:#?}", result);
 
         for i in 0..result.len() {
             //TODO: Check if the actual structs are the same
