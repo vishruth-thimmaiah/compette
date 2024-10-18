@@ -35,7 +35,7 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    pub fn jit_compile(&self, build: bool) -> () {
+    pub fn jit_compile(&self, build: bool) -> Option<u64> {
         for node in &self.tokens {
             match node.get_type() {
                 ParserTypes::FUNCTION => {
@@ -48,11 +48,12 @@ impl<'ctx> CodeGen<'ctx> {
         }
         if build {
             builder::build_ir(&self.module);
+            None
         } else {
             unsafe {
                 let exec: JitFunction<MainFunc> =
                     self.execution_engine.get_function("main").unwrap();
-                exec.call();
+                Some(exec.call())
             }
         }
     }
@@ -131,8 +132,7 @@ mod tests {
 
         let context = Context::create();
         let codegen = CodeGen::new(&context, parser);
-        codegen.jit_compile(false);
-        // unsafe { println!("{}", compiled_data.call()) };
-        // unsafe { assert_eq!(12, compiled_data.call()) };
+        let output = codegen.jit_compile(false);
+        assert_eq!(output, Some(12));
     }
 }
