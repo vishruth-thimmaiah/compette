@@ -1,23 +1,30 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
+
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::execution_engine::{ExecutionEngine, JitFunction};
 use inkwell::module::Module;
-use inkwell::values::IntValue;
+use inkwell::types::BasicType;
+use inkwell::values::{IntValue, PointerValue};
 use inkwell::OptimizationLevel;
 
 use crate::lexer::types::Types;
 use crate::llvm::builder;
-use crate::parser::nodes::{ExpressionParserNode, FunctionParserNode, ParserType, ReturnNode};
+use crate::parser::nodes::{
+    AssignmentParserNode, ExpressionParserNode, FunctionParserNode, ParserType, ReturnNode,
+};
 use crate::parser::types::ParserTypes;
 
 type MainFunc = unsafe extern "C" fn() -> u64;
 
 pub struct CodeGen<'ctx> {
-    context: &'ctx Context,
+    pub context: &'ctx Context,
+    pub builder: Builder<'ctx>,
     module: Module<'ctx>,
-    builder: Builder<'ctx>,
     execution_engine: ExecutionEngine<'ctx>,
     tokens: Vec<Box<dyn ParserType>>,
+    variables: RefCell<HashMap<String, PointerValue<'ctx>>>,
 }
 
 impl<'ctx> CodeGen<'ctx> {
@@ -32,6 +39,7 @@ impl<'ctx> CodeGen<'ctx> {
             builder: context.create_builder(),
             execution_engine,
             tokens,
+            variables: RefCell::new(HashMap::new()),
         }
     }
 
@@ -58,6 +66,23 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
+    fn add_variable(&self, node: &AssignmentParserNode) {
+        let alloc = self.new_ptr(node);
+        self.variables
+            .borrow_mut()
+            .insert(node.var_name.clone(), alloc);
+
+        let value = node
+            .value
+            .any()
+            .downcast_ref::<ExpressionParserNode>()
+            .unwrap();
+
+        self.builder
+            .build_store(alloc, self.add_expression(value))
+            .unwrap();
+    }
+
     fn add_function(&self, node: &FunctionParserNode) {
         let i64_type = self.context.i64_type();
         let fn_type = i64_type.fn_type(&[], false);
@@ -65,30 +90,54 @@ impl<'ctx> CodeGen<'ctx> {
         let basic_block = self.context.append_basic_block(function, "entry");
         self.builder.position_at_end(basic_block);
 
+        println!("{:#?}", node.body);
+
         let ret_node = node
             .body
-            .get(0)
+            .get(1)
             .unwrap()
             .any()
             .downcast_ref::<ReturnNode>()
             .unwrap();
 
-        let node = ret_node
+        let node_expr = ret_node
             .return_value
             .any()
             .downcast_ref::<ExpressionParserNode>()
             .unwrap();
-        let result = self.add_expression(node);
+
+        let ode = node
+            .body
+            .get(0)
+            .unwrap()
+            .any()
+            .downcast_ref::<AssignmentParserNode>()
+            .unwrap();
+        self.add_variable(ode);
+
+        let result = self.add_expression(node_expr);
 
         self.builder.build_return(Some(&result)).unwrap();
     }
 
     fn add_expression(&self, node: &ExpressionParserNode) -> IntValue {
-        let left_val = self
-            .context
-            .i64_type()
-            .const_int_from_string(&node.left.value, inkwell::types::StringRadix::Decimal)
-            .unwrap();
+        let left_val = match node.left.r#type {
+            Types::NUMBER => self
+                .context
+                .i64_type()
+                .const_int_from_string(&node.left.value, inkwell::types::StringRadix::Decimal)
+                .unwrap(),
+            Types::IDENTIFIER => self
+                .builder
+                .build_load(
+                    self.context.i64_type(),
+                    self.variables.borrow()[node.left.value.as_str()],
+                    &node.left.value,
+                )
+                .unwrap()
+                .into_int_value(),
+            _ => panic!("Invalid type"),
+        };
 
         let right = {
             if let Some(right) = &node.right {
@@ -122,7 +171,8 @@ mod tests {
     fn check_main_func() {
         let contents = r#"
         func main() {
-            return 6 * 3 - 1
+            let a = 6 * 3 - 1
+            return a
         }
         "#;
 
@@ -130,9 +180,12 @@ mod tests {
 
         let parser = Parser::new(lexer.clone()).parse();
 
+        println!("{:#?}", parser);
+
         let context = Context::create();
         let codegen = CodeGen::new(&context, parser);
-        let output = codegen.jit_compile(false);
-        assert_eq!(output, Some(12));
+        let result = codegen.jit_compile(false);
+        // unsafe { println!("{}", compiled_data.call()) };
+        assert_eq!(12, result.unwrap());
     }
 }

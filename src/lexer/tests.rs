@@ -6,10 +6,10 @@ mod tests {
     #[test]
     fn check_lexer() {
         let contents = r#"
-        let a = 1
-        let b = 2
+        let u32 a = 1
+        let u32 b = 2
 
-        // let c = 3
+        // let u32 c = 3
 
         if a == 1 {
             c = 1
@@ -22,7 +22,7 @@ mod tests {
         }
 
         loop a == 5 {
-            let c = c + 1
+            let u32 c = c + 1
         }
 
         func add(x, y) {
@@ -35,11 +35,13 @@ mod tests {
         let req_result = vec![
             Token::new(NL, None, 0, 0),
             Token::new(LET, None, 0, 0),
+            Token::new(U32, None, 0, 0),
             Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
             Token::new(ASSIGN, None, 0, 0),
             Token::new(NUMBER, Some("1".to_string()), 0, 0),
             Token::new(NL, None, 0, 0),
             Token::new(LET, None, 0, 0),
+            Token::new(U32, None, 0, 0),
             Token::new(IDENTIFIER, Some("b".to_string()), 0, 0),
             Token::new(ASSIGN, None, 0, 0),
             Token::new(NUMBER, Some("2".to_string()), 0, 0),
@@ -87,6 +89,7 @@ mod tests {
             Token::new(LBRACE, None, 0, 0),
             Token::new(NL, None, 0, 0),
             Token::new(LET, None, 0, 0),
+            Token::new(U32, None, 0, 0),
             Token::new(IDENTIFIER, Some("c".to_string()), 0, 0),
             Token::new(ASSIGN, None, 0, 0),
             Token::new(IDENTIFIER, Some("c".to_string()), 0, 0),
@@ -122,13 +125,13 @@ mod tests {
             Token::new(NL, None, 0, 0),
             Token::new(EOF, None, 0, 0),
         ];
-        let resutlt = Lexer::new(contents).tokenize();
+        let result = Lexer::new(contents).tokenize();
 
-        assert_eq!(req_result.len(), resutlt.len());
+        assert_eq!(req_result.len(), result.len());
 
         for i in 0..req_result.len() {
-            assert_eq!(req_result[i].r#type, resutlt[i].r#type);
-            assert_eq!(req_result[i].value, resutlt[i].value);
+            assert_eq!(req_result[i].r#type, result[i].r#type);
+            assert_eq!(req_result[i].value, result[i].value);
         }
     }
 }

@@ -105,8 +105,12 @@ impl Parser {
             self.handle_error("invalid token")
         }
 
+        let var_type = self.get_next_token().r#type;
+        self.set_next_position();
+
         let var_name = self.get_next_token().value.unwrap();
         self.set_next_position();
+
 
         if self.get_next_token().r#type != Types::ASSIGN {
             self.handle_error("invalid token")
@@ -116,7 +120,11 @@ impl Parser {
         let value = self.parse_expression();
         self.set_next_position();
 
-        return Box::new(AssignmentParserNode { var_name, value });
+        return Box::new(AssignmentParserNode {
+            var_name,
+            var_type,
+            value,
+        });
     }
 
     // TODO: Add support for parenthesis

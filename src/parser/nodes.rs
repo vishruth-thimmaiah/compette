@@ -30,6 +30,7 @@ pub trait ParserType: Debug {
 #[derive(Debug)]
 pub struct AssignmentParserNode {
     pub var_name: String,
+    pub var_type: Types,
     pub value: Box<dyn ParserType>,
 }
 impl ParserType for AssignmentParserNode {

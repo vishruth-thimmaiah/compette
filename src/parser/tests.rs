@@ -7,23 +7,23 @@ mod tests {
     #[test]
     fn test_parser() {
         let contents = r#"
-        let a = 1
-        let b = 2
+        let u32 a = 1
+        let u32 b = 2
 
         if a == 1 {
-            let c = 1
+            let u32 c = 1
         } else if a == 2 {
-            let c = 2
+            let u32 c = 2
         } else {
-            let c = 3
+            let u32 c = 3
         }
 
         loop a == 5 {
-            let c = c + 1
+            let u32 c = c + 1
         }
 
         func add(x, y) {
-            let q = x + y
+            let u32 q = x + y
             return q
         }
 
@@ -33,6 +33,7 @@ mod tests {
         let req_result: Vec<Box<dyn ParserType>> = vec![
             Box::new(AssignmentParserNode {
                 var_name: "a".to_string(),
+                var_type: U32,
                 value: Box::new(ExpressionParserNode {
                     left: ParserToken {
                         r#type: NUMBER,
@@ -44,6 +45,7 @@ mod tests {
             }),
             Box::new(AssignmentParserNode {
                 var_name: "b".to_string(),
+                var_type: U32,
                 value: Box::new(ExpressionParserNode {
                     left: ParserToken {
                         r#type: NUMBER,
@@ -71,6 +73,7 @@ mod tests {
                 }),
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "c".to_string(),
+                    var_type: U32,
                     value: Box::new(ExpressionParserNode {
                         left: ParserToken {
                             r#type: NUMBER,
@@ -98,6 +101,7 @@ mod tests {
                     }),
                     body: vec![Box::new(AssignmentParserNode {
                         var_name: "c".to_string(),
+                        var_type: U32,
                         value: Box::new(ExpressionParserNode {
                             left: ParserToken {
                                 r#type: NUMBER,
@@ -110,6 +114,7 @@ mod tests {
                 }],
                 else_body: Some(ConditionalElseParserNode {
                     body: vec![Box::new(AssignmentParserNode {
+                        var_type: U32,
                         var_name: "c".to_string(),
                         value: Box::new(ExpressionParserNode {
                             left: ParserToken {
@@ -140,6 +145,7 @@ mod tests {
                 }),
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "c".to_string(),
+                    var_type: U32,
                     value: Box::new(ExpressionParserNode {
                         left: ParserToken {
                             r#type: IDENTIFIER,
@@ -163,6 +169,7 @@ mod tests {
                 body: vec![
                     Box::new(AssignmentParserNode {
                         var_name: "q".to_string(),
+                        var_type: U32,
                         value: Box::new(ExpressionParserNode {
                             left: ParserToken {
                                 r#type: IDENTIFIER,
@@ -214,12 +221,12 @@ mod tests {
     #[test]
     fn test_function_ast() {
         let contents = r#"
-        let a = 1
+        let u32 a = 1
         a = 4
-        let b = 2
+        let u32 b = 2
 
         func add(x, y) {
-            let q = x + y
+            let u32 q = x + y
         }
 
         add(a, b)
@@ -228,6 +235,7 @@ mod tests {
         let req_result: Vec<Box<dyn ParserType>> = vec![
             Box::new(AssignmentParserNode {
                 var_name: "a".to_string(),
+                var_type: U32,
                 value: Box::new(ExpressionParserNode {
                     left: ParserToken {
                         r#type: NUMBER,
@@ -250,6 +258,7 @@ mod tests {
             }),
             Box::new(AssignmentParserNode {
                 var_name: "b".to_string(),
+                var_type: U32,
                 value: Box::new(ExpressionParserNode {
                     left: ParserToken {
                         r#type: NUMBER,
@@ -264,6 +273,7 @@ mod tests {
                 args: vec!["x".to_string(), "y".to_string()],
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "q".to_string(),
+                    var_type: U32,
                     value: Box::new(ExpressionParserNode {
                         left: ParserToken {
                             r#type: IDENTIFIER,

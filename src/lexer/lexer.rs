@@ -158,7 +158,7 @@ impl Lexer {
 
         let mut char = self.content.as_bytes()[self.index];
 
-        while 65 <= char && char <= 90 || 97 <= char && char <= 122 {
+        while 48 <= char && char <= 57 || 65 <= char && char <= 90 || 97 <= char && char <= 122 {
             end += 1;
             char = self.content.as_bytes()[end];
         }
@@ -174,6 +174,16 @@ impl Lexer {
             "if" => Token::new(Types::IF, None, self.line, self.column),
             "else" => Token::new(Types::ELSE, None, self.line, self.column),
             "loop" => Token::new(Types::LOOP, None, self.line, self.column),
+            "u16" => Token::new(Types::U16, None, self.line, self.column),
+            "u32" => Token::new(Types::U32, None, self.line, self.column),
+            "u64" => Token::new(Types::U64, None, self.line, self.column),
+            "i16" => Token::new(Types::I16, None, self.line, self.column),
+            "i32" => Token::new(Types::I32, None, self.line, self.column),
+            "i64" => Token::new(Types::I64, None, self.line, self.column),
+            "f32" => Token::new(Types::F32, None, self.line, self.column),
+            "f64" => Token::new(Types::F64, None, self.line, self.column),
+            "bool" => Token::new(Types::BOOL, None, self.line, self.column),
+            "string" => Token::new(Types::STRING, None, self.line, self.column),
             _ => Token::new(Types::IDENTIFIER, Some(result), self.line, self.column),
         }
     }
