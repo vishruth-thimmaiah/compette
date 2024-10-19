@@ -3,8 +3,17 @@
 pub enum Types {
     NL,
     EOF,
+    OPERATOR(OPERATOR),
+    DELIMITER(DELIMITER),
+    KEYWORD(KEYWORD),
+    IDENTIFIER,
+    NUMBER,
+    DATATYPE(DATATYPE),
+}
 
-    // Operators
+#[allow(non_camel_case_types)]
+#[derive(Debug, PartialEq, Clone)]
+pub enum OPERATOR {
     ASSIGN,
     PLUS,
     MINUS,
@@ -16,29 +25,30 @@ pub enum Types {
     LESSER_EQUAL,
     GREATER_EQUAL,
     NOT_EQUAL,
+}
 
-    // Delimiters
+#[derive(Debug, PartialEq, Clone)]
+pub enum DELIMITER {
     COMMA,
     SEMICOLON,
-
     LPAREN,
     RPAREN,
     LBRACE,
     RBRACE,
+}
 
-    // Keywords
+#[derive(Debug, PartialEq, Clone)]
+pub enum KEYWORD {
     FUNCTION,
     LET,
     RETURN,
     IF,
     ELSE,
     LOOP,
+}
 
-    // Identifiers
-    IDENTIFIER,
-    NUMBER,
-
-    // Types
+#[derive(Debug, PartialEq, Clone)]
+pub enum DATATYPE {
     U16,
     U32,
     U64,

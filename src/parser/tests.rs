@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::lexer::{lexer::Lexer, types::Types::*};
+    use crate::lexer::{lexer::Lexer, types::{Types::*, DATATYPE, OPERATOR}};
 
     use super::super::{nodes::*, parser};
 
@@ -33,7 +33,7 @@ mod tests {
         let req_result: Vec<Box<dyn ParserType>> = vec![
             Box::new(AssignmentParserNode {
                 var_name: "a".to_string(),
-                var_type: U32,
+                var_type: DATATYPE::U32,
                 value: Box::new(ExpressionParserNode {
                     left: ParserToken {
                         r#type: NUMBER,
@@ -45,7 +45,7 @@ mod tests {
             }),
             Box::new(AssignmentParserNode {
                 var_name: "b".to_string(),
-                var_type: U32,
+                var_type: DATATYPE::U32,
                 value: Box::new(ExpressionParserNode {
                     left: ParserToken {
                         r#type: NUMBER,
@@ -69,11 +69,11 @@ mod tests {
                         right: None,
                         operator: None,
                     })),
-                    operator: Some(EQUAL),
+                    operator: Some(OPERATOR::EQUAL),
                 }),
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "c".to_string(),
-                    var_type: U32,
+                    var_type: DATATYPE::U32,
                     value: Box::new(ExpressionParserNode {
                         left: ParserToken {
                             r#type: NUMBER,
@@ -97,11 +97,11 @@ mod tests {
                             right: None,
                             operator: None,
                         })),
-                        operator: Some(EQUAL),
+                        operator: Some(OPERATOR::EQUAL),
                     }),
                     body: vec![Box::new(AssignmentParserNode {
                         var_name: "c".to_string(),
-                        var_type: U32,
+                        var_type: DATATYPE::U32,
                         value: Box::new(ExpressionParserNode {
                             left: ParserToken {
                                 r#type: NUMBER,
@@ -114,7 +114,7 @@ mod tests {
                 }],
                 else_body: Some(ConditionalElseParserNode {
                     body: vec![Box::new(AssignmentParserNode {
-                        var_type: U32,
+                        var_type: DATATYPE::U32,
                         var_name: "c".to_string(),
                         value: Box::new(ExpressionParserNode {
                             left: ParserToken {
@@ -141,11 +141,11 @@ mod tests {
                         right: None,
                         operator: None,
                     })),
-                    operator: Some(EQUAL),
+                    operator: Some(OPERATOR::EQUAL),
                 }),
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "c".to_string(),
-                    var_type: U32,
+                    var_type: DATATYPE::U32,
                     value: Box::new(ExpressionParserNode {
                         left: ParserToken {
                             r#type: IDENTIFIER,
@@ -159,18 +159,18 @@ mod tests {
                             right: None,
                             operator: None,
                         })),
-                        operator: Some(ASSIGN),
+                        operator: Some(OPERATOR::ASSIGN),
                     }),
                 })],
             }),
             Box::new(FunctionParserNode {
                 func_name: "add".to_string(),
                 args: vec!["x".to_string(), "y".to_string()],
-                return_type: Some(U32),
+                return_type: Some(DATATYPE::U32),
                 body: vec![
                     Box::new(AssignmentParserNode {
                         var_name: "q".to_string(),
-                        var_type: U32,
+                        var_type: DATATYPE::U32,
                         value: Box::new(ExpressionParserNode {
                             left: ParserToken {
                                 r#type: IDENTIFIER,
@@ -184,7 +184,7 @@ mod tests {
                                 right: None,
                                 operator: None,
                             })),
-                            operator: Some(PLUS),
+                            operator: Some(OPERATOR::PLUS),
                         }),
                     }),
                     Box::new(ReturnNode {
@@ -236,7 +236,7 @@ mod tests {
         let req_result: Vec<Box<dyn ParserType>> = vec![
             Box::new(AssignmentParserNode {
                 var_name: "a".to_string(),
-                var_type: U32,
+                var_type: DATATYPE::U32,
                 value: Box::new(ExpressionParserNode {
                     left: ParserToken {
                         r#type: NUMBER,
@@ -259,7 +259,7 @@ mod tests {
             }),
             Box::new(AssignmentParserNode {
                 var_name: "b".to_string(),
-                var_type: U32,
+                var_type: DATATYPE::U32,
                 value: Box::new(ExpressionParserNode {
                     left: ParserToken {
                         r#type: NUMBER,
@@ -271,11 +271,11 @@ mod tests {
             }),
             Box::new(FunctionParserNode {
                 func_name: "add".to_string(),
-                return_type: Some(U32),
+                return_type: Some(DATATYPE::U32),
                 args: vec!["x".to_string(), "y".to_string()],
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "q".to_string(),
-                    var_type: U32,
+                    var_type: DATATYPE::U32,
                     value: Box::new(ExpressionParserNode {
                         left: ParserToken {
                             r#type: IDENTIFIER,
@@ -289,7 +289,7 @@ mod tests {
                             right: None,
                             operator: None,
                         })),
-                        operator: Some(PLUS),
+                        operator: Some(OPERATOR::PLUS),
                     }),
                 })],
             }),

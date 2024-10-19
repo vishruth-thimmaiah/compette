@@ -8,7 +8,7 @@ use inkwell::module::Module;
 use inkwell::values::{IntValue, PointerValue};
 use inkwell::OptimizationLevel;
 
-use crate::lexer::types::Types;
+use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 use crate::llvm::builder;
 use crate::parser::nodes::{
     AssignmentParserNode, ExpressionParserNode, FunctionParserNode, ParserType, ReturnNode,
@@ -116,7 +116,7 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.build_return(Some(&result)).unwrap();
     }
 
-    fn add_expression(&self, node: &ExpressionParserNode, req_type: &Types) -> IntValue {
+    fn add_expression(&self, node: &ExpressionParserNode, req_type: &DATATYPE) -> IntValue {
         let left_val = match node.left.r#type {
             Types::NUMBER => self.def_expr(req_type)
                 .const_int_from_string(&node.left.value, inkwell::types::StringRadix::Decimal)
@@ -143,10 +143,10 @@ impl<'ctx> CodeGen<'ctx> {
         };
 
         match node.operator.as_ref().unwrap() {
-            Types::PLUS => self.builder.build_int_add(left_val, right_val, "main").unwrap(),
-            Types::MINUS => self.builder.build_int_sub(left_val, right_val, "main").unwrap(),
-            Types::MULTIPLY => self.builder.build_int_mul(left_val, right_val, "main").unwrap(),
-            Types::DIVIDE => self
+            OPERATOR::PLUS => self.builder.build_int_add(left_val, right_val, "main").unwrap(),
+            OPERATOR::MINUS => self.builder.build_int_sub(left_val, right_val, "main").unwrap(),
+            OPERATOR::MULTIPLY => self.builder.build_int_mul(left_val, right_val, "main").unwrap(),
+            OPERATOR::DIVIDE => self
                 .builder
                 .build_int_signed_div(left_val, right_val, "main")
                 .unwrap(),

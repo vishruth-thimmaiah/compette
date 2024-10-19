@@ -1,6 +1,6 @@
 use core::str;
 
-use super::types::Types;
+use super::types::{Types, DATATYPE, DELIMITER, KEYWORD, OPERATOR};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Token {
@@ -88,16 +88,79 @@ impl Lexer {
                 self.column = 0;
                 return Some(Token::new(Types::NL, None, self.line, self.column));
             }
-            "+" => return Some(Token::new(Types::PLUS, None, self.line, self.column)),
-            "-" => return Some(Token::new(Types::MINUS, None, self.line, self.column)),
-            "*" => return Some(Token::new(Types::MULTIPLY, None, self.line, self.column)),
+            "+" => {
+                return Some(Token::new(
+                    Types::OPERATOR(OPERATOR::PLUS),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
+            "-" => {
+                return Some(Token::new(
+                    Types::OPERATOR(OPERATOR::MINUS),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
+            "*" => {
+                return Some(Token::new(
+                    Types::OPERATOR(OPERATOR::MULTIPLY),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
             "/" => return self.skip_comment(),
-            "," => return Some(Token::new(Types::COMMA, None, self.line, self.column)),
-            ";" => return Some(Token::new(Types::SEMICOLON, None, self.line, self.column)),
-            "(" => return Some(Token::new(Types::LPAREN, None, self.line, self.column)),
-            ")" => return Some(Token::new(Types::RPAREN, None, self.line, self.column)),
-            "{" => return Some(Token::new(Types::LBRACE, None, self.line, self.column)),
-            "}" => return Some(Token::new(Types::RBRACE, None, self.line, self.column)),
+            "," => {
+                return Some(Token::new(
+                    Types::DELIMITER(DELIMITER::COMMA),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
+            ";" => {
+                return Some(Token::new(
+                    Types::DELIMITER(DELIMITER::SEMICOLON),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
+            "(" => {
+                return Some(Token::new(
+                    Types::DELIMITER(DELIMITER::LPAREN),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
+            ")" => {
+                return Some(Token::new(
+                    Types::DELIMITER(DELIMITER::RPAREN),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
+            "{" => {
+                return Some(Token::new(
+                    Types::DELIMITER(DELIMITER::LBRACE),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
+            "}" => {
+                return Some(Token::new(
+                    Types::DELIMITER(DELIMITER::RBRACE),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
             "=" | "<" | ">" | "!" => return Some(self.check_operator()),
             "\"" | "'" => return Some(Self::check_string(self)),
             _ => {
@@ -127,7 +190,12 @@ impl Lexer {
             return None;
         }
 
-        return Some(Token::new(Types::DIVIDE, None, self.line, self.column));
+        return Some(Token::new(
+            Types::OPERATOR(OPERATOR::DIVIDE),
+            None,
+            self.line,
+            self.column,
+        ));
     }
 
     fn check_operator(&mut self) -> Token {
@@ -137,17 +205,60 @@ impl Lexer {
         self.index += 2;
 
         match (first_char, second_char) {
-            (61, 61) => return Token::new(Types::EQUAL, None, self.line, self.column),
-            (33, 61) => return Token::new(Types::NOT_EQUAL, None, self.line, self.column),
-            (60, 61) => return Token::new(Types::LESSER_EQUAL, None, self.line, self.column),
-            (62, 61) => return Token::new(Types::GREATER_EQUAL, None, self.line, self.column),
+            (61, 61) => {
+                return Token::new(
+                    Types::OPERATOR(OPERATOR::EQUAL),
+                    None,
+                    self.line,
+                    self.column,
+                )
+            }
+            (33, 61) => {
+                return Token::new(
+                    Types::OPERATOR(OPERATOR::NOT_EQUAL),
+                    None,
+                    self.line,
+                    self.column,
+                )
+            }
+            (60, 61) => {
+                return Token::new(
+                    Types::OPERATOR(OPERATOR::LESSER_EQUAL),
+                    None,
+                    self.line,
+                    self.column,
+                )
+            }
+            (62, 61) => {
+                return Token::new(
+                    Types::OPERATOR(OPERATOR::GREATER_EQUAL),
+                    None,
+                    self.line,
+                    self.column,
+                )
+            }
             _ => self.index -= 1,
         }
 
         match first_char {
-            61 => Token::new(Types::ASSIGN, None, self.line, self.column),
-            60 => Token::new(Types::LESSER, None, self.line, self.column),
-            62 => Token::new(Types::GREATER, None, self.line, self.column),
+            61 => Token::new(
+                Types::OPERATOR(OPERATOR::ASSIGN),
+                None,
+                self.line,
+                self.column,
+            ),
+            60 => Token::new(
+                Types::OPERATOR(OPERATOR::LESSER),
+                None,
+                self.line,
+                self.column,
+            ),
+            62 => Token::new(
+                Types::OPERATOR(OPERATOR::GREATER),
+                None,
+                self.line,
+                self.column,
+            ),
             _ => panic!("Unexpected token"),
         }
     }
@@ -168,22 +279,43 @@ impl Lexer {
         self.index = end - 1;
 
         match result.as_str() {
-            "func" => Token::new(Types::FUNCTION, None, self.line, self.column),
-            "let" => Token::new(Types::LET, None, self.line, self.column),
-            "return" => Token::new(Types::RETURN, None, self.line, self.column),
-            "if" => Token::new(Types::IF, None, self.line, self.column),
-            "else" => Token::new(Types::ELSE, None, self.line, self.column),
-            "loop" => Token::new(Types::LOOP, None, self.line, self.column),
-            "u16" => Token::new(Types::U16, None, self.line, self.column),
-            "u32" => Token::new(Types::U32, None, self.line, self.column),
-            "u64" => Token::new(Types::U64, None, self.line, self.column),
-            "i16" => Token::new(Types::I16, None, self.line, self.column),
-            "i32" => Token::new(Types::I32, None, self.line, self.column),
-            "i64" => Token::new(Types::I64, None, self.line, self.column),
-            "f32" => Token::new(Types::F32, None, self.line, self.column),
-            "f64" => Token::new(Types::F64, None, self.line, self.column),
-            "bool" => Token::new(Types::BOOL, None, self.line, self.column),
-            "string" => Token::new(Types::STRING, None, self.line, self.column),
+            "func" => Token::new(
+                Types::KEYWORD(KEYWORD::FUNCTION),
+                None,
+                self.line,
+                self.column,
+            ),
+            "let" => Token::new(Types::KEYWORD(KEYWORD::LET), None, self.line, self.column),
+            "return" => Token::new(
+                Types::KEYWORD(KEYWORD::RETURN),
+                None,
+                self.line,
+                self.column,
+            ),
+            "if" => Token::new(Types::KEYWORD(KEYWORD::IF), None, self.line, self.column),
+            "else" => Token::new(Types::KEYWORD(KEYWORD::ELSE), None, self.line, self.column),
+            "loop" => Token::new(Types::KEYWORD(KEYWORD::LOOP), None, self.line, self.column),
+            "u16" => Token::new(Types::DATATYPE(DATATYPE::U16), None, self.line, self.column),
+            "u32" => Token::new(Types::DATATYPE(DATATYPE::U32), None, self.line, self.column),
+            "u64" => Token::new(Types::DATATYPE(DATATYPE::U64), None, self.line, self.column),
+
+            "i16" => Token::new(Types::DATATYPE(DATATYPE::I16), None, self.line, self.column),
+            "i32" => Token::new(Types::DATATYPE(DATATYPE::I32), None, self.line, self.column),
+            "i64" => Token::new(Types::DATATYPE(DATATYPE::I64), None, self.line, self.column),
+            "f32" => Token::new(Types::DATATYPE(DATATYPE::F32), None, self.line, self.column),
+            "f64" => Token::new(Types::DATATYPE(DATATYPE::F64), None, self.line, self.column),
+            "bool" => Token::new(
+                Types::DATATYPE(DATATYPE::BOOL),
+                None,
+                self.line,
+                self.column,
+            ),
+            "string" => Token::new(
+                Types::DATATYPE(DATATYPE::STRING),
+                None,
+                self.line,
+                self.column,
+            ),
             _ => Token::new(Types::IDENTIFIER, Some(result), self.line, self.column),
         }
     }
@@ -221,6 +353,6 @@ impl Lexer {
 
         self.index = end - 1;
 
-        return Token::new(Types::STRING, Some(result), self.line, self.column);
+        return Token::new(Types::DATATYPE(DATATYPE::STRING), Some(result), self.line, self.column);
     }
 }

@@ -1,6 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
-use crate::lexer::{lexer::Token, types::Types};
+use crate::lexer::{lexer::Token, types::{Types, DATATYPE, OPERATOR}};
 
 use super::types::ParserTypes;
 
@@ -30,7 +30,7 @@ pub trait ParserType: Debug {
 #[derive(Debug)]
 pub struct AssignmentParserNode {
     pub var_name: String,
-    pub var_type: Types,
+    pub var_type: DATATYPE,
     pub value: Box<dyn ParserType>,
 }
 impl ParserType for AssignmentParserNode {
@@ -46,7 +46,7 @@ impl ParserType for AssignmentParserNode {
 pub struct ExpressionParserNode {
     pub left: ParserToken,
     pub right: Option<Box<dyn ParserType>>,
-    pub operator: Option<Types>,
+    pub operator: Option<OPERATOR>,
 }
 impl ParserType for ExpressionParserNode {
     fn get_type(&self) -> ParserTypes {
@@ -61,7 +61,7 @@ impl ParserType for ExpressionParserNode {
 pub struct FunctionParserNode {
     pub func_name: String,
     pub args: Vec<String>,
-    pub return_type: Option<Types>,
+    pub return_type: Option<DATATYPE>,
     pub body: Vec<Box<dyn ParserType>>,
 }
 impl ParserType for FunctionParserNode {

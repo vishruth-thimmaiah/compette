@@ -1,6 +1,9 @@
 use std::process::exit;
 
-use crate::lexer::{lexer::Token, types::Types};
+use crate::lexer::{
+    lexer::Token,
+    types::{Types, DELIMITER, KEYWORD, OPERATOR},
+};
 
 use super::nodes::{
     AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
@@ -73,19 +76,19 @@ impl Parser {
             match token_type {
                 Types::NL => (),
                 Types::EOF => break,
-                Types::LET => tokens.push(self.parse_assignment()),
-                Types::IF => tokens.push(self.parse_conditional_if()),
-                Types::FUNCTION => tokens.push(self.parse_function()),
+                Types::KEYWORD(KEYWORD::LET) => tokens.push(self.parse_assignment()),
+                Types::KEYWORD(KEYWORD::IF) => tokens.push(self.parse_conditional_if()),
+                Types::KEYWORD(KEYWORD::FUNCTION) => tokens.push(self.parse_function()),
                 Types::IDENTIFIER => tokens.push(self.parse_identifier_call()),
-                Types::LOOP => tokens.push(self.parse_loop()),
-                Types::LBRACE => nested = true,
+                Types::KEYWORD(KEYWORD::LOOP) => tokens.push(self.parse_loop()),
+                Types::DELIMITER(DELIMITER::LBRACE) => nested = true,
                 // TODO: better function detecting
-                Types::RETURN => {
+                Types::KEYWORD(KEYWORD::RETURN) => {
                     if nested {
                         tokens.push(self.parse_return())
                     }
                 }
-                Types::RBRACE => {
+                Types::DELIMITER(DELIMITER::RBRACE) => {
                     if !nested {
                         self.handle_error("Invalid close brace");
                     }
@@ -105,13 +108,19 @@ impl Parser {
             self.handle_error("invalid token")
         }
 
-        let var_type = self.get_next_token().r#type;
+        let var_type = match self.get_next_token().r#type {
+            Types::DATATYPE(dt) => dt,
+            _ => {
+                self.handle_error("invalid token");
+                exit(1)
+            }
+        };
         self.set_next_position();
 
         let var_name = self.get_next_token().value.unwrap();
         self.set_next_position();
 
-        if self.get_next_token().r#type != Types::ASSIGN {
+        if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
             self.handle_error("invalid token")
         }
         self.set_next_position();
@@ -131,27 +140,29 @@ impl Parser {
         let left = self.get_next_token();
         self.set_next_position();
 
-        let operator = self.get_next_token().r#type;
-        match operator {
-            Types::PLUS
-            | Types::MINUS
-            | Types::MULTIPLY
-            | Types::DIVIDE
-            | Types::EQUAL
-            | Types::NOT_EQUAL
-            | Types::GREATER
-            | Types::LESSER
-            | Types::GREATER_EQUAL
-            | Types::LESSER_EQUAL => {
-                self.set_next_position();
-                let right = self.parse_expression();
-                return Box::new(ExpressionParserNode {
-                    left: ParserToken::from(left),
-                    right: Some(right),
-                    operator: Some(operator),
-                });
-            }
-            Types::NL | Types::LBRACE => {
+        match self.get_next_token().r#type {
+            Types::OPERATOR(operator) => match operator {
+                OPERATOR::PLUS
+                | OPERATOR::MINUS
+                | OPERATOR::MULTIPLY
+                | OPERATOR::DIVIDE
+                | OPERATOR::EQUAL
+                | OPERATOR::NOT_EQUAL
+                | OPERATOR::GREATER
+                | OPERATOR::LESSER
+                | OPERATOR::GREATER_EQUAL
+                | OPERATOR::LESSER_EQUAL => {
+                    self.set_next_position();
+                    let right = self.parse_expression();
+                    return Box::new(ExpressionParserNode {
+                        left: ParserToken::from(left),
+                        right: Some(right),
+                        operator: Some(operator),
+                    });
+                }
+                OPERATOR::ASSIGN => todo!(),
+            },
+            Types::NL | Types::DELIMITER(DELIMITER::LBRACE) => {
                 return Box::new(ExpressionParserNode {
                     left: ParserToken::from(left),
                     right: None,
@@ -162,7 +173,7 @@ impl Parser {
                 self.handle_error("invalid token");
                 exit(1)
             }
-        }
+        };
     }
 
     fn parse_function(&mut self) -> Box<FunctionParserNode> {
@@ -173,7 +184,7 @@ impl Parser {
         let func_name = self.get_next_token().value.unwrap();
         self.set_next_position();
 
-        if self.get_next_token().r#type != Types::LPAREN {
+        if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LPAREN) {
             self.handle_error("invalid token")
         }
         self.set_next_position();
@@ -181,7 +192,7 @@ impl Parser {
         let mut args: Vec<String> = vec![];
         loop {
             let token = self.get_next_token();
-            if token.r#type == Types::RPAREN {
+            if token.r#type == Types::DELIMITER(DELIMITER::RPAREN) {
                 break;
             }
             if token.r#type == Types::IDENTIFIER {
@@ -189,16 +200,18 @@ impl Parser {
             }
             self.set_next_position();
         }
-
-        let return_type = if self.get_next_token().r#type != Types::LBRACE {
-            self.set_next_position();
-            Some(self.get_next_token().r#type)
-        } else {
-            None
-        };
         self.set_next_position();
 
-        if self.get_next_token().r#type != Types::LBRACE {
+        let return_type = match self.get_next_token().r#type {
+            Types::DATATYPE(dt) => {
+                self.set_next_position();
+                Some(dt)
+            }
+            _ => None,
+        };
+
+
+        if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
             self.handle_error("invalid token")
         }
         self.set_next_position();
@@ -235,11 +248,11 @@ impl Parser {
         let name = self.get_current_token().value.unwrap();
 
         // Handle function call
-        if self.get_next_token().r#type == Types::LPAREN {
+        if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LPAREN) {
             let mut args: Vec<String> = vec![];
             loop {
                 let token = self.get_next_token();
-                if token.r#type == Types::RPAREN {
+                if token.r#type == Types::DELIMITER(DELIMITER::RPAREN) {
                     break;
                 }
                 if token.r#type == Types::IDENTIFIER {
@@ -254,7 +267,7 @@ impl Parser {
                 args,
             });
         } else {
-            if self.get_next_token().r#type != Types::ASSIGN {
+            if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
                 self.handle_error("invalid token");
             }
             self.set_next_position();
@@ -288,13 +301,13 @@ impl Parser {
 
         loop {
             let token = self.get_next_token();
-            if token.r#type != Types::ELSE {
+            if token.r#type != Types::KEYWORD(KEYWORD::ELSE) {
                 break;
             }
             self.set_next_position();
 
             let token = self.get_next_token();
-            if token.r#type != Types::IF {
+            if token.r#type != Types::KEYWORD(KEYWORD::IF) {
                 break;
             }
             self.set_next_position();
@@ -311,11 +324,11 @@ impl Parser {
     }
 
     fn parse_conditional_else(&mut self) -> Option<ConditionalElseParserNode> {
-        if self.get_current_token().r#type != Types::ELSE {
+        if self.get_current_token().r#type != Types::KEYWORD(KEYWORD::ELSE) {
             return None;
         }
 
-        if self.get_next_token().r#type != Types::LBRACE {
+        if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
             self.handle_error("invalid token")
         }
         self.set_next_position();
