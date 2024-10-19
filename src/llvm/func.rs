@@ -44,6 +44,7 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn jit_compile(&self, build: bool) -> Option<u32> {
         for node in &self.tokens {
+            // functions should be the only type of node at the top level
             match node.get_type() {
                 ParserTypes::FUNCTION => {
                     let downcast_node = node.any().downcast_ref::<FunctionParserNode>().unwrap();
@@ -61,6 +62,22 @@ impl<'ctx> CodeGen<'ctx> {
                 let exec: JitFunction<MainFunc> =
                     self.execution_engine.get_function("main").unwrap();
                 Some(exec.call())
+            }
+        }
+    }
+
+    fn nested_codegen(&self, body: &Vec<Box<dyn ParserType>>, ret_type: &DATATYPE) {
+        for node in body {
+            match node.get_type() {
+                ParserTypes::VARIABLE => {
+                    let downcast_node = node.any().downcast_ref::<AssignmentParserNode>().unwrap();
+                    self.add_variable(downcast_node);
+                }
+                ParserTypes::RETURN => {
+                    let downcast_node = node.any().downcast_ref::<ReturnNode>().unwrap();
+                    self.add_return(downcast_node, ret_type);
+                },
+                _ => todo!(),
             }
         }
     }
@@ -88,37 +105,20 @@ impl<'ctx> CodeGen<'ctx> {
         let basic_block = self.context.append_basic_block(function, "entry");
         self.builder.position_at_end(basic_block);
 
-        let ret_node = node
-            .body
-            .get(1)
-            .unwrap()
-            .any()
-            .downcast_ref::<ReturnNode>()
-            .unwrap();
+        self.nested_codegen(&node.body, node.return_type.as_ref().unwrap());
+    }
 
-        let node_expr = ret_node
-            .return_value
-            .any()
-            .downcast_ref::<ExpressionParserNode>()
-            .unwrap();
+    fn add_return(&self, node: &ReturnNode, ret_type: &DATATYPE) {
+        let ret_expr = node.return_value.any().downcast_ref::<ExpressionParserNode>().unwrap();
+        let ret_val = self.add_expression(ret_expr, ret_type);
 
-        let ode = node
-            .body
-            .get(0)
-            .unwrap()
-            .any()
-            .downcast_ref::<AssignmentParserNode>()
-            .unwrap();
-        self.add_variable(ode);
-
-        let result = self.add_expression(node_expr, &ode.var_type);
-
-        self.builder.build_return(Some(&result)).unwrap();
+        self.builder.build_return(Some(&ret_val)).unwrap();
     }
 
     fn add_expression(&self, node: &ExpressionParserNode, req_type: &DATATYPE) -> IntValue {
         let left_val = match node.left.r#type {
-            Types::NUMBER => self.def_expr(req_type)
+            Types::NUMBER => self
+                .def_expr(req_type)
                 .const_int_from_string(&node.left.value, inkwell::types::StringRadix::Decimal)
                 .unwrap(),
             Types::IDENTIFIER => self
@@ -143,9 +143,18 @@ impl<'ctx> CodeGen<'ctx> {
         };
 
         match node.operator.as_ref().unwrap() {
-            OPERATOR::PLUS => self.builder.build_int_add(left_val, right_val, "main").unwrap(),
-            OPERATOR::MINUS => self.builder.build_int_sub(left_val, right_val, "main").unwrap(),
-            OPERATOR::MULTIPLY => self.builder.build_int_mul(left_val, right_val, "main").unwrap(),
+            OPERATOR::PLUS => self
+                .builder
+                .build_int_add(left_val, right_val, "main")
+                .unwrap(),
+            OPERATOR::MINUS => self
+                .builder
+                .build_int_sub(left_val, right_val, "main")
+                .unwrap(),
+            OPERATOR::MULTIPLY => self
+                .builder
+                .build_int_mul(left_val, right_val, "main")
+                .unwrap(),
             OPERATOR::DIVIDE => self
                 .builder
                 .build_int_signed_div(left_val, right_val, "main")

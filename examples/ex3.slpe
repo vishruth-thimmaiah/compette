@@ -1,0 +1,5 @@
+func main() u32 {
+	let u32 a = 6
+	let u32 b = 3
+	return a * b
+}
