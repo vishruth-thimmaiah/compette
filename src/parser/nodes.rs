@@ -61,6 +61,7 @@ impl ParserType for ExpressionParserNode {
 pub struct FunctionParserNode {
     pub func_name: String,
     pub args: Vec<String>,
+    pub return_type: Option<Types>,
     pub body: Vec<Box<dyn ParserType>>,
 }
 impl ParserType for FunctionParserNode {

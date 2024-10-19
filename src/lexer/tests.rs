@@ -25,7 +25,7 @@ mod tests {
             let u32 c = c + 1
         }
 
-        func add(x, y) {
+        func add(x, y) u32 {
             return x + y
         }
 
@@ -106,6 +106,7 @@ mod tests {
             Token::new(COMMA, None, 0, 0),
             Token::new(IDENTIFIER, Some("y".to_string()), 0, 0),
             Token::new(RPAREN, None, 0, 0),
+            Token::new(U32, None, 0, 0),
             Token::new(LBRACE, None, 0, 0),
             Token::new(NL, None, 0, 0),
             Token::new(RETURN, None, 0, 0),

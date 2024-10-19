@@ -1,4 +1,4 @@
-func main() {
+func main() u32 {
 	let u32 a = 6 * 3 - 1
 	return a
 }

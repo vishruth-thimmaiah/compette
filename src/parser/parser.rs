@@ -111,7 +111,6 @@ impl Parser {
         let var_name = self.get_next_token().value.unwrap();
         self.set_next_position();
 
-
         if self.get_next_token().r#type != Types::ASSIGN {
             self.handle_error("invalid token")
         }
@@ -191,6 +190,12 @@ impl Parser {
             self.set_next_position();
         }
 
+        let return_type = if self.get_next_token().r#type != Types::LBRACE {
+            self.set_next_position();
+            Some(self.get_next_token().r#type)
+        } else {
+            None
+        };
         self.set_next_position();
 
         if self.get_next_token().r#type != Types::LBRACE {
@@ -204,6 +209,7 @@ impl Parser {
         return Box::new(FunctionParserNode {
             func_name,
             args,
+            return_type,
             body,
         });
     }
