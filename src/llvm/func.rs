@@ -125,7 +125,7 @@ impl<'ctx> CodeGen<'ctx> {
                 .builder
                 .build_load(
                     self.def_expr(req_type),
-                    self.variables.borrow()[node.left.value.as_str()],
+                    *self.variables.borrow().get(node.left.value.as_str()).expect("unknown variable."),
                     &node.left.value,
                 )
                 .unwrap()
