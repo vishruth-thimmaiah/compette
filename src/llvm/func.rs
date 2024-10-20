@@ -5,13 +5,14 @@ use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::execution_engine::{ExecutionEngine, JitFunction};
 use inkwell::module::Module;
-use inkwell::values::{IntValue, PointerValue};
+use inkwell::values::{BasicValueEnum, PointerValue};
 use inkwell::OptimizationLevel;
 
 use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 use crate::llvm::builder;
 use crate::parser::nodes::{
-    AssignmentParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ParserType, ReturnNode, ValueParserNode
+    AssignmentParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
+    ParserType, ReturnNode, ValueParserNode,
 };
 use crate::parser::types::ParserTypes;
 
@@ -119,18 +120,17 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.build_return(Some(&ret_val)).unwrap();
     }
 
-    fn add_expression(&self, node: &ExpressionParserNode, req_type: &DATATYPE) -> IntValue {
+    fn add_expression(
+        &self,
+        node: &ExpressionParserNode,
+        req_type: &DATATYPE,
+    ) -> BasicValueEnum<'ctx> {
         let left_val = match node.left.get_type() {
             ParserTypes::VALUE => {
                 let value_parser_node = node.left.any().downcast_ref::<ValueParserNode>().unwrap();
                 match value_parser_node.r#type {
-                    Types::NUMBER => self
-                        .def_expr(req_type)
-                        .const_int_from_string(
-                            &value_parser_node.value,
-                            inkwell::types::StringRadix::Decimal,
-                        )
-                        .unwrap(),
+                    Types::NUMBER => self.string_to_value(&value_parser_node.value, req_type),
+
                     Types::IDENTIFIER => self
                         .builder
                         .build_load(
@@ -142,17 +142,25 @@ impl<'ctx> CodeGen<'ctx> {
                                 .expect("unknown variable."),
                             &value_parser_node.value,
                         )
-                        .unwrap()
-                        .into_int_value(),
+                        .unwrap(),
                     _ => panic!("Invalid type"),
                 }
             }
             ParserTypes::FUNCTION_CALL => {
-                let downcast_node = node.left.any().downcast_ref::<FunctionCallParserNode>().unwrap();
+                let downcast_node = node
+                    .left
+                    .any()
+                    .downcast_ref::<FunctionCallParserNode>()
+                    .unwrap();
 
                 let function = self.module.get_function(&downcast_node.func_name).unwrap();
-                self.builder.build_call(function, &[], &downcast_node.func_name).unwrap().try_as_basic_value().left().unwrap().into_int_value()
-            },
+                self.builder
+                    .build_call(function, &[], &downcast_node.func_name)
+                    .unwrap()
+                    .try_as_basic_value()
+                    .left()
+                    .unwrap()
+            }
             _ => panic!("Invalid type"),
         };
 
@@ -166,22 +174,10 @@ impl<'ctx> CodeGen<'ctx> {
         };
 
         match node.operator.as_ref().unwrap() {
-            OPERATOR::PLUS => self
-                .builder
-                .build_int_add(left_val, right_val, "main")
-                .unwrap(),
-            OPERATOR::MINUS => self
-                .builder
-                .build_int_sub(left_val, right_val, "main")
-                .unwrap(),
-            OPERATOR::MULTIPLY => self
-                .builder
-                .build_int_mul(left_val, right_val, "main")
-                .unwrap(),
-            OPERATOR::DIVIDE => self
-                .builder
-                .build_int_signed_div(left_val, right_val, "main")
-                .unwrap(),
+            OPERATOR::PLUS => self.add_binary_operation(&left_val, &right_val),
+            OPERATOR::MINUS => self.sub_binary_operation(&left_val, &right_val),
+            OPERATOR::MULTIPLY => self.mul_binary_operation(&left_val, &right_val),
+            OPERATOR::DIVIDE => self.div_binary_operation(&left_val, &right_val),
             _ => unreachable!(),
         }
     }
