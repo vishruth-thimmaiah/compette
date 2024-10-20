@@ -11,7 +11,7 @@ use inkwell::OptimizationLevel;
 use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 use crate::llvm::builder;
 use crate::parser::nodes::{
-    AssignmentParserNode, ExpressionParserNode, FunctionParserNode, ParserType, ReturnNode,
+    AssignmentParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ParserType, ReturnNode, ValueParserNode
 };
 use crate::parser::types::ParserTypes;
 
@@ -76,7 +76,7 @@ impl<'ctx> CodeGen<'ctx> {
                 ParserTypes::RETURN => {
                     let downcast_node = node.any().downcast_ref::<ReturnNode>().unwrap();
                     self.add_return(downcast_node, ret_type);
-                },
+                }
                 _ => todo!(),
             }
         }
@@ -109,27 +109,50 @@ impl<'ctx> CodeGen<'ctx> {
     }
 
     fn add_return(&self, node: &ReturnNode, ret_type: &DATATYPE) {
-        let ret_expr = node.return_value.any().downcast_ref::<ExpressionParserNode>().unwrap();
+        let ret_expr = node
+            .return_value
+            .any()
+            .downcast_ref::<ExpressionParserNode>()
+            .unwrap();
         let ret_val = self.add_expression(ret_expr, ret_type);
 
         self.builder.build_return(Some(&ret_val)).unwrap();
     }
 
     fn add_expression(&self, node: &ExpressionParserNode, req_type: &DATATYPE) -> IntValue {
-        let left_val = match node.left.r#type {
-            Types::NUMBER => self
-                .def_expr(req_type)
-                .const_int_from_string(&node.left.value, inkwell::types::StringRadix::Decimal)
-                .unwrap(),
-            Types::IDENTIFIER => self
-                .builder
-                .build_load(
-                    self.def_expr(req_type),
-                    *self.variables.borrow().get(node.left.value.as_str()).expect("unknown variable."),
-                    &node.left.value,
-                )
-                .unwrap()
-                .into_int_value(),
+        let left_val = match node.left.get_type() {
+            ParserTypes::VALUE => {
+                let value_parser_node = node.left.any().downcast_ref::<ValueParserNode>().unwrap();
+                match value_parser_node.r#type {
+                    Types::NUMBER => self
+                        .def_expr(req_type)
+                        .const_int_from_string(
+                            &value_parser_node.value,
+                            inkwell::types::StringRadix::Decimal,
+                        )
+                        .unwrap(),
+                    Types::IDENTIFIER => self
+                        .builder
+                        .build_load(
+                            self.def_expr(req_type),
+                            *self
+                                .variables
+                                .borrow()
+                                .get(value_parser_node.value.as_str())
+                                .expect("unknown variable."),
+                            &value_parser_node.value,
+                        )
+                        .unwrap()
+                        .into_int_value(),
+                    _ => panic!("Invalid type"),
+                }
+            }
+            ParserTypes::FUNCTION_CALL => {
+                let downcast_node = node.left.any().downcast_ref::<FunctionCallParserNode>().unwrap();
+
+                let function = self.module.get_function(&downcast_node.func_name).unwrap();
+                self.builder.build_call(function, &[], &downcast_node.func_name).unwrap().try_as_basic_value().left().unwrap().into_int_value()
+            },
             _ => panic!("Invalid type"),
         };
 

@@ -1,14 +1,17 @@
 use std::process::exit;
 
-use crate::lexer::{
-    lexer::Token,
-    types::{Types, DELIMITER, KEYWORD, OPERATOR},
+use crate::{
+    lexer::{
+        lexer::Token,
+        types::{Types, DELIMITER, KEYWORD, OPERATOR},
+    },
+    parser::nodes::ValueParserNode,
 };
 
 use super::nodes::{
     AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
     ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
-    LoopParserNode, ParserToken, ParserType, ReturnNode, VariableCallParserNode,
+    LoopParserNode, ParserType, ReturnNode, VariableCallParserNode,
 };
 
 pub struct Parser {
@@ -80,6 +83,7 @@ impl Parser {
                 Types::KEYWORD(KEYWORD::IF) => tokens.push(self.parse_conditional_if()),
                 Types::KEYWORD(KEYWORD::FUNCTION) => tokens.push(self.parse_function()),
                 Types::IDENTIFIER => tokens.push(self.parse_identifier_call()),
+                Types::IDENTIFIER_FUNC => tokens.push(self.parse_function_call()),
                 Types::KEYWORD(KEYWORD::LOOP) => tokens.push(self.parse_loop()),
                 Types::DELIMITER(DELIMITER::LBRACE) => nested = true,
                 // TODO: better function detecting
@@ -137,8 +141,21 @@ impl Parser {
 
     // TODO: Add support for parenthesis
     fn parse_expression(&mut self) -> Box<ExpressionParserNode> {
-        let left = self.get_next_token();
         self.set_next_position();
+        let left: Box<dyn ParserType> = match self.get_current_token().r#type {
+            Types::IDENTIFIER_FUNC => {
+                self.parse_function_call()
+            }
+            Types::IDENTIFIER => Box::new(ValueParserNode {
+                value: self.get_current_token().value.unwrap(),
+                r#type: Types::IDENTIFIER,
+            }),
+            Types::NUMBER => Box::new(ValueParserNode {
+                value: self.get_current_token().value.unwrap(),
+                r#type: Types::NUMBER,
+            }),
+            _ => unreachable!(),
+        };
 
         match self.get_next_token().r#type {
             Types::OPERATOR(operator) => match operator {
@@ -155,16 +172,16 @@ impl Parser {
                     self.set_next_position();
                     let right = self.parse_expression();
                     return Box::new(ExpressionParserNode {
-                        left: ParserToken::from(left),
+                        left,
                         right: Some(right),
                         operator: Some(operator),
                     });
                 }
-                OPERATOR::ASSIGN => todo!(),
+                OPERATOR::ASSIGN => unreachable!(),
             },
             Types::NL | Types::DELIMITER(DELIMITER::LBRACE) => {
                 return Box::new(ExpressionParserNode {
-                    left: ParserToken::from(left),
+                    left,
                     right: None,
                     operator: None,
                 });
@@ -210,7 +227,6 @@ impl Parser {
             _ => None,
         };
 
-
         if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
             self.handle_error("invalid token")
         }
@@ -240,42 +256,41 @@ impl Parser {
         })
     }
 
-    fn parse_identifier_call(&mut self) -> Box<dyn ParserType> {
-        if self.get_prev_token().r#type != Types::NL {
-            self.handle_error("invalid token")
-        }
+    fn parse_identifier_call(&mut self) -> Box<VariableCallParserNode> {
+        println!("{:?}", self.get_current_token());
+        let name = self.get_current_token().value.unwrap();
 
+        if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
+            self.handle_error("invalid token");
+        }
+        self.set_next_position();
+        return Box::new(VariableCallParserNode {
+            var_name: name,
+            rhs: self.parse_expression(),
+        });
+    }
+
+    fn parse_function_call(&mut self) -> Box<FunctionCallParserNode> {
         let name = self.get_current_token().value.unwrap();
 
         // Handle function call
-        if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LPAREN) {
-            let mut args: Vec<String> = vec![];
-            loop {
-                let token = self.get_next_token();
-                if token.r#type == Types::DELIMITER(DELIMITER::RPAREN) {
-                    break;
-                }
-                if token.r#type == Types::IDENTIFIER {
-                    args.push(token.value.unwrap());
-                }
-                self.set_next_position();
+        let mut args: Vec<String> = vec![];
+        loop {
+            let token = self.get_next_token();
+            if token.r#type == Types::DELIMITER(DELIMITER::RPAREN) {
+                break;
+            }
+            if token.r#type == Types::IDENTIFIER {
+                args.push(token.value.unwrap());
             }
             self.set_next_position();
-
-            return Box::new(FunctionCallParserNode {
-                func_name: name,
-                args,
-            });
-        } else {
-            if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
-                self.handle_error("invalid token");
-            }
-            self.set_next_position();
-            return Box::new(VariableCallParserNode {
-                var_name: name,
-                rhs: self.parse_expression(),
-            });
         }
+        self.set_next_position();
+
+        return Box::new(FunctionCallParserNode {
+            func_name: name,
+            args,
+        });
     }
 
     fn parse_conditional_if(&mut self) -> Box<ConditionalIfParserNode> {

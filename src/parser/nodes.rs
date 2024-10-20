@@ -1,26 +1,26 @@
 use std::{any::Any, fmt::Debug};
 
-use crate::lexer::{lexer::Token, types::{Types, DATATYPE, OPERATOR}};
+use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 
 use super::types::ParserTypes;
 
-#[derive(Debug)]
-pub struct ParserToken {
-    pub value: String,
-    pub r#type: Types,
-}
-
-impl ParserToken {
-    pub fn from(token: Token) -> Self {
-        if None == token.value {
-            panic!("invalid Token")
-        }
-        Self {
-            value: token.value.unwrap(),
-            r#type: token.r#type,
-        }
-    }
-}
+// #[derive(Debug)]
+// pub struct ParserToken {
+//     pub value: String,
+//     pub r#type: Types,
+// }
+//
+// impl ParserToken {
+//     pub fn from(token: Token) -> Self {
+//         if None == token.value {
+//             panic!("invalid Token")
+//         }
+//         Self {
+//             value: token.value.unwrap(),
+//             r#type: token.r#type,
+//         }
+//     }
+// }
 
 pub trait ParserType: Debug {
     fn get_type(&self) -> ParserTypes;
@@ -44,7 +44,7 @@ impl ParserType for AssignmentParserNode {
 
 #[derive(Debug)]
 pub struct ExpressionParserNode {
-    pub left: ParserToken,
+    pub left: Box<dyn ParserType>,
     pub right: Option<Box<dyn ParserType>>,
     pub operator: Option<OPERATOR>,
 }
@@ -108,6 +108,20 @@ pub struct VariableCallParserNode {
 impl ParserType for VariableCallParserNode {
     fn get_type(&self) -> ParserTypes {
         ParserTypes::VARIABLE_CALL
+    }
+    fn any(&self) -> &dyn Any {
+        self
+    }
+}
+
+#[derive(Debug)]
+pub struct ValueParserNode {
+    pub value: String,
+    pub r#type: Types,
+}
+impl ParserType for ValueParserNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::VALUE
     }
     fn any(&self) -> &dyn Any {
         self

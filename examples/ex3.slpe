@@ -1,5 +1,10 @@
+func num() u32 {
+	let u32 d = 5
+	return d
+}
+
 func main() u32 {
 	let u32 a = 6
-	let u32 b = 3
+	let u32 b = num()
 	return a * b
 }

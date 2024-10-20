@@ -8,6 +8,7 @@ pub enum Types {
     KEYWORD(KEYWORD),
     IDENTIFIER,
     NUMBER,
+    IDENTIFIER_FUNC,
     DATATYPE(DATATYPE),
 }
 

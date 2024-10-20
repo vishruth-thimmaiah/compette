@@ -316,7 +316,13 @@ impl Lexer {
                 self.line,
                 self.column,
             ),
-            _ => Token::new(Types::IDENTIFIER, Some(result), self.line, self.column),
+            _ => {
+                if self.content.as_bytes()[self.index+1] == 40 {
+                    Token::new(Types::IDENTIFIER_FUNC, Some(result), self.line, self.column)
+                } else {
+                    Token::new(Types::IDENTIFIER, Some(result), self.line, self.column)
+                }
+            }
         }
     }
 
@@ -353,6 +359,11 @@ impl Lexer {
 
         self.index = end - 1;
 
-        return Token::new(Types::DATATYPE(DATATYPE::STRING), Some(result), self.line, self.column);
+        return Token::new(
+            Types::DATATYPE(DATATYPE::STRING),
+            Some(result),
+            self.line,
+            self.column,
+        );
     }
 }
