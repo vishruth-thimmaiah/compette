@@ -25,7 +25,7 @@ mod tests {
             let u32 c = c + 1
         }
 
-        func add(x, y) u32 {
+        func add(x u32, y u32) u32 {
             let u32 q = x + y
             return q
         }
@@ -168,7 +168,7 @@ mod tests {
             }),
             Box::new(FunctionParserNode {
                 func_name: "add".to_string(),
-                args: vec!["x".to_string(), "y".to_string()],
+                args: vec![("x".to_string(), DATATYPE::U32), ("y".to_string(), DATATYPE::U32)],
                 return_type: Some(DATATYPE::U32),
                 body: vec![
                     Box::new(AssignmentParserNode {
@@ -229,7 +229,7 @@ mod tests {
         a = 4
         let u32 b = 2
 
-        func add(x, y) u32 {
+        func add(x u32, y u32) u32 {
             let u32 q = x + y
         }
 
@@ -275,7 +275,7 @@ mod tests {
             Box::new(FunctionParserNode {
                 func_name: "add".to_string(),
                 return_type: Some(DATATYPE::U32),
-                args: vec!["x".to_string(), "y".to_string()],
+                args: vec![("x".to_string(), DATATYPE::U32), ("y".to_string(), DATATYPE::U32)],
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "q".to_string(),
                     var_type: DATATYPE::U32,

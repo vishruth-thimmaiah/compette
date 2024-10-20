@@ -3,7 +3,7 @@ use std::process::exit;
 use crate::{
     lexer::{
         lexer::Token,
-        types::{Types, DELIMITER, KEYWORD, OPERATOR},
+        types::{Types, DATATYPE, DELIMITER, KEYWORD, OPERATOR},
     },
     parser::nodes::ValueParserNode,
 };
@@ -143,9 +143,7 @@ impl Parser {
     fn parse_expression(&mut self) -> Box<ExpressionParserNode> {
         self.set_next_position();
         let left: Box<dyn ParserType> = match self.get_current_token().r#type {
-            Types::IDENTIFIER_FUNC => {
-                self.parse_function_call()
-            }
+            Types::IDENTIFIER_FUNC => self.parse_function_call(),
             Types::IDENTIFIER => Box::new(ValueParserNode {
                 value: self.get_current_token().value.unwrap(),
                 r#type: Types::IDENTIFIER,
@@ -206,16 +204,39 @@ impl Parser {
         }
         self.set_next_position();
 
-        let mut args: Vec<String> = vec![];
+        let mut args: Vec<(String, DATATYPE)> = vec![];
         loop {
-            let token = self.get_next_token();
-            if token.r#type == Types::DELIMITER(DELIMITER::RPAREN) {
-                break;
-            }
-            if token.r#type == Types::IDENTIFIER {
-                args.push(token.value.unwrap());
+            let var_name = match self.get_next_token().r#type {
+                Types::DELIMITER(DELIMITER::RPAREN) => break,
+                Types::IDENTIFIER => self.get_next_token().value.unwrap(),
+                _ => {
+                    self.handle_error("invalid token");
+                    exit(1)
+                }
+            };
+            self.set_next_position();
+
+            let var_type = match self.get_next_token().r#type {
+                Types::DATATYPE(dt) => dt,
+                _ => {
+                    self.handle_error("invalid token");
+                    exit(1)
+                }
+            };
+            self.set_next_position();
+
+            args.push((var_name, var_type));
+
+            match self.get_next_token().r#type {
+                Types::DELIMITER(DELIMITER::RPAREN) => break,
+                Types::DELIMITER(DELIMITER::COMMA) => (),
+                _ => {
+                    self.handle_error("invalid token");
+                    exit(1)
+                }
             }
             self.set_next_position();
+
         }
         self.set_next_position();
 
@@ -257,7 +278,6 @@ impl Parser {
     }
 
     fn parse_identifier_call(&mut self) -> Box<VariableCallParserNode> {
-        println!("{:?}", self.get_current_token());
         let name = self.get_current_token().value.unwrap();
 
         if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
