@@ -1,4 +1,4 @@
-func num() u32 {
+func num(e u32) u32 {
 	let u32 d = 5
 	return d
 }

@@ -1,5 +1,5 @@
 use inkwell::{
-    types::{BasicType, BasicTypeEnum, FunctionType},
+    types::{BasicMetadataTypeEnum, BasicTypeEnum},
     values::{BasicValueEnum, PointerValue},
 };
 
@@ -13,24 +13,38 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.build_alloca(ty, &node.var_name).unwrap()
     }
 
-    pub fn def_func(&self, ret_type: &DATATYPE) -> FunctionType<'ctx> {
-        self.def_expr(ret_type).fn_type(&[], false)
-    }
-
     pub fn string_to_value(&self, value: &str, val_type: &DATATYPE) -> BasicValueEnum<'ctx> {
         let expr_type = self.def_expr(val_type);
 
         if expr_type.is_int_type() {
             expr_type
                 .into_int_type()
-                .const_int_from_string(value, inkwell::types::StringRadix::Decimal).unwrap().into()
-        }
-        else if expr_type.is_float_type() {
-            expr_type.into_float_type().const_float(value.parse::<f64>().unwrap()).into()
-        }
-        else {
+                .const_int_from_string(value, inkwell::types::StringRadix::Decimal)
+                .unwrap()
+                .into()
+        } else if expr_type.is_float_type() {
+            expr_type
+                .into_float_type()
+                .const_float(value.parse::<f64>().unwrap())
+                .into()
+        } else {
             todo!()
         }
+    }
+
+    pub fn def_func_args(
+        &self,
+        args: &Vec<(String, DATATYPE)>,
+    ) -> Vec<BasicMetadataTypeEnum<'ctx>> {
+        let mut result_arr: Vec<BasicMetadataTypeEnum<'ctx>> = Vec::new();
+
+        for arg in args {
+            result_arr.push(self.def_expr(&arg.1).into());
+        }
+
+        
+
+        return result_arr;
     }
 
     pub fn def_expr(&self, req_val: &DATATYPE) -> BasicTypeEnum<'ctx> {

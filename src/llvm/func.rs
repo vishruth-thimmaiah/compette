@@ -5,6 +5,7 @@ use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::execution_engine::{ExecutionEngine, JitFunction};
 use inkwell::module::Module;
+use inkwell::types::BasicType;
 use inkwell::values::{BasicValueEnum, PointerValue};
 use inkwell::OptimizationLevel;
 
@@ -101,8 +102,16 @@ impl<'ctx> CodeGen<'ctx> {
     }
 
     fn add_function(&self, node: &FunctionParserNode) {
-        let fn_type = self.def_func(node.return_type.as_ref().unwrap());
+        let args = self.def_func_args(&node.args);
+
+        let ret_type = node.return_type.as_ref().unwrap();
+        let fn_type = self.def_expr(ret_type).fn_type(&args, false);
         let function = self.module.add_function(&node.func_name, fn_type, None);
+
+        for (index, arg) in function.get_param_iter().enumerate() {
+            arg.set_name(&node.args[index].0);
+        }
+
         let basic_block = self.context.append_basic_block(function, "entry");
         self.builder.position_at_end(basic_block);
 
@@ -154,8 +163,9 @@ impl<'ctx> CodeGen<'ctx> {
                     .unwrap();
 
                 let function = self.module.get_function(&downcast_node.func_name).unwrap();
+                let args = Vec::new();
                 self.builder
-                    .build_call(function, &[], &downcast_node.func_name)
+                    .build_call(function, &args, &downcast_node.func_name)
                     .unwrap()
                     .try_as_basic_value()
                     .left()
