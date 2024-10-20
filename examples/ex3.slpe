@@ -3,6 +3,7 @@ func num(e u32) u32 {
 }
 
 func main() u32 {
-	let u32 a = 2
-	return num(1) + 1
+	let u32 a = 6
+	let u32 b = num(5)
+	return a * b
 }
