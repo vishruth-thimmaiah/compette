@@ -2,7 +2,10 @@
 mod tests {
     use crate::lexer::{
         lexer::Lexer,
-        types::{Types::*, DATATYPE, OPERATOR},
+        types::{
+            Types::{self, *},
+            DATATYPE, OPERATOR,
+        },
     };
 
     use super::super::{nodes::*, parser};
@@ -168,7 +171,10 @@ mod tests {
             }),
             Box::new(FunctionParserNode {
                 func_name: "add".to_string(),
-                args: vec![("x".to_string(), DATATYPE::U32), ("y".to_string(), DATATYPE::U32)],
+                args: vec![
+                    ("x".to_string(), DATATYPE::U32),
+                    ("y".to_string(), DATATYPE::U32),
+                ],
                 return_type: Some(DATATYPE::U32),
                 body: vec![
                     Box::new(AssignmentParserNode {
@@ -204,7 +210,24 @@ mod tests {
             }),
             Box::new(FunctionCallParserNode {
                 func_name: "add".to_string(),
-                args: vec!["a".to_string(), "b".to_string()],
+                args: vec![
+                    ExpressionParserNode {
+                        left: Box::new(ValueParserNode {
+                            value: "a".to_string(),
+                            r#type: Types::IDENTIFIER,
+                        }),
+                        right: None,
+                        operator: None,
+                    },
+                    ExpressionParserNode {
+                        left: Box::new(ValueParserNode {
+                            value: "b".to_string(),
+                            r#type: Types::IDENTIFIER,
+                        }),
+                        right: None,
+                        operator: None,
+                    },
+                ],
             }),
         ];
 
@@ -275,7 +298,10 @@ mod tests {
             Box::new(FunctionParserNode {
                 func_name: "add".to_string(),
                 return_type: Some(DATATYPE::U32),
-                args: vec![("x".to_string(), DATATYPE::U32), ("y".to_string(), DATATYPE::U32)],
+                args: vec![
+                    ("x".to_string(), DATATYPE::U32),
+                    ("y".to_string(), DATATYPE::U32),
+                ],
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "q".to_string(),
                     var_type: DATATYPE::U32,
@@ -298,7 +324,24 @@ mod tests {
             }),
             Box::new(FunctionCallParserNode {
                 func_name: "add".to_string(),
-                args: vec!["a".to_string(), "b".to_string()],
+                args: vec![
+                    ExpressionParserNode {
+                        left: Box::new(ValueParserNode {
+                            value: "a".to_string(),
+                            r#type: Types::IDENTIFIER,
+                        }),
+                        right: None,
+                        operator: None,
+                    },
+                    ExpressionParserNode {
+                        left: Box::new(ValueParserNode {
+                            value: "b".to_string(),
+                            r#type: Types::IDENTIFIER,
+                        }),
+                        right: None,
+                        operator: None,
+                    },
+                ],
             }),
         ];
 

@@ -294,14 +294,31 @@ impl Parser {
         let name = self.get_current_token().value.unwrap();
 
         // Handle function call
-        let mut args: Vec<String> = vec![];
+        let mut args: Vec<ExpressionParserNode> = vec![];
         loop {
             let token = self.get_next_token();
             if token.r#type == Types::DELIMITER(DELIMITER::RPAREN) {
                 break;
             }
-            if token.r#type == Types::IDENTIFIER {
-                args.push(token.value.unwrap());
+            else if token.r#type == Types::IDENTIFIER {
+                args.push(ExpressionParserNode{
+                    left: Box::new(ValueParserNode{
+                        value: token.value.unwrap(),
+                        r#type: Types::IDENTIFIER,
+                    }),
+                    right: None,
+                    operator: None,
+                });
+            }
+            else if token.r#type == Types::NUMBER {
+                args.push(ExpressionParserNode{
+                    left: Box::new(ValueParserNode{
+                        value: token.value.unwrap(),
+                        r#type: Types::NUMBER,
+                    }),
+                    right: None,
+                    operator: None,
+                });
             }
             self.set_next_position();
         }

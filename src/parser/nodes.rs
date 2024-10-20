@@ -89,7 +89,7 @@ impl ParserType for ReturnNode {
 #[derive(Debug)]
 pub struct FunctionCallParserNode {
     pub func_name: String,
-    pub args: Vec<String>,
+    pub args: Vec<ExpressionParserNode>,
 }
 impl ParserType for FunctionCallParserNode {
     fn get_type(&self) -> ParserTypes {

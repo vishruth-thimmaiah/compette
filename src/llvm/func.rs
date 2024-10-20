@@ -6,7 +6,7 @@ use inkwell::context::Context;
 use inkwell::execution_engine::{ExecutionEngine, JitFunction};
 use inkwell::module::Module;
 use inkwell::types::BasicType;
-use inkwell::values::{BasicValueEnum, PointerValue};
+use inkwell::values::BasicValueEnum;
 use inkwell::OptimizationLevel;
 
 use crate::lexer::types::{Types, DATATYPE, OPERATOR};
@@ -25,7 +25,7 @@ pub struct CodeGen<'ctx> {
     module: Module<'ctx>,
     execution_engine: ExecutionEngine<'ctx>,
     tokens: Vec<Box<dyn ParserType>>,
-    variables: RefCell<HashMap<String, PointerValue<'ctx>>>,
+    variables: RefCell<HashMap<String, BasicValueEnum<'ctx>>>,
 }
 
 impl<'ctx> CodeGen<'ctx> {
@@ -86,9 +86,10 @@ impl<'ctx> CodeGen<'ctx> {
 
     fn add_variable(&self, node: &AssignmentParserNode) {
         let alloc = self.new_ptr(node);
+        let build_alloc = self.builder.build_load(self.def_expr(&node.var_type), alloc, &node.var_name).unwrap();
         self.variables
             .borrow_mut()
-            .insert(node.var_name.clone(), alloc);
+            .insert(node.var_name.clone(), build_alloc);
 
         let value = node
             .value
@@ -110,6 +111,9 @@ impl<'ctx> CodeGen<'ctx> {
 
         for (index, arg) in function.get_param_iter().enumerate() {
             arg.set_name(&node.args[index].0);
+            self.variables
+                .borrow_mut()
+                .insert(node.args[index].0.clone(), arg);
         }
 
         let basic_block = self.context.append_basic_block(function, "entry");
@@ -140,18 +144,11 @@ impl<'ctx> CodeGen<'ctx> {
                 match value_parser_node.r#type {
                     Types::NUMBER => self.string_to_value(&value_parser_node.value, req_type),
 
-                    Types::IDENTIFIER => self
-                        .builder
-                        .build_load(
-                            self.def_expr(req_type),
-                            *self
-                                .variables
-                                .borrow()
-                                .get(value_parser_node.value.as_str())
-                                .expect("unknown variable."),
-                            &value_parser_node.value,
-                        )
-                        .unwrap(),
+                    Types::IDENTIFIER => *self
+                        .variables
+                        .borrow()
+                        .get(value_parser_node.value.as_str())
+                        .expect("unknown variable."),
                     _ => panic!("Invalid type"),
                 }
             }
@@ -163,7 +160,15 @@ impl<'ctx> CodeGen<'ctx> {
                     .unwrap();
 
                 let function = self.module.get_function(&downcast_node.func_name).unwrap();
-                let args = Vec::new();
+                let mut args = Vec::new();
+                let params = function.get_params();
+                for (index, arg) in downcast_node.args.iter().enumerate() {
+                    args.push(
+                        self.add_expression(arg, self.get_datatype(params[index]))
+                            .into(),
+                    );
+                }
+
                 self.builder
                     .build_call(function, &args, &downcast_node.func_name)
                     .unwrap()

@@ -42,9 +42,20 @@ impl<'ctx> CodeGen<'ctx> {
             result_arr.push(self.def_expr(&arg.1).into());
         }
 
-        
-
         return result_arr;
+    }
+
+    pub fn get_datatype(&self, bt: BasicValueEnum) -> &DATATYPE {
+        match bt.get_type() {
+            BasicTypeEnum::IntType(it) => match it.get_bit_width() {
+                16 => &DATATYPE::U16,
+                32 => &DATATYPE::U32,
+                64 => &DATATYPE::U64,
+                _ => todo!(),
+            },
+            BasicTypeEnum::FloatType(_) => todo!(),
+            _ => todo!(),
+        }
     }
 
     pub fn def_expr(&self, req_val: &DATATYPE) -> BasicTypeEnum<'ctx> {
