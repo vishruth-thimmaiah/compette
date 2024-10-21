@@ -12,8 +12,8 @@ use inkwell::OptimizationLevel;
 use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 use crate::llvm::builder;
 use crate::parser::nodes::{
-    AssignmentParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
-    ParserType, ReturnNode, ValueParserNode,
+    AssignmentParserNode, ConditionalIfParserNode, ExpressionParserNode,
+    FunctionCallParserNode, FunctionParserNode, ParserType, ReturnNode, ValueParserNode,
 };
 use crate::parser::types::ParserTypes;
 
@@ -94,6 +94,13 @@ impl<'ctx> CodeGen<'ctx> {
                     let downcast_node = node.any().downcast_ref::<AssignmentParserNode>().unwrap();
                     self.add_variable(func_name, downcast_node);
                 }
+                ParserTypes::CONDITIONAL => {
+                    let downcast_if = node
+                        .any()
+                        .downcast_ref::<ConditionalIfParserNode>()
+                        .unwrap();
+                    self.add_conditional_if(func_name, downcast_if);
+                }
                 ParserTypes::RETURN => {
                     let downcast_node = node.any().downcast_ref::<ReturnNode>().unwrap();
                     self.add_return(downcast_node, func_name, ret_type);
@@ -170,9 +177,7 @@ impl<'ctx> CodeGen<'ctx> {
                     Types::NUMBER => self.string_to_value(&value_parser_node.value, req_type),
 
                     Types::IDENTIFIER => {
-                        let vars = self
-                            .variables
-                            .borrow();
+                        let vars = self.variables.borrow();
                         let var_name = vars
                             .iter()
                             .filter(|x| x.name == func_name)
@@ -189,11 +194,14 @@ impl<'ctx> CodeGen<'ctx> {
                                     )
                                     .unwrap()
                             } else if let Some(func) = self.module.get_function(func_name) {
-                                func.get_params().iter().find(|x| {
-                                    x.get_name().to_str().unwrap() == value_parser_node.value
-                                }).unwrap().to_owned()
-                            }
-                            else {
+                                func.get_params()
+                                    .iter()
+                                    .find(|x| {
+                                        x.get_name().to_str().unwrap() == value_parser_node.value
+                                    })
+                                    .unwrap()
+                                    .to_owned()
+                            } else {
                                 panic!("Invalid type");
                             }
                         };
@@ -245,5 +253,28 @@ impl<'ctx> CodeGen<'ctx> {
             OPERATOR::DIVIDE => self.div_binary_operation(&left_val, &right_val),
             _ => unreachable!(),
         }
+    }
+
+    fn add_conditional_if(&self, func_name: &str, node: &ConditionalIfParserNode) {
+
+        let expr = self.add_expression(&node.condition, func_name, &DATATYPE::U32);
+
+        let function = self.module.get_function(func_name).unwrap();
+        let if_block = self.context.append_basic_block(function, "if");
+        let else_block = self.context.append_basic_block(function, "else");
+        let cont = self.context.append_basic_block(function, "if_cont");
+
+        self.builder
+            .build_conditional_branch(self.to_bool(&expr).into_int_value(), if_block, else_block).unwrap();
+
+        self.builder.position_at_end(if_block);
+        self.nested_codegen(&node.body, func_name, &DATATYPE::U32);
+        self.builder.build_unconditional_branch(cont).unwrap();
+
+        self.builder.position_at_end(else_block);
+        self.nested_codegen(&node.else_body.as_ref().unwrap().body, func_name, &DATATYPE::U32);
+        self.builder.build_unconditional_branch(cont).unwrap();
+
+        self.builder.position_at_end(cont);
     }
 }

@@ -90,4 +90,29 @@ impl<'ctx> CodeGen<'ctx> {
                 .into()
         }
     }
+
+    pub fn to_bool(&self, expr: &BasicValueEnum<'ctx>) -> BasicValueEnum<'ctx> {
+        if expr.is_int_value() {
+            let val = self.context.i64_type().const_zero();
+            let lhs = expr.into_int_value();
+            if lhs.get_type().get_bit_width() == 1 {
+                return *expr;
+            }
+            self.builder
+                .build_int_compare(inkwell::IntPredicate::NE, lhs, val, "")
+                .unwrap()
+                .into()
+        } else {
+            let val = self.context.f64_type().const_zero();
+            self.builder
+                .build_float_compare(
+                    inkwell::FloatPredicate::ONE,
+                    expr.into_float_value(),
+                    val,
+                    "",
+                )
+                .unwrap()
+                .into()
+        }
+    }
 }
