@@ -48,6 +48,7 @@ impl<'ctx> CodeGen<'ctx> {
     pub fn get_datatype(&self, bt: BasicValueEnum) -> &DATATYPE {
         match bt.get_type() {
             BasicTypeEnum::IntType(it) => match it.get_bit_width() {
+                1 => &DATATYPE::BOOL,
                 16 => &DATATYPE::U16,
                 32 => &DATATYPE::U32,
                 64 => &DATATYPE::U64,

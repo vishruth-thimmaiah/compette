@@ -1,5 +1,7 @@
 use inkwell::values::BasicValueEnum;
 
+use crate::lexer::types::DATATYPE;
+
 use super::func::CodeGen;
 
 impl<'ctx> CodeGen<'ctx> {
@@ -92,18 +94,18 @@ impl<'ctx> CodeGen<'ctx> {
     }
 
     pub fn to_bool(&self, expr: &BasicValueEnum<'ctx>) -> BasicValueEnum<'ctx> {
+        let datatype = self.get_datatype(*expr);
         if expr.is_int_value() {
-            let val = self.context.i64_type().const_zero();
-            let lhs = expr.into_int_value();
-            if lhs.get_type().get_bit_width() == 1 {
+            let val = self.def_expr(datatype).const_zero().into_int_value();
+            if datatype == &DATATYPE::BOOL {
                 return *expr;
             }
             self.builder
-                .build_int_compare(inkwell::IntPredicate::NE, lhs, val, "")
+                .build_int_compare(inkwell::IntPredicate::NE, expr.into_int_value(), val, "")
                 .unwrap()
                 .into()
         } else {
-            let val = self.context.f64_type().const_zero();
+            let val = self.def_expr(datatype).const_zero().into_float_value();
             self.builder
                 .build_float_compare(
                     inkwell::FloatPredicate::ONE,
