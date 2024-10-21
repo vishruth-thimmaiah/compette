@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
 
-    use crate::lexer::types::{DATATYPE, KEYWORD, OPERATOR, DELIMITER};
+    use crate::lexer::types::{DATATYPE, DELIMITER, KEYWORD, OPERATOR};
 
     use super::super::{lexer::*, types::Types::*};
 
@@ -9,7 +9,7 @@ mod tests {
     fn check_lexer() {
         let contents = r#"
         let u32 a = 1
-        let u32 b = 2
+        let u32! b = 2
 
         // let u32 c = 3
 
@@ -44,6 +44,7 @@ mod tests {
             Token::new(NL, None, 0, 0),
             Token::new(KEYWORD(KEYWORD::LET), None, 0, 0),
             Token::new(DATATYPE(DATATYPE::U32), None, 0, 0),
+            Token::new(OPERATOR(OPERATOR::NOT), None, 0, 0),
             Token::new(IDENTIFIER, Some("b".to_string()), 0, 0),
             Token::new(OPERATOR(OPERATOR::ASSIGN), None, 0, 0),
             Token::new(NUMBER, Some("2".to_string()), 0, 0),

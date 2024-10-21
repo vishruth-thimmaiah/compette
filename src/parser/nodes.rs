@@ -4,24 +4,6 @@ use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 
 use super::types::ParserTypes;
 
-// #[derive(Debug)]
-// pub struct ParserToken {
-//     pub value: String,
-//     pub r#type: Types,
-// }
-//
-// impl ParserToken {
-//     pub fn from(token: Token) -> Self {
-//         if None == token.value {
-//             panic!("invalid Token")
-//         }
-//         Self {
-//             value: token.value.unwrap(),
-//             r#type: token.r#type,
-//         }
-//     }
-// }
-
 pub trait ParserType: Debug {
     fn get_type(&self) -> ParserTypes;
     fn any(&self) -> &dyn Any;
@@ -31,6 +13,7 @@ pub trait ParserType: Debug {
 pub struct AssignmentParserNode {
     pub var_name: String,
     pub var_type: DATATYPE,
+    pub is_mutable: bool,
     pub value: Box<dyn ParserType>,
 }
 impl ParserType for AssignmentParserNode {

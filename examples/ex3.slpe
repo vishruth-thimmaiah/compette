@@ -1,9 +1,9 @@
-func num(e u32) u32 {
-	return e
+func num(e u32, f u32) u32 {
+	return e + f
 }
 
 func main() u32 {
 	let u32 a = 6
-	let u32 b = num(5)
+	let u32 b = num(5, 4)
 	return a * b
 }

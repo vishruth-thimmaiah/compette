@@ -40,6 +40,7 @@ mod tests {
             Box::new(AssignmentParserNode {
                 var_name: "a".to_string(),
                 var_type: DATATYPE::U32,
+                is_mutable: false,
                 value: Box::new(ExpressionParserNode {
                     left: Box::new(ValueParserNode {
                         r#type: NUMBER,
@@ -52,6 +53,7 @@ mod tests {
             Box::new(AssignmentParserNode {
                 var_name: "b".to_string(),
                 var_type: DATATYPE::U32,
+                is_mutable: false,
                 value: Box::new(ExpressionParserNode {
                     left: Box::new(ValueParserNode {
                         r#type: NUMBER,
@@ -80,6 +82,7 @@ mod tests {
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "c".to_string(),
                     var_type: DATATYPE::U32,
+                    is_mutable: false,
                     value: Box::new(ExpressionParserNode {
                         left: Box::new(ValueParserNode {
                             r#type: NUMBER,
@@ -107,6 +110,7 @@ mod tests {
                     }),
                     body: vec![Box::new(AssignmentParserNode {
                         var_name: "c".to_string(),
+                        is_mutable: false,
                         var_type: DATATYPE::U32,
                         value: Box::new(ExpressionParserNode {
                             left: Box::new(ValueParserNode {
@@ -122,6 +126,7 @@ mod tests {
                     body: vec![Box::new(AssignmentParserNode {
                         var_type: DATATYPE::U32,
                         var_name: "c".to_string(),
+                        is_mutable: false,
                         value: Box::new(ExpressionParserNode {
                             left: Box::new(ValueParserNode {
                                 r#type: NUMBER,
@@ -152,6 +157,7 @@ mod tests {
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "c".to_string(),
                     var_type: DATATYPE::U32,
+                    is_mutable: false,
                     value: Box::new(ExpressionParserNode {
                         left: Box::new(ValueParserNode {
                             r#type: IDENTIFIER,
@@ -180,6 +186,7 @@ mod tests {
                     Box::new(AssignmentParserNode {
                         var_name: "q".to_string(),
                         var_type: DATATYPE::U32,
+                        is_mutable: false,
                         value: Box::new(ExpressionParserNode {
                             left: Box::new(ValueParserNode {
                                 r#type: IDENTIFIER,
@@ -250,7 +257,7 @@ mod tests {
         let contents = r#"
         let u32 a = 1
         a = 4
-        let u32 b = 2
+        let u32! b = 2
 
         func add(x u32, y u32) u32 {
             let u32 q = x + y
@@ -263,6 +270,7 @@ mod tests {
             Box::new(AssignmentParserNode {
                 var_name: "a".to_string(),
                 var_type: DATATYPE::U32,
+                is_mutable: false,
                 value: Box::new(ExpressionParserNode {
                     left: Box::new(ValueParserNode {
                         r#type: NUMBER,
@@ -286,6 +294,7 @@ mod tests {
             Box::new(AssignmentParserNode {
                 var_name: "b".to_string(),
                 var_type: DATATYPE::U32,
+                is_mutable: true,
                 value: Box::new(ExpressionParserNode {
                     left: Box::new(ValueParserNode {
                         r#type: NUMBER,
@@ -305,6 +314,7 @@ mod tests {
                 body: vec![Box::new(AssignmentParserNode {
                     var_name: "q".to_string(),
                     var_type: DATATYPE::U32,
+                    is_mutable: false,
                     value: Box::new(ExpressionParserNode {
                         left: Box::new(ValueParserNode {
                             r#type: IDENTIFIER,
@@ -396,6 +406,7 @@ mod tests {
                     Box::new(AssignmentParserNode {
                         var_name: "a".to_string(),
                         var_type: DATATYPE::U32,
+                        is_mutable: false,
                         value: Box::new(ExpressionParserNode {
                             left: Box::new(ValueParserNode {
                                 r#type: NUMBER,
@@ -408,6 +419,7 @@ mod tests {
                     Box::new(AssignmentParserNode {
                         var_name: "b".to_string(),
                         var_type: DATATYPE::U32,
+                        is_mutable: false,
                         value: Box::new(FunctionCallParserNode {
                             func_name: "num".to_string(),
                             args: vec![],

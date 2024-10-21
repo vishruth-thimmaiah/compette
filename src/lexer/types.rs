@@ -16,6 +16,7 @@ pub enum Types {
 #[derive(Debug, PartialEq, Clone)]
 pub enum OPERATOR {
     ASSIGN,
+    NOT,
     PLUS,
     MINUS,
     MULTIPLY,

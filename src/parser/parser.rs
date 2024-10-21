@@ -121,6 +121,14 @@ impl Parser {
         };
         self.set_next_position();
 
+        let is_mutable = match self.get_next_token().r#type {
+            Types::OPERATOR(OPERATOR::NOT) => {
+                self.set_next_position();
+                true
+            },
+            _ => false,
+        };
+
         let var_name = self.get_next_token().value.unwrap();
         self.set_next_position();
 
@@ -135,6 +143,7 @@ impl Parser {
         return Box::new(AssignmentParserNode {
             var_name,
             var_type,
+            is_mutable,
             value,
         });
     }
@@ -175,6 +184,7 @@ impl Parser {
                         operator: Some(operator),
                     });
                 }
+                OPERATOR::NOT => todo!(),
                 OPERATOR::ASSIGN => unreachable!(),
             },
             Types::NL | Types::DELIMITER(DELIMITER::LBRACE) => {

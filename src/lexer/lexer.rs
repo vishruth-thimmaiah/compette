@@ -241,6 +241,7 @@ impl Lexer {
         }
 
         match first_char {
+            33 => Token::new(Types::OPERATOR(OPERATOR::NOT), None, self.line, self.column),
             61 => Token::new(
                 Types::OPERATOR(OPERATOR::ASSIGN),
                 None,
@@ -317,7 +318,7 @@ impl Lexer {
                 self.column,
             ),
             _ => {
-                if self.content.as_bytes()[self.index+1] == 40 {
+                if self.content.as_bytes()[self.index + 1] == 40 {
                     Token::new(Types::IDENTIFIER_FUNC, Some(result), self.line, self.column)
                 } else {
                     Token::new(Types::IDENTIFIER, Some(result), self.line, self.column)
