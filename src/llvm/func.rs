@@ -251,6 +251,12 @@ impl<'ctx> CodeGen<'ctx> {
             OPERATOR::MINUS => self.sub_binary_operation(&left_val, &right_val),
             OPERATOR::MULTIPLY => self.mul_binary_operation(&left_val, &right_val),
             OPERATOR::DIVIDE => self.div_binary_operation(&left_val, &right_val),
+            OPERATOR::EQUAL => self.comp_binary_operation(OPERATOR::EQUAL, &left_val, &right_val),
+            OPERATOR::NOT_EQUAL => self.comp_binary_operation(OPERATOR::NOT_EQUAL, &left_val, &right_val),
+            OPERATOR::GREATER => self.comp_binary_operation(OPERATOR::GREATER, &left_val, &right_val),
+            OPERATOR::LESSER => self.comp_binary_operation(OPERATOR::LESSER, &left_val, &right_val),
+            OPERATOR::GREATER_EQUAL => self.comp_binary_operation(OPERATOR::GREATER_EQUAL, &left_val, &right_val),
+            OPERATOR::LESSER_EQUAL => self.comp_binary_operation(OPERATOR::LESSER_EQUAL, &left_val, &right_val),
             _ => unreachable!(),
         }
     }

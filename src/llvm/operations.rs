@@ -1,6 +1,6 @@
 use inkwell::values::BasicValueEnum;
 
-use crate::lexer::types::DATATYPE;
+use crate::lexer::types::{DATATYPE, OPERATOR};
 
 use super::func::CodeGen;
 
@@ -93,6 +93,31 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
+    pub fn comp_binary_operation(
+        &self,
+        op: OPERATOR,
+        left: &BasicValueEnum<'ctx>,
+        right: &BasicValueEnum<'ctx>,
+    ) -> BasicValueEnum<'ctx> {
+
+        let (ip, fp) = self.get_predicate(op);
+        if left.is_int_value() && right.is_int_value() {
+            let left_int = left.into_int_value();
+            let right_int = right.into_int_value();
+            self.builder
+                .build_int_compare(ip, left_int, right_int, "")
+                .unwrap()
+                .into()
+        } else {
+            let left_float = left.into_float_value();
+            let right_float = right.into_float_value();
+            self.builder
+                .build_float_compare(fp, left_float, right_float, "")
+                .unwrap()
+                .into()
+        }
+    }
+
     pub fn to_bool(&self, expr: &BasicValueEnum<'ctx>) -> BasicValueEnum<'ctx> {
         let datatype = self.get_datatype(*expr);
         if expr.is_int_value() {
@@ -115,6 +140,19 @@ impl<'ctx> CodeGen<'ctx> {
                 )
                 .unwrap()
                 .into()
+        }
+    }
+
+    fn get_predicate(&self, op: OPERATOR) -> (inkwell::IntPredicate, inkwell::FloatPredicate) {
+        match op {
+            OPERATOR::EQUAL => (inkwell::IntPredicate::EQ, inkwell::FloatPredicate::OEQ),
+            OPERATOR::NOT_EQUAL => (inkwell::IntPredicate::NE, inkwell::FloatPredicate::ONE),
+            OPERATOR::GREATER => (inkwell::IntPredicate::SGT, inkwell::FloatPredicate::OGT),
+            OPERATOR::LESSER => (inkwell::IntPredicate::SLT, inkwell::FloatPredicate::OLT),
+            OPERATOR::GREATER_EQUAL => (inkwell::IntPredicate::SGE, inkwell::FloatPredicate::OGE),
+            OPERATOR::LESSER_EQUAL => (inkwell::IntPredicate::SLE, inkwell::FloatPredicate::UEQ),
+            _ => todo!(),
+
         }
     }
 }
