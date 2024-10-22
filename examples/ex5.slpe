@@ -1,0 +1,7 @@
+func main() u32 {
+	let u32! a = 0
+	loop a < 10 {
+		a = a + 1
+	}
+	return a
+}

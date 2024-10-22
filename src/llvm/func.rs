@@ -14,7 +14,8 @@ use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 use crate::llvm::builder;
 use crate::parser::nodes::{
     AssignmentParserNode, ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode,
-    FunctionParserNode, ParserType, ReturnNode, ValueParserNode, VariableCallParserNode,
+    FunctionParserNode, LoopParserNode, ParserType, ReturnNode, ValueParserNode,
+    VariableCallParserNode,
 };
 use crate::parser::types::ParserTypes;
 
@@ -106,6 +107,10 @@ impl<'ctx> CodeGen<'ctx> {
                         .downcast_ref::<ConditionalIfParserNode>()
                         .unwrap();
                     self.add_conditional_if(func_name, downcast_if);
+                }
+                ParserTypes::LOOP => {
+                    let downcast_node = node.any().downcast_ref::<LoopParserNode>().unwrap();
+                    self.add_loop(func_name, downcast_node);
                 }
                 ParserTypes::RETURN => {
                     let downcast_node = node.any().downcast_ref::<ReturnNode>().unwrap();
@@ -372,5 +377,25 @@ impl<'ctx> CodeGen<'ctx> {
             }
         }
         self.builder.build_unconditional_branch(move_to).unwrap();
+    }
+
+    fn add_loop(&self, func_name: &str, node: &LoopParserNode) {
+        let function = self.module.get_function(func_name).unwrap();
+
+        let loop_block = self.context.append_basic_block(function, "loop");
+        let cont = self.context.append_basic_block(function, "loop_cont");
+
+        let expr = self.add_expression(&node.condition, func_name, &DATATYPE::U32);
+
+        self.builder
+            .build_conditional_branch(self.to_bool(&expr).into_int_value(), loop_block, cont)
+            .unwrap();
+
+        self.builder.position_at_end(loop_block);
+        self.nested_codegen(&node.body, func_name, &DATATYPE::U32);
+
+        let expr = self.add_expression(&node.condition, func_name, &DATATYPE::U32);
+        self.builder.build_conditional_branch(self.to_bool(&expr).into_int_value(), loop_block, cont).unwrap();
+        self.builder.position_at_end(cont);
     }
 }
