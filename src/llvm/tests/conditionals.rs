@@ -18,7 +18,7 @@ mod tests {
     }
 
     #[test]
-    fn check_if_else_cond2() {
+    fn check_mult_if_else_cond() {
         let contents = r#"
         func main() u32 {
             let u32 a = 2
@@ -38,7 +38,7 @@ mod tests {
     }
 
     #[test]
-    fn check_if_else_cond3() {
+    fn check_if_cond() {
         let contents = r#"
         func main() u32 {
             if 5 > 2 {
@@ -52,7 +52,7 @@ mod tests {
     }
 
     #[test]
-    fn check_if_else_cond4() {
+    fn check_if_else_if_cond() {
         let contents = r#"
         func main() u32 {
             if 0 > 2 {
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn check_if_else_cond5() {
+    fn check_if_false_cond() {
         let contents = r#"
         func main() u32 {
             if 0 > 2 {
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn check_if_else_cond6() {
+    fn check_mult_if_cond() {
         let contents = r#"
         func main() u32 {
             if 0 > 2 {
