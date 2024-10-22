@@ -305,7 +305,22 @@ impl<'ctx> CodeGen<'ctx> {
 
             prev_block = (cond_block, &else_if_cond.condition);
         }
-        let else_block = self.context.append_basic_block(function, "else");
+
+        let last_block = if let Some(else_body) = &node.else_body {
+            let else_block = self.context.append_basic_block(function, "else");
+            self.builder.position_at_end(else_block);
+            self.nested_codegen(&else_body.body, func_name, &DATATYPE::U32);
+
+            self.add_unconditional(else_body.body.last(), cont);
+
+            else_block
+        } else if prev_block.0 == if_block {
+            cont
+        } else {
+            prev_block.0
+        };
+
+        self.builder.position_at_end(prev_block.0.get_previous_basic_block().unwrap());
 
         let expr = self.add_expression(prev_block.1, func_name, &DATATYPE::U32);
 
@@ -313,7 +328,7 @@ impl<'ctx> CodeGen<'ctx> {
             .build_conditional_branch(
                 self.to_bool(&expr).into_int_value(),
                 prev_block.0,
-                else_block,
+                last_block,
             )
             .unwrap();
 
@@ -322,15 +337,7 @@ impl<'ctx> CodeGen<'ctx> {
 
         self.add_unconditional(node.body.last(), cont);
 
-        self.builder.position_at_end(else_block);
-        self.nested_codegen(
-            &node.else_body.as_ref().unwrap().body,
-            func_name,
-            &DATATYPE::U32,
-        );
-
-        self.add_unconditional(node.else_body.as_ref().unwrap().body.last(), cont);
-        cont.move_after(else_block).unwrap();
+        cont.move_after(last_block).unwrap();
         self.builder.position_at_end(cont);
     }
 

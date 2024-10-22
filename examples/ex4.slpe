@@ -1,12 +1,10 @@
 func main() u32 {
-	let u32 a = 2
-	if a > 5 {
-		return 5
-	} else if a < 5 {
-	} else if a > 10 {
-		return 50
-	} else {
-		return 10
-	}
-	return 20
+	if 0 > 2 {
+		return 1
+	}  
+
+	if 0 < 2 {
+		return 2
+	}  
+	return 0
 }
