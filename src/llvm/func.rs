@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 
+use inkwell::basic_block::BasicBlock;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::execution_engine::{ExecutionEngine, JitFunction};
@@ -12,8 +13,8 @@ use inkwell::OptimizationLevel;
 use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 use crate::llvm::builder;
 use crate::parser::nodes::{
-    AssignmentParserNode, ConditionalIfParserNode, ExpressionParserNode,
-    FunctionCallParserNode, FunctionParserNode, ParserType, ReturnNode, ValueParserNode,
+    AssignmentParserNode, ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode,
+    FunctionParserNode, ParserType, ReturnNode, ValueParserNode,
 };
 use crate::parser::types::ParserTypes;
 
@@ -252,35 +253,93 @@ impl<'ctx> CodeGen<'ctx> {
             OPERATOR::MULTIPLY => self.mul_binary_operation(&left_val, &right_val),
             OPERATOR::DIVIDE => self.div_binary_operation(&left_val, &right_val),
             OPERATOR::EQUAL => self.comp_binary_operation(OPERATOR::EQUAL, &left_val, &right_val),
-            OPERATOR::NOT_EQUAL => self.comp_binary_operation(OPERATOR::NOT_EQUAL, &left_val, &right_val),
-            OPERATOR::GREATER => self.comp_binary_operation(OPERATOR::GREATER, &left_val, &right_val),
+            OPERATOR::NOT_EQUAL => {
+                self.comp_binary_operation(OPERATOR::NOT_EQUAL, &left_val, &right_val)
+            }
+            OPERATOR::GREATER => {
+                self.comp_binary_operation(OPERATOR::GREATER, &left_val, &right_val)
+            }
             OPERATOR::LESSER => self.comp_binary_operation(OPERATOR::LESSER, &left_val, &right_val),
-            OPERATOR::GREATER_EQUAL => self.comp_binary_operation(OPERATOR::GREATER_EQUAL, &left_val, &right_val),
-            OPERATOR::LESSER_EQUAL => self.comp_binary_operation(OPERATOR::LESSER_EQUAL, &left_val, &right_val),
+            OPERATOR::GREATER_EQUAL => {
+                self.comp_binary_operation(OPERATOR::GREATER_EQUAL, &left_val, &right_val)
+            }
+            OPERATOR::LESSER_EQUAL => {
+                self.comp_binary_operation(OPERATOR::LESSER_EQUAL, &left_val, &right_val)
+            }
             _ => unreachable!(),
         }
     }
 
     fn add_conditional_if(&self, func_name: &str, node: &ConditionalIfParserNode) {
-
-        let expr = self.add_expression(&node.condition, func_name, &DATATYPE::U32);
-
         let function = self.module.get_function(func_name).unwrap();
         let if_block = self.context.append_basic_block(function, "if");
-        let else_block = self.context.append_basic_block(function, "else");
+
         let cont = self.context.append_basic_block(function, "if_cont");
 
+        let mut prev_block = (if_block, &node.condition);
+        let mut else_if_blocks = Vec::new();
+
+        for (index, else_if_cond) in node.else_if_body.iter().enumerate() {
+            let c_name = &("cond_".to_string() + &index.to_string());
+            let b_name = &("else_if_".to_string() + &index.to_string());
+            let cond_eval_block = self.context.append_basic_block(function, c_name);
+
+            let expr = self.add_expression(prev_block.1, func_name, &DATATYPE::U32);
+
+            self.builder
+                .build_conditional_branch(
+                    self.to_bool(&expr).into_int_value(),
+                    prev_block.0,
+                    cond_eval_block,
+                )
+                .unwrap();
+
+            let cond_block = self.context.append_basic_block(function, b_name);
+            else_if_blocks.push(cond_block);
+            self.builder.position_at_end(cond_block);
+            self.nested_codegen(&else_if_cond.body, func_name, &DATATYPE::U32);
+
+            self.add_unconditional(else_if_cond.body.last(), cont);
+
+            self.builder.position_at_end(cond_eval_block);
+
+            prev_block = (cond_block, &else_if_cond.condition);
+        }
+        let else_block = self.context.append_basic_block(function, "else");
+
+        let expr = self.add_expression(prev_block.1, func_name, &DATATYPE::U32);
+
         self.builder
-            .build_conditional_branch(self.to_bool(&expr).into_int_value(), if_block, else_block).unwrap();
+            .build_conditional_branch(
+                self.to_bool(&expr).into_int_value(),
+                prev_block.0,
+                else_block,
+            )
+            .unwrap();
 
         self.builder.position_at_end(if_block);
         self.nested_codegen(&node.body, func_name, &DATATYPE::U32);
-        self.builder.build_unconditional_branch(cont).unwrap();
+
+        self.add_unconditional(node.body.last(), cont);
 
         self.builder.position_at_end(else_block);
-        self.nested_codegen(&node.else_body.as_ref().unwrap().body, func_name, &DATATYPE::U32);
-        self.builder.build_unconditional_branch(cont).unwrap();
+        self.nested_codegen(
+            &node.else_body.as_ref().unwrap().body,
+            func_name,
+            &DATATYPE::U32,
+        );
 
+        self.add_unconditional(node.else_body.as_ref().unwrap().body.last(), cont);
+        cont.move_after(else_block).unwrap();
         self.builder.position_at_end(cont);
+    }
+
+    fn add_unconditional(&self, last_item: Option<&Box<dyn ParserType>>, move_to: BasicBlock) {
+        if let Some(last) = last_item {
+            if last.get_type() == ParserTypes::RETURN {
+                return;
+            }
+        }
+        self.builder.build_unconditional_branch(move_to).unwrap();
     }
 }
