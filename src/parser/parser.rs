@@ -125,7 +125,7 @@ impl Parser {
             Types::OPERATOR(OPERATOR::NOT) => {
                 self.set_next_position();
                 true
-            },
+            }
             _ => false,
         };
 
@@ -250,7 +250,6 @@ impl Parser {
                 }
             }
             self.set_next_position();
-
         }
         self.set_next_position();
 
@@ -313,30 +312,27 @@ impl Parser {
             let token = self.get_next_token();
             if token.r#type == Types::DELIMITER(DELIMITER::RPAREN) {
                 break;
-            }
-            else if token.r#type == Types::IDENTIFIER {
-                args.push(ExpressionParserNode{
-                    left: Box::new(ValueParserNode{
+            } else if token.r#type == Types::IDENTIFIER {
+                args.push(ExpressionParserNode {
+                    left: Box::new(ValueParserNode {
                         value: token.value.unwrap(),
                         r#type: Types::IDENTIFIER,
                     }),
                     right: None,
                     operator: None,
                 });
-            }
-            else if token.r#type == Types::NUMBER {
-                args.push(ExpressionParserNode{
-                    left: Box::new(ValueParserNode{
+            } else if token.r#type == Types::NUMBER {
+                args.push(ExpressionParserNode {
+                    left: Box::new(ValueParserNode {
                         value: token.value.unwrap(),
                         r#type: Types::NUMBER,
                     }),
                     right: None,
                     operator: None,
                 });
-            }
-            else if token.r#type == Types::BOOL {
-                args.push(ExpressionParserNode{
-                    left: Box::new(ValueParserNode{
+            } else if token.r#type == Types::BOOL {
+                args.push(ExpressionParserNode {
+                    left: Box::new(ValueParserNode {
                         value: token.value.unwrap(),
                         r#type: Types::BOOL,
                     }),
@@ -419,7 +415,18 @@ impl Parser {
             self.handle_error("invalid token")
         }
 
-        let condition = self.parse_expression();
+        let condition = if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACE) {
+            Box::new(ExpressionParserNode {
+                left: Box::new(ValueParserNode {
+                    value: "1".to_string(),
+                    r#type: Types::BOOL,
+                }),
+                right: None,
+                operator: None,
+            })
+        } else {
+            self.parse_expression()
+        };
         self.set_next_position();
 
         let body = self.parse_scope();
