@@ -14,7 +14,7 @@ use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 use crate::llvm::builder;
 use crate::parser::nodes::{
     AssignmentParserNode, ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode,
-    FunctionParserNode, ParserType, ReturnNode, ValueParserNode,
+    FunctionParserNode, ParserType, ReturnNode, ValueParserNode, VariableCallParserNode,
 };
 use crate::parser::types::ParserTypes;
 
@@ -22,7 +22,7 @@ type MainFunc = unsafe extern "C" fn() -> u32;
 
 struct FunctionStore<'ctx> {
     name: String,
-    args: HashMap<String, PointerValue<'ctx>>,
+    args: HashMap<String, (PointerValue<'ctx>, bool)>,
 }
 
 impl FunctionStore<'_> {
@@ -95,6 +95,11 @@ impl<'ctx> CodeGen<'ctx> {
                     let downcast_node = node.any().downcast_ref::<AssignmentParserNode>().unwrap();
                     self.add_variable(func_name, downcast_node);
                 }
+                ParserTypes::VARIABLE_CALL => {
+                    let downcast_node =
+                        node.any().downcast_ref::<VariableCallParserNode>().unwrap();
+                    self.mod_variable(func_name, downcast_node);
+                }
                 ParserTypes::CONDITIONAL => {
                     let downcast_if = node
                         .any()
@@ -115,7 +120,8 @@ impl<'ctx> CodeGen<'ctx> {
         let alloc = self.new_ptr(node);
         self.variables.borrow_mut().iter_mut().for_each(|x| {
             if x.name == func_name {
-                x.args.insert(node.var_name.clone(), alloc);
+                x.args
+                    .insert(node.var_name.clone(), (alloc, node.is_mutable));
             }
         });
 
@@ -128,6 +134,23 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder
             .build_store(alloc, self.add_expression(value, func_name, &node.var_type))
             .unwrap();
+    }
+
+    fn mod_variable(&self, func_name: &str, node: &VariableCallParserNode) {
+        let variables = self.variables.borrow();
+        let func = variables.iter().find(|x| x.name == func_name).unwrap();
+
+        let variable = func.args.get(&node.var_name).expect("Variable not found");
+
+        if !variable.1 {
+            return;
+        }
+
+        let variable = variable.0;
+
+        let expr = self.add_expression(&node.rhs, func_name, &DATATYPE::U32);
+
+        self.builder.build_store(variable, expr).unwrap();
     }
 
     fn add_function(&self, node: &FunctionParserNode) {
@@ -190,7 +213,7 @@ impl<'ctx> CodeGen<'ctx> {
                                 self.builder
                                     .build_load(
                                         self.def_expr(req_type),
-                                        *var_name,
+                                        var_name.0,
                                         &value_parser_node.value,
                                     )
                                     .unwrap()
@@ -320,7 +343,8 @@ impl<'ctx> CodeGen<'ctx> {
             prev_block.0
         };
 
-        self.builder.position_at_end(prev_block.0.get_previous_basic_block().unwrap());
+        self.builder
+            .position_at_end(prev_block.0.get_previous_basic_block().unwrap());
 
         let expr = self.add_expression(prev_block.1, func_name, &DATATYPE::U32);
 
