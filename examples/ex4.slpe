@@ -1,9 +1,9 @@
 func main() u32 {
-	if 0 > 2 {
+	if false {
 		return 1
 	}  
 
-	if 0 < 2 {
+	if true {
 		return 2
 	}  
 	return 0

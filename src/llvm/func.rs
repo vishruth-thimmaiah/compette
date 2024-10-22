@@ -204,6 +204,7 @@ impl<'ctx> CodeGen<'ctx> {
                 let value_parser_node = node.left.any().downcast_ref::<ValueParserNode>().unwrap();
                 match value_parser_node.r#type {
                     Types::NUMBER => self.string_to_value(&value_parser_node.value, req_type),
+                    Types::BOOL => self.string_to_value(&value_parser_node.value, req_type),
 
                     Types::IDENTIFIER => {
                         let vars = self.variables.borrow();

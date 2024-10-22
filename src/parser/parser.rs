@@ -161,6 +161,10 @@ impl Parser {
                 value: self.get_current_token().value.unwrap(),
                 r#type: Types::NUMBER,
             }),
+            Types::BOOL => Box::new(ValueParserNode {
+                value: self.get_current_token().value.unwrap(),
+                r#type: Types::BOOL,
+            }),
             _ => unreachable!(),
         };
 
@@ -325,6 +329,16 @@ impl Parser {
                     left: Box::new(ValueParserNode{
                         value: token.value.unwrap(),
                         r#type: Types::NUMBER,
+                    }),
+                    right: None,
+                    operator: None,
+                });
+            }
+            else if token.r#type == Types::BOOL {
+                args.push(ExpressionParserNode{
+                    left: Box::new(ValueParserNode{
+                        value: token.value.unwrap(),
+                        r#type: Types::BOOL,
                     }),
                     right: None,
                     operator: None,

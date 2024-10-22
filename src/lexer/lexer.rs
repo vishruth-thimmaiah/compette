@@ -311,6 +311,8 @@ impl Lexer {
                 self.line,
                 self.column,
             ),
+            "true" => Token::new(Types::BOOL, Some("1".to_string()), self.line, self.column),
+            "false" => Token::new(Types::BOOL, Some("0".to_string()), self.line, self.column),
             "string" => Token::new(
                 Types::DATATYPE(DATATYPE::STRING),
                 None,
