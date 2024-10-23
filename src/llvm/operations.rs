@@ -2,7 +2,7 @@ use inkwell::values::BasicValueEnum;
 
 use crate::lexer::types::{DATATYPE, OPERATOR};
 
-use super::func::CodeGen;
+use super::codegen::CodeGen;
 
 impl<'ctx> CodeGen<'ctx> {
     pub fn add_binary_operation(
@@ -99,7 +99,6 @@ impl<'ctx> CodeGen<'ctx> {
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
     ) -> BasicValueEnum<'ctx> {
-
         let (ip, fp) = self.get_predicate(op);
         if left.is_int_value() && right.is_int_value() {
             let left_int = left.into_int_value();
@@ -152,7 +151,6 @@ impl<'ctx> CodeGen<'ctx> {
             OPERATOR::GREATER_EQUAL => (inkwell::IntPredicate::SGE, inkwell::FloatPredicate::OGE),
             OPERATOR::LESSER_EQUAL => (inkwell::IntPredicate::SLE, inkwell::FloatPredicate::UEQ),
             _ => todo!(),
-
         }
     }
 }

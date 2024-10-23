@@ -5,7 +5,7 @@ use inkwell::{
 
 use crate::{lexer::types::DATATYPE, parser::nodes::AssignmentParserNode};
 
-use super::func::CodeGen;
+use super::codegen::CodeGen;
 
 impl<'ctx> CodeGen<'ctx> {
     pub fn new_ptr(&self, node: &AssignmentParserNode) -> PointerValue<'ctx> {

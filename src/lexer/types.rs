@@ -70,5 +70,5 @@ pub enum DATATYPE {
 #[derive(Debug, PartialEq, Clone)]
 pub struct ArrayDetails {
     pub datatype: DATATYPE,
-    pub length: u32
+    pub length: u32,
 }

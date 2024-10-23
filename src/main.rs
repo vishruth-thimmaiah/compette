@@ -2,7 +2,7 @@ use std::{env::args, fs};
 
 use inkwell::context::Context;
 use lexer::lexer::Lexer;
-use llvm::func::CodeGen;
+use llvm::codegen::CodeGen;
 use parser::parser::Parser;
 
 mod lexer;
