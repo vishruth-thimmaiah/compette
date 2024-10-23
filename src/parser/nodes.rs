@@ -112,6 +112,20 @@ impl ParserType for ValueParserNode {
 }
 
 #[derive(Debug)]
+pub struct ValueIterCallParserNode {
+    pub value: String,
+    pub index: String,
+}
+impl ParserType for ValueIterCallParserNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::VALUE
+    }
+    fn any(&self) -> &dyn Any {
+        self
+    }
+}
+
+#[derive(Debug)]
 pub struct ValueIterParserNode {
     pub value: Vec<ExpressionParserNode>,
 }
@@ -123,7 +137,6 @@ impl ParserType for ValueIterParserNode {
         self
     }
 }
-
 
 #[derive(Debug)]
 pub struct ConditionalIfParserNode {

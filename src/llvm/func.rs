@@ -15,8 +15,8 @@ use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 use crate::llvm::builder;
 use crate::parser::nodes::{
     AssignmentParserNode, ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode,
-    FunctionParserNode, LoopParserNode, ParserType, ReturnNode, ValueIterParserNode,
-    ValueParserNode, VariableCallParserNode,
+    FunctionParserNode, LoopParserNode, ParserType, ReturnNode, ValueIterCallParserNode,
+    ValueIterParserNode, ValueParserNode, VariableCallParserNode,
 };
 use crate::parser::types::ParserTypes;
 
@@ -221,6 +221,38 @@ impl<'ctx> CodeGen<'ctx> {
         array.into()
     }
 
+    fn get_array_val(
+        &self,
+        node: &ValueIterCallParserNode,
+        func_name: &str,
+        req_type: &DATATYPE,
+    ) -> BasicValueEnum<'ctx> {
+        let vars = self.variables.borrow();
+        let var_name = vars
+            .iter()
+            .filter(|x| x.name == func_name)
+            .collect::<Vec<&_>>()[0]
+            .args
+            .get(&node.value)
+            .unwrap()
+            .0;
+
+        unsafe {
+            let val = &[self
+                .context
+                .i32_type()
+                .const_int_from_string(&node.index, inkwell::types::StringRadix::Decimal)
+                .unwrap()];
+            let array_type = self.def_expr(req_type);
+
+            let ptr = self
+                .builder
+                .build_in_bounds_gep(array_type, var_name, val, "")
+                .unwrap();
+            self.builder.build_load(array_type, ptr, "").unwrap()
+        }
+    }
+
     fn add_expression(
         &self,
         node: &ExpressionParserNode,
@@ -229,14 +261,13 @@ impl<'ctx> CodeGen<'ctx> {
     ) -> BasicValueEnum<'ctx> {
         let left_val = match node.left.get_type() {
             ParserTypes::VALUE => {
+                if let Some(iter) = node.left.any().downcast_ref::<ValueIterParserNode>() {
+                    return self.add_array(iter, func_name, req_type);
+                } else if let Some(iter) = node.left.any().downcast_ref::<ValueIterCallParserNode>()
+                {
+                    return self.get_array_val(iter, func_name, req_type);
+                }
                 let value_parser_node = node.left.any().downcast_ref::<ValueParserNode>();
-                if value_parser_node.is_none() {
-                    if let Some(iter) = node.left.any().downcast_ref::<ValueIterParserNode>() {
-                        return self.add_array(iter, func_name, req_type);
-                    } else {
-                        panic!("Invalid value node");
-                    }
-                };
                 let value_parser_node = value_parser_node.unwrap();
                 match value_parser_node.r#type {
                     Types::NUMBER => self.string_to_value(&value_parser_node.value, req_type),

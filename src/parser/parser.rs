@@ -11,7 +11,8 @@ use crate::{
 use super::nodes::{
     AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
     ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
-    LoopParserNode, ParserType, ReturnNode, ValueIterParserNode, VariableCallParserNode,
+    LoopParserNode, ParserType, ReturnNode, ValueIterCallParserNode, ValueIterParserNode,
+    VariableCallParserNode,
 };
 
 pub struct Parser {
@@ -201,10 +202,29 @@ impl Parser {
         self.set_next_position();
         let left: Box<dyn ParserType> = match self.get_current_token().r#type {
             Types::IDENTIFIER_FUNC => self.parse_function_call(),
-            Types::IDENTIFIER => Box::new(ValueParserNode {
-                value: self.get_current_token().value.unwrap(),
-                r#type: Types::IDENTIFIER,
-            }),
+            Types::IDENTIFIER => {
+                if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACKET) {
+                    let var = self.get_current_token();
+                    self.set_next_position();
+                    let index = self.get_next_token();
+                    self.set_next_position();
+                    if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACKET) {
+                        self.handle_error("Invalid array access");
+                        exit(1)
+                    }
+                    self.set_next_position();
+
+                    Box::new(ValueIterCallParserNode {
+                        value: var.value.unwrap(),
+                        index: index.value.unwrap(),
+                    })
+                } else {
+                    Box::new(ValueParserNode {
+                        value: self.get_current_token().value.unwrap(),
+                        r#type: Types::IDENTIFIER,
+                    })
+                }
+            }
             Types::NUMBER => Box::new(ValueParserNode {
                 value: self.get_current_token().value.unwrap(),
                 r#type: Types::NUMBER,
