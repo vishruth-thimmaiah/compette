@@ -253,6 +253,45 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
+    fn add_value(
+        &self,
+        node: &ValueParserNode,
+        func_name: &str,
+        req_type: &DATATYPE,
+    ) -> BasicValueEnum<'ctx> {
+        match node.r#type {
+            Types::NUMBER => self.string_to_value(&node.value, req_type),
+            Types::BOOL => self.string_to_value(&node.value, req_type),
+
+            Types::IDENTIFIER => {
+                let vars = self.variables.borrow();
+                let var_name = vars
+                    .iter()
+                    .filter(|x| x.name == func_name)
+                    .collect::<Vec<&_>>()[0]
+                    .args
+                    .get(node.value.as_str());
+                let res = {
+                    if let Some(var_name) = var_name {
+                        self.builder
+                            .build_load(self.def_expr(req_type), var_name.0, &node.value)
+                            .unwrap()
+                    } else if let Some(func) = self.module.get_function(func_name) {
+                        func.get_params()
+                            .iter()
+                            .find(|x| x.get_name().to_str().unwrap() == node.value)
+                            .unwrap()
+                            .to_owned()
+                    } else {
+                        panic!("Invalid type");
+                    }
+                };
+                res
+            }
+            _ => panic!("Invalid type"),
+        }
+    }
+
     fn add_expression(
         &self,
         node: &ExpressionParserNode,
@@ -262,49 +301,13 @@ impl<'ctx> CodeGen<'ctx> {
         let left_val = match node.left.get_type() {
             ParserTypes::VALUE => {
                 if let Some(iter) = node.left.any().downcast_ref::<ValueIterParserNode>() {
-                    return self.add_array(iter, func_name, req_type);
+                    self.add_array(iter, func_name, req_type)
                 } else if let Some(iter) = node.left.any().downcast_ref::<ValueIterCallParserNode>()
                 {
-                    return self.get_array_val(iter, func_name, req_type);
-                }
-                let value_parser_node = node.left.any().downcast_ref::<ValueParserNode>();
-                let value_parser_node = value_parser_node.unwrap();
-                match value_parser_node.r#type {
-                    Types::NUMBER => self.string_to_value(&value_parser_node.value, req_type),
-                    Types::BOOL => self.string_to_value(&value_parser_node.value, req_type),
-
-                    Types::IDENTIFIER => {
-                        let vars = self.variables.borrow();
-                        let var_name = vars
-                            .iter()
-                            .filter(|x| x.name == func_name)
-                            .collect::<Vec<&_>>()[0]
-                            .args
-                            .get(value_parser_node.value.as_str());
-                        let res = {
-                            if let Some(var_name) = var_name {
-                                self.builder
-                                    .build_load(
-                                        self.def_expr(req_type),
-                                        var_name.0,
-                                        &value_parser_node.value,
-                                    )
-                                    .unwrap()
-                            } else if let Some(func) = self.module.get_function(func_name) {
-                                func.get_params()
-                                    .iter()
-                                    .find(|x| {
-                                        x.get_name().to_str().unwrap() == value_parser_node.value
-                                    })
-                                    .unwrap()
-                                    .to_owned()
-                            } else {
-                                panic!("Invalid type");
-                            }
-                        };
-                        res
-                    }
-                    _ => panic!("Invalid type"),
+                    self.get_array_val(iter, func_name, req_type)
+                } else {
+                    let val_node = node.left.any().downcast_ref::<ValueParserNode>().unwrap();
+                    self.add_value(val_node, func_name, req_type)
                 }
             }
             ParserTypes::FUNCTION_CALL => {
