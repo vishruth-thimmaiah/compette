@@ -9,7 +9,7 @@ pub fn generate_result(contents: &str) -> Option<u32> {
 
     let context = Context::create();
     let codegen = CodeGen::new(&context, parser);
-    codegen.jit_compile(false)
+    codegen.compile(false)
 }
 
 #[cfg(test)]

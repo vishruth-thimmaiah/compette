@@ -57,7 +57,7 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    pub fn jit_compile(&self, build: bool) -> Option<u32> {
+    pub fn compile(&self, build: bool) -> Option<u32> {
         for node in &self.tokens {
             // functions should be the only type of node at the top level
             match node.get_type() {

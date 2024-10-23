@@ -5,6 +5,7 @@ use lexer::lexer::Lexer;
 use llvm::codegen::CodeGen;
 use parser::parser::Parser;
 
+mod args;
 mod lexer;
 mod llvm;
 mod parser;
@@ -14,25 +15,27 @@ fn main() {
 
     if args.len() > 1 {
         let contents = fs::read_to_string(&args[1]).unwrap();
+        let args = args::parse_args(args);
 
         let lexer = Lexer::new(&contents).tokenize();
+        if args.print_lexer_ouput {
+            println!("{:#?}", lexer);
+        }
 
         let parser = Parser::new(lexer.clone()).parse();
-
-        if args.len() == 3 {
-            if args[2] == "lexer" {
-                println!("{:#?}", lexer);
-            } else if args[2] == "ast" {
-                println!("{:#?}", parser);
-            } else if args[2] == "lexer-ast" {
-                println!("Lexer{:#?}\n", lexer);
-                println!("ast{:#?}", parser);
-            }
+        if args.print_ast_output {
+            println!("{:#?}", parser);
         }
 
         let context = Context::create();
         let codegen = CodeGen::new(&context, parser);
-        let _ = codegen.jit_compile(true);
+
+        if args.use_jit {
+            let output = codegen.compile(false);
+            println!("Exit Code: {}", output.unwrap());
+        } else {
+            codegen.compile(true);
+        }
     } else {
         println!("Usage: sloppee <file>");
     }
