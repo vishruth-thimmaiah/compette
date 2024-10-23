@@ -2,6 +2,7 @@ pub struct Args {
     pub print_lexer_ouput: bool,
     pub print_ast_output: bool,
     pub use_jit: bool,
+    pub dry_run: bool,
 }
 
 impl Default for Args {
@@ -10,6 +11,7 @@ impl Default for Args {
             print_lexer_ouput: false,
             print_ast_output: false,
             use_jit: false,
+            dry_run: false,
         }
     }
 }
@@ -24,9 +26,9 @@ pub fn parse_args(args: Vec<String>) -> Args {
             "--print-lexer-output" => result.print_lexer_ouput = true,
             "--print-ast-output" => result.print_ast_output = true,
             "--use-jit" => result.use_jit = true,
+            "--dry-run" => result.dry_run = true,
             _ => (),
         }
-
     }
     result
 }

@@ -27,6 +27,10 @@ fn main() {
             println!("{:#?}", parser);
         }
 
+        if args.dry_run {
+            return;
+        }
+
         let context = Context::create();
         let codegen = CodeGen::new(&context, parser);
 
