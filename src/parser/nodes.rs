@@ -114,7 +114,7 @@ impl ParserType for ValueParserNode {
 #[derive(Debug)]
 pub struct ValueIterCallParserNode {
     pub value: String,
-    pub index: String,
+    pub index: Box<ExpressionParserNode>,
 }
 impl ParserType for ValueIterCallParserNode {
     fn get_type(&self) -> ParserTypes {

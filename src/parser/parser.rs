@@ -206,8 +206,7 @@ impl Parser {
                 if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACKET) {
                     let var = self.get_current_token();
                     self.set_next_position();
-                    let index = self.get_next_token();
-                    self.set_next_position();
+                    let index = self.parse_expression();
                     if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACKET) {
                         self.handle_error("Invalid array access");
                         exit(1)
@@ -216,7 +215,7 @@ impl Parser {
 
                     Box::new(ValueIterCallParserNode {
                         value: var.value.unwrap(),
-                        index: index.value.unwrap(),
+                        index,
                     })
                 } else {
                     Box::new(ValueParserNode {

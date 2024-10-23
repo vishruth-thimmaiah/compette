@@ -95,11 +95,7 @@ impl<'ctx> CodeGen<'ctx> {
             .0;
 
         unsafe {
-            let val = &[self
-                .context
-                .i32_type()
-                .const_int_from_string(&node.index, inkwell::types::StringRadix::Decimal)
-                .unwrap()];
+            let val = &[self.add_expression(&node.index, func_name, req_type).into_int_value()];
             let array_type = self.def_expr(req_type);
 
             let ptr = self
