@@ -1,4 +1,9 @@
-use inkwell::values::{ArrayValue, BasicValueEnum};
+use core::panic;
+
+use inkwell::{
+    types::VectorType,
+    values::{ArrayValue, BasicValueEnum},
+};
 
 use crate::{
     lexer::types::{Types, DATATYPE, OPERATOR},
@@ -29,9 +34,14 @@ impl<'ctx> CodeGen<'ctx> {
             .downcast_ref::<ExpressionParserNode>()
             .unwrap();
 
-        self.builder
-            .build_store(alloc, self.add_expression(value, func_name, &node.var_type))
-            .unwrap();
+        let possible_iter_node = value.left.any().downcast_ref::<ValueIterParserNode>();
+        let expr = if node.is_mutable && possible_iter_node.is_some() {
+            self.add_vec(possible_iter_node.unwrap(), func_name, &node.var_type)
+        } else {
+            self.add_expression(value, func_name, &node.var_type)
+        };
+
+        self.builder.build_store(alloc, expr).unwrap();
     }
 
     pub fn mod_variable(&self, func_name: &str, node: &VariableCallParserNode) {
@@ -78,6 +88,27 @@ impl<'ctx> CodeGen<'ctx> {
         array.into()
     }
 
+    pub fn add_vec(
+        &self,
+        node: &ValueIterParserNode,
+        func_name: &str,
+        req_type: &DATATYPE,
+    ) -> BasicValueEnum<'ctx> {
+        let vec_type = if let DATATYPE::ARRAY(array_type) = req_type {
+            array_type
+        } else {
+            panic!("Expected vec type")
+        };
+
+        let mut vec_val = vec![];
+        for value in &node.value {
+            let value = self.add_expression(&value, func_name, &vec_type.datatype);
+            vec_val.push(value);
+        }
+
+        VectorType::const_vector(&vec_val).into()
+    }
+
     pub fn get_array_val(
         &self,
         node: &ValueIterCallParserNode,
@@ -94,16 +125,17 @@ impl<'ctx> CodeGen<'ctx> {
             .unwrap()
             .0;
 
-        unsafe {
-            let val = &[self.add_expression(&node.index, func_name, req_type).into_int_value()];
-            let array_type = self.def_expr(req_type);
+        let val = &[self
+            .add_expression(&node.index, func_name, req_type)
+            .into_int_value()];
+        let array_type = self.def_expr(req_type);
 
-            let ptr = self
-                .builder
+        let ptr = unsafe {
+            self.builder
                 .build_in_bounds_gep(array_type, var_name, val, "")
-                .unwrap();
-            self.builder.build_load(array_type, ptr, "").unwrap()
-        }
+                .unwrap()
+        };
+        self.builder.build_load(array_type, ptr, "").unwrap()
     }
 
     pub fn add_value(

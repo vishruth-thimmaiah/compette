@@ -1,5 +1,4 @@
 func main() u32 {
-	let u32[] a = [1, 2, 3]
-	let u32 b = a[0]
-	return a[b]
+	let u32[]! a = [1, 2, 3]
+	return a[1]
 }
