@@ -1,0 +1,4 @@
+func main() u32 {
+	let u32[] a = [1, 2, 3]
+	return 0
+}

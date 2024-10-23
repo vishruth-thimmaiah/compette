@@ -161,6 +161,22 @@ impl Lexer {
                     self.column,
                 ))
             }
+            "[" => {
+                return Some(Token::new(
+                    Types::DELIMITER(DELIMITER::LBRACKET),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
+            "]" => {
+                return Some(Token::new(
+                    Types::DELIMITER(DELIMITER::RBRACKET),
+                    None,
+                    self.line,
+                    self.column,
+                ))
+            }
             "=" | "<" | ">" | "!" => return Some(self.check_operator()),
             "\"" | "'" => return Some(Self::check_string(self)),
             _ => {

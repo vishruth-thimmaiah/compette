@@ -1,5 +1,5 @@
 use inkwell::{
-    types::{BasicMetadataTypeEnum, BasicTypeEnum},
+    types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum},
     values::{BasicValueEnum, PointerValue},
 };
 
@@ -70,7 +70,12 @@ impl<'ctx> CodeGen<'ctx> {
             DATATYPE::BOOL => self.context.bool_type().into(),
             DATATYPE::F32 => self.context.f32_type().into(),
             DATATYPE::F64 => self.context.f64_type().into(),
+
             DATATYPE::STRING => todo!(),
+            DATATYPE::ARRAY(inner) => self
+                .def_expr(&inner.datatype)
+                .array_type(inner.length)
+                .into(),
         }
     }
 }

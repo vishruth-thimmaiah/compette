@@ -3,7 +3,7 @@ use std::process::exit;
 use crate::{
     lexer::{
         lexer::Token,
-        types::{Types, DATATYPE, DELIMITER, KEYWORD, OPERATOR},
+        types::{ArrayDetails, Types, DATATYPE, DELIMITER, KEYWORD, OPERATOR},
     },
     parser::nodes::ValueParserNode,
 };
@@ -11,7 +11,7 @@ use crate::{
 use super::nodes::{
     AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
     ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
-    LoopParserNode, ParserType, ReturnNode, VariableCallParserNode,
+    LoopParserNode, ParserType, ReturnNode, ValueIterParserNode, VariableCallParserNode,
 };
 
 pub struct Parser {
@@ -112,7 +112,7 @@ impl Parser {
             self.handle_error("invalid token")
         }
 
-        let var_type = match self.get_next_token().r#type {
+        let mut var_type = match self.get_next_token().r#type {
             Types::DATATYPE(dt) => dt,
             _ => {
                 self.handle_error("invalid token");
@@ -120,6 +120,18 @@ impl Parser {
             }
         };
         self.set_next_position();
+
+        let is_array = if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACKET) {
+            self.set_next_position();
+            if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACKET) {
+                self.handle_error("Invalid array declaration");
+                exit(1)
+            }
+            self.set_next_position();
+            true
+        } else {
+            false
+        };
 
         let is_mutable = match self.get_next_token().r#type {
             Types::OPERATOR(OPERATOR::NOT) => {
@@ -138,6 +150,23 @@ impl Parser {
         self.set_next_position();
 
         let value = self.parse_expression();
+
+        if is_array {
+            let try_downcast = value.left.any().downcast_ref::<ValueIterParserNode>();
+
+            if try_downcast.is_none() {
+                self.handle_error("Invalid array assignment");
+                exit(1)
+            }
+
+            let length = try_downcast.unwrap().value.len() as u32;
+
+            var_type = DATATYPE::ARRAY(Box::new(ArrayDetails {
+                datatype: var_type,
+                length,
+            }));
+        }
+
         self.set_next_position();
 
         return Box::new(AssignmentParserNode {
@@ -145,6 +174,25 @@ impl Parser {
             var_type,
             is_mutable,
             value,
+        });
+    }
+
+    fn parse_array(&mut self) -> Box<ValueIterParserNode> {
+        let mut array_contents = vec![];
+        while self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACKET) {
+            array_contents.push(*self.parse_expression());
+            if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::RBRACKET) {
+                break;
+            } else if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::COMMA) {
+                self.handle_error("Expected comma after array element");
+            }
+            self.set_next_position();
+        }
+
+        self.set_next_position();
+
+        return Box::new(ValueIterParserNode {
+            value: array_contents,
         });
     }
 
@@ -165,6 +213,7 @@ impl Parser {
                 value: self.get_current_token().value.unwrap(),
                 r#type: Types::BOOL,
             }),
+            Types::DELIMITER(DELIMITER::LBRACKET) => self.parse_array(),
             _ => unreachable!(),
         };
 
@@ -191,7 +240,10 @@ impl Parser {
                 OPERATOR::NOT => todo!(),
                 OPERATOR::ASSIGN => unreachable!(),
             },
-            Types::NL | Types::DELIMITER(DELIMITER::LBRACE) => {
+            Types::NL
+            | Types::DELIMITER(DELIMITER::LBRACE)
+            | Types::DELIMITER(DELIMITER::COMMA)
+            | Types::DELIMITER(DELIMITER::RBRACKET) => {
                 return Box::new(ExpressionParserNode {
                     left,
                     right: None,

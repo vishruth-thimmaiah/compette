@@ -38,6 +38,8 @@ pub enum DELIMITER {
     RPAREN,
     LBRACE,
     RBRACE,
+    LBRACKET,
+    RBRACKET,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -62,4 +64,11 @@ pub enum DATATYPE {
     F64,
     BOOL,
     STRING,
+    ARRAY(Box<ArrayDetails>),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ArrayDetails {
+    pub datatype: DATATYPE,
+    pub length: u32
 }

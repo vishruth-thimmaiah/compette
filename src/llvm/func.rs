@@ -1,3 +1,4 @@
+use core::panic;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
@@ -7,15 +8,15 @@ use inkwell::context::Context;
 use inkwell::execution_engine::{ExecutionEngine, JitFunction};
 use inkwell::module::Module;
 use inkwell::types::BasicType;
-use inkwell::values::{BasicValueEnum, PointerValue};
+use inkwell::values::{ArrayValue, BasicValueEnum, PointerValue};
 use inkwell::OptimizationLevel;
 
 use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 use crate::llvm::builder;
 use crate::parser::nodes::{
     AssignmentParserNode, ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode,
-    FunctionParserNode, LoopParserNode, ParserType, ReturnNode, ValueParserNode,
-    VariableCallParserNode,
+    FunctionParserNode, LoopParserNode, ParserType, ReturnNode, ValueIterParserNode,
+    ValueParserNode, VariableCallParserNode,
 };
 use crate::parser::types::ParserTypes;
 
@@ -193,6 +194,33 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.build_return(Some(&ret_val)).unwrap();
     }
 
+    fn add_array(
+        &self,
+        node: &ValueIterParserNode,
+        func_name: &str,
+        req_type: &DATATYPE,
+    ) -> BasicValueEnum<'ctx> {
+        let array_type = if let DATATYPE::ARRAY(array_type) = req_type {
+            array_type
+        } else {
+            panic!("Expected array type")
+        };
+
+        let mut array_val = vec![];
+
+        for value in &node.value {
+            let value = self.add_expression(&value, func_name, &array_type.datatype);
+            array_val.push(value);
+        }
+
+        // Figure out how to do this without unsafe
+        let array = unsafe {
+            ArrayValue::new_const_array(&self.def_expr(&array_type.datatype), &array_val)
+        };
+
+        array.into()
+    }
+
     fn add_expression(
         &self,
         node: &ExpressionParserNode,
@@ -201,7 +229,15 @@ impl<'ctx> CodeGen<'ctx> {
     ) -> BasicValueEnum<'ctx> {
         let left_val = match node.left.get_type() {
             ParserTypes::VALUE => {
-                let value_parser_node = node.left.any().downcast_ref::<ValueParserNode>().unwrap();
+                let value_parser_node = node.left.any().downcast_ref::<ValueParserNode>();
+                if value_parser_node.is_none() {
+                    if let Some(iter) = node.left.any().downcast_ref::<ValueIterParserNode>() {
+                        return self.add_array(iter, func_name, req_type);
+                    } else {
+                        panic!("Invalid value node");
+                    }
+                };
+                let value_parser_node = value_parser_node.unwrap();
                 match value_parser_node.r#type {
                     Types::NUMBER => self.string_to_value(&value_parser_node.value, req_type),
                     Types::BOOL => self.string_to_value(&value_parser_node.value, req_type),
@@ -396,7 +432,9 @@ impl<'ctx> CodeGen<'ctx> {
         self.nested_codegen(&node.body, func_name, &DATATYPE::U32);
 
         let expr = self.add_expression(&node.condition, func_name, &DATATYPE::U32);
-        self.builder.build_conditional_branch(self.to_bool(&expr).into_int_value(), loop_block, cont).unwrap();
+        self.builder
+            .build_conditional_branch(self.to_bool(&expr).into_int_value(), loop_block, cont)
+            .unwrap();
         self.builder.position_at_end(cont);
     }
 }
