@@ -41,7 +41,7 @@ impl<'ctx> CodeGen<'ctx> {
         let variable = func.args.get(&node.var_name).expect("Variable not found");
 
         if !variable.1 {
-            return;
+            panic!("Cannot modify immutable variable");
         }
 
         let variable = variable.0;
