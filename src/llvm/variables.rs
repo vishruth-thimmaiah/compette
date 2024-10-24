@@ -25,7 +25,11 @@ impl<'ctx> CodeGen<'ctx> {
             if x.name == func_name {
                 x.args.insert(
                     node.var_name.clone(),
-                    VariableStore{ptr, is_mutable: node.is_mutable, datatype: node.var_type.clone()},
+                    VariableStore {
+                        ptr,
+                        is_mutable: node.is_mutable,
+                        datatype: node.var_type.clone(),
+                    },
                 );
             }
         });
@@ -70,20 +74,25 @@ impl<'ctx> CodeGen<'ctx> {
             panic!("Cannot modify immutable variable");
         }
 
-        let var_ptr = if node.var_name.get_type() == ParserTypes::VALUE_ITER_CALL {
-            self.get_array_val(
+        let (var_ptr, datatype) = if node.var_name.get_type() == ParserTypes::VALUE_ITER_CALL {
+            let datatype = if let DATATYPE::ARRAY(array_type) = &variable.datatype {
+                &array_type.datatype
+            } else {
+                unreachable!()
+            };
+            (self.get_array_val(
                 node.var_name
                     .any()
                     .downcast_ref::<ValueIterCallParserNode>()
                     .unwrap(),
                 func_name,
-                &variable.datatype
-            )
+                datatype,
+            ), datatype)
         } else {
-            variable.ptr
+            (variable.ptr, &variable.datatype)
         };
 
-        let expr = self.add_expression(&node.rhs, func_name, &variable.datatype);
+        let expr = self.add_expression(&node.rhs, func_name, datatype);
 
         self.builder.build_store(var_ptr, expr).unwrap();
     }
