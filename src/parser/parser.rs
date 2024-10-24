@@ -239,6 +239,7 @@ impl Parser {
         match self.get_next_token().r#type {
             Types::OPERATOR(operator) => match operator {
                 OPERATOR::PLUS
+                | OPERATOR::DOT
                 | OPERATOR::MINUS
                 | OPERATOR::MULTIPLY
                 | OPERATOR::DIVIDE

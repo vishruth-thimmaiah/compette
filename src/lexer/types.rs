@@ -18,6 +18,7 @@ pub enum Types {
 pub enum OPERATOR {
     ASSIGN,
     NOT,
+    DOT,
     PLUS,
     MINUS,
     MULTIPLY,

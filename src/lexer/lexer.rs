@@ -103,6 +103,7 @@ impl Lexer {
                 "}" => Types::DELIMITER(DELIMITER::RBRACE),
                 "[" => Types::DELIMITER(DELIMITER::LBRACKET),
                 "]" => Types::DELIMITER(DELIMITER::RBRACKET),
+                "." => Types::OPERATOR(OPERATOR::DOT),
                 "/" => return self.skip_comment(),
                 "\n" => {
                     self.line += 1;
@@ -116,11 +117,7 @@ impl Lexer {
                         char,
                         str::from_utf8(&[char]).unwrap()
                     );
-                } // "\"" | "'" => return Some(Self::check_string(self)),
-                  // _ => {
-                  // } else {
-                  // }
-                  //     panic!()
+                }
             },
             None,
             self.line,
