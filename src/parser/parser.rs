@@ -363,14 +363,29 @@ impl Parser {
     }
 
     fn parse_identifier_call(&mut self) -> Box<VariableCallParserNode> {
-        let name = self.get_current_token().value.unwrap();
+        let var_name: Box<dyn ParserType> =
+            if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACKET) {
+                let name = self.get_current_token().value.unwrap();
+                self.set_next_position();
+                let val = Box::new(ValueIterCallParserNode {
+                    value: name,
+                    index: self.parse_expression(),
+                });
+                self.set_next_position();
+                val
+            } else {
+                Box::new(ValueParserNode {
+                    value: self.get_current_token().value.unwrap(),
+                    r#type: Types::IDENTIFIER,
+                })
+            };
 
         if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
             self.handle_error("invalid token");
         }
         self.set_next_position();
         return Box::new(VariableCallParserNode {
-            var_name: name,
+            var_name,
             rhs: self.parse_expression(),
         });
     }

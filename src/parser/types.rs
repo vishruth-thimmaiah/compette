@@ -10,4 +10,6 @@ pub enum ParserTypes {
     EXPRESSION,
     VARIABLE_CALL,
     VALUE,
+    VALUE_ITER,
+    VALUE_ITER_CALL,
 }

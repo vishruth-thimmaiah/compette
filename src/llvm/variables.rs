@@ -2,7 +2,7 @@ use core::panic;
 
 use inkwell::{
     types::VectorType,
-    values::{ArrayValue, BasicValueEnum},
+    values::{ArrayValue, BasicValueEnum, PointerValue},
 };
 
 use crate::{
@@ -48,13 +48,38 @@ impl<'ctx> CodeGen<'ctx> {
         let variables = self.variables.borrow();
         let func = variables.iter().find(|x| x.name == func_name).unwrap();
 
-        let variable = func.args.get(&node.var_name).expect("Variable not found");
+        let var_name = if let Some(name) = node
+            .var_name
+            .any()
+            .downcast_ref::<ValueIterCallParserNode>()
+        {
+            &name.value
+        } else {
+            &node
+                .var_name
+                .any()
+                .downcast_ref::<ValueParserNode>()
+                .unwrap()
+                .value
+        };
+        let variable = func.args.get(var_name).expect("Variable not found");
 
         if !variable.1 {
             panic!("Cannot modify immutable variable");
         }
 
-        let variable = variable.0;
+        let variable = if node.var_name.get_type() == ParserTypes::VALUE_ITER_CALL {
+            self.get_array_val(
+                node.var_name
+                    .any()
+                    .downcast_ref::<ValueIterCallParserNode>()
+                    .unwrap(),
+                func_name,
+                &DATATYPE::U32,
+            )
+        } else {
+            variable.0
+        };
 
         let expr = self.add_expression(&node.rhs, func_name, &DATATYPE::U32);
 
@@ -114,7 +139,7 @@ impl<'ctx> CodeGen<'ctx> {
         node: &ValueIterCallParserNode,
         func_name: &str,
         req_type: &DATATYPE,
-    ) -> BasicValueEnum<'ctx> {
+    ) -> PointerValue<'ctx> {
         let vars = self.variables.borrow();
         let var_name = vars
             .iter()
@@ -130,12 +155,11 @@ impl<'ctx> CodeGen<'ctx> {
             .into_int_value()];
         let array_type = self.def_expr(req_type);
 
-        let ptr = unsafe {
+        unsafe {
             self.builder
                 .build_in_bounds_gep(array_type, var_name, val, "")
                 .unwrap()
-        };
-        self.builder.build_load(array_type, ptr, "").unwrap()
+        }
     }
 
     pub fn add_value(
@@ -184,42 +208,39 @@ impl<'ctx> CodeGen<'ctx> {
         req_type: &DATATYPE,
     ) -> BasicValueEnum<'ctx> {
         let left_val = match node.left.get_type() {
+            ParserTypes::VALUE_ITER_CALL => {
+                let iter_node = node
+                    .left
+                    .any()
+                    .downcast_ref::<ValueIterCallParserNode>()
+                    .unwrap();
+                let array = self.get_array_val(iter_node, func_name, req_type);
+                self.builder
+                    .build_load(self.def_expr(req_type), array, "")
+                    .unwrap()
+            }
+            ParserTypes::VALUE_ITER => {
+                let iter_node = node
+                    .left
+                    .any()
+                    .downcast_ref::<ValueIterParserNode>()
+                    .unwrap();
+                self.add_array(iter_node, func_name, req_type)
+            }
             ParserTypes::VALUE => {
-                if let Some(iter) = node.left.any().downcast_ref::<ValueIterParserNode>() {
-                    self.add_array(iter, func_name, req_type)
-                } else if let Some(iter) = node.left.any().downcast_ref::<ValueIterCallParserNode>()
-                {
-                    self.get_array_val(iter, func_name, req_type)
-                } else {
-                    let val_node = node.left.any().downcast_ref::<ValueParserNode>().unwrap();
-                    self.add_value(val_node, func_name, req_type)
-                }
+                let val_node = node.left.any().downcast_ref::<ValueParserNode>().unwrap();
+                self.add_value(val_node, func_name, req_type)
             }
             ParserTypes::FUNCTION_CALL => {
-                let downcast_node = node
+                let func_node = node
                     .left
                     .any()
                     .downcast_ref::<FunctionCallParserNode>()
                     .unwrap();
 
-                let function = self.module.get_function(&downcast_node.func_name).unwrap();
-                let mut args = Vec::new();
-                let params = function.get_params();
-                for (index, arg) in downcast_node.args.iter().enumerate() {
-                    args.push(
-                        self.add_expression(arg, func_name, self.get_datatype(params[index]))
-                            .into(),
-                    );
-                }
-
-                self.builder
-                    .build_call(function, &args, &downcast_node.func_name)
-                    .unwrap()
-                    .try_as_basic_value()
-                    .left()
-                    .unwrap()
+                self.add_func_call(func_node, func_name)
             }
-            _ => panic!("Invalid type"),
+            _ => panic!("Invalid type: {:?}", node.left.get_type()),
         };
 
         let right_val = {

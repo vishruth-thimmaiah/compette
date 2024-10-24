@@ -85,7 +85,7 @@ impl ParserType for FunctionCallParserNode {
 
 #[derive(Debug)]
 pub struct VariableCallParserNode {
-    pub var_name: String,
+    pub var_name: Box<dyn ParserType>,
     pub rhs: Box<ExpressionParserNode>,
 }
 impl ParserType for VariableCallParserNode {
@@ -118,7 +118,7 @@ pub struct ValueIterCallParserNode {
 }
 impl ParserType for ValueIterCallParserNode {
     fn get_type(&self) -> ParserTypes {
-        ParserTypes::VALUE
+        ParserTypes::VALUE_ITER_CALL
     }
     fn any(&self) -> &dyn Any {
         self
@@ -131,7 +131,7 @@ pub struct ValueIterParserNode {
 }
 impl ParserType for ValueIterParserNode {
     fn get_type(&self) -> ParserTypes {
-        ParserTypes::VALUE
+        ParserTypes::VALUE_ITER
     }
     fn any(&self) -> &dyn Any {
         self

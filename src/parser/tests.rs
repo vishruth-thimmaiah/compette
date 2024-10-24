@@ -281,7 +281,10 @@ mod tests {
                 }),
             }),
             Box::new(VariableCallParserNode {
-                var_name: "a".to_string(),
+                var_name: Box::new(ValueParserNode {
+                    r#type: IDENTIFIER,
+                    value: "a".to_string(),
+                }),
                 rhs: Box::new(ExpressionParserNode {
                     left: Box::new(ValueParserNode {
                         r#type: NUMBER,

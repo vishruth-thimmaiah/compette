@@ -27,7 +27,7 @@ Options:
     --print-ast-output      Print the ast output
     --use-jit               Use LLVM's JIT
     --dry-run               Run without invoking LLVM
-    "#;
+"#;
 
 fn show_help() {
     println!("{}", HELP_STRING);
@@ -37,7 +37,7 @@ fn show_help() {
 pub fn parse_args(args: &Vec<String>) -> Args {
     let mut result = Args::default();
     let first_arg = args.get(1);
-    if  first_arg == Some(&"--help".to_string()) || first_arg == Some(&"-h".to_string()) {
+    if first_arg == Some(&"--help".to_string()) || first_arg == Some(&"-h".to_string()) {
         show_help();
     }
     if args.len() < 3 {

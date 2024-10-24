@@ -1,8 +1,8 @@
-use inkwell::types::BasicType;
+use inkwell::{types::BasicType, values::BasicValueEnum};
 
 use crate::{
     lexer::types::DATATYPE,
-    parser::nodes::{ExpressionParserNode, FunctionParserNode, ReturnNode},
+    parser::nodes::{ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ReturnNode},
 };
 
 use super::codegen::{CodeGen, FunctionStore};
@@ -41,5 +41,28 @@ impl<'ctx> CodeGen<'ctx> {
         let ret_val = self.add_expression(ret_expr, func_name, ret_type);
 
         self.builder.build_return(Some(&ret_val)).unwrap();
+    }
+
+    pub fn add_func_call(
+        &self,
+        func_node: &FunctionCallParserNode,
+        func_name: &str,
+    ) -> BasicValueEnum<'ctx> {
+        let function = self.module.get_function(&func_node.func_name).unwrap();
+        let mut args = Vec::new();
+        let params = function.get_params();
+        for (index, arg) in func_node.args.iter().enumerate() {
+            args.push(
+                self.add_expression(arg, func_name, self.get_datatype(params[index]))
+                    .into(),
+            );
+        }
+
+        self.builder
+            .build_call(function, &args, &func_node.func_name)
+            .unwrap()
+            .try_as_basic_value()
+            .left()
+            .unwrap()
     }
 }
