@@ -3,7 +3,7 @@
 
 ### To run:
 ```
-cargo run -- <filename> [lexer / ast / lexer-ast]
+cargo run -- <filename> [OPTIONS]
 ```
 
 ### to run tests:

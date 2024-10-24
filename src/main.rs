@@ -12,29 +12,29 @@ mod parser;
 
 fn main() {
     let args: Vec<String> = args().collect();
+    let parsed_args = args::parse_args(&args);
 
     if args.len() > 1 {
         let contents = fs::read_to_string(&args[1]).unwrap();
-        let args = args::parse_args(args);
 
         let lexer = Lexer::new(&contents).tokenize();
-        if args.print_lexer_ouput {
+        if parsed_args.print_lexer_ouput {
             println!("{:#?}", lexer);
         }
 
         let parser = Parser::new(lexer.clone()).parse();
-        if args.print_ast_output {
+        if parsed_args.print_ast_output {
             println!("{:#?}", parser);
         }
 
-        if args.dry_run {
+        if parsed_args.dry_run {
             return;
         }
 
         let context = Context::create();
         let codegen = CodeGen::new(&context, parser);
 
-        if args.use_jit {
+        if parsed_args.use_jit {
             let output = codegen.compile(false);
             println!("Exit Code: {}", output.unwrap());
         } else {
