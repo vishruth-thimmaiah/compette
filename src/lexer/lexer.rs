@@ -79,120 +79,53 @@ impl Lexer {
     fn check_char(&mut self, char: u8) -> Option<Token> {
         self.column += self.index - self.prev_index;
         self.prev_index = self.index;
-        match str::from_utf8(&[char]).unwrap() {
-            " " | "\t" => {
-                return None;
-            }
-            "\n" => {
-                self.line += 1;
-                self.column = 0;
-                return Some(Token::new(Types::NL, None, self.line, self.column));
-            }
-            "+" => {
-                return Some(Token::new(
-                    Types::OPERATOR(OPERATOR::PLUS),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            "-" => {
-                return Some(Token::new(
-                    Types::OPERATOR(OPERATOR::MINUS),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            "*" => {
-                return Some(Token::new(
-                    Types::OPERATOR(OPERATOR::MULTIPLY),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            "/" => return self.skip_comment(),
-            "," => {
-                return Some(Token::new(
-                    Types::DELIMITER(DELIMITER::COMMA),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            ";" => {
-                return Some(Token::new(
-                    Types::DELIMITER(DELIMITER::SEMICOLON),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            "(" => {
-                return Some(Token::new(
-                    Types::DELIMITER(DELIMITER::LPAREN),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            ")" => {
-                return Some(Token::new(
-                    Types::DELIMITER(DELIMITER::RPAREN),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            "{" => {
-                return Some(Token::new(
-                    Types::DELIMITER(DELIMITER::LBRACE),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            "}" => {
-                return Some(Token::new(
-                    Types::DELIMITER(DELIMITER::RBRACE),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            "[" => {
-                return Some(Token::new(
-                    Types::DELIMITER(DELIMITER::LBRACKET),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            "]" => {
-                return Some(Token::new(
-                    Types::DELIMITER(DELIMITER::RBRACKET),
-                    None,
-                    self.line,
-                    self.column,
-                ))
-            }
-            "=" | "<" | ">" | "!" => return Some(self.check_operator()),
-            "\"" | "'" => return Some(Self::check_string(self)),
-            _ => {
-                if 48 <= char && char <= 57 {
-                    return Some(Self::check_number(self));
-                } else if 65 <= char && char <= 90 || 97 <= char && char <= 122 {
-                    return Some(Self::check_identifier(self));
-                } else {
+
+        if 48 <= char && char <= 57 {
+            return Some(self.check_number());
+        } else if 65 <= char && char <= 90 || 97 <= char && char <= 122 {
+            return Some(self.check_identifier());
+        } else if char == 32 || char == 9 {
+            return None;
+        } else if char == 34 || char == 39 {
+            return Some(self.check_string());
+        }
+
+        return Some(Token::new(
+            match str::from_utf8(&[char]).unwrap() {
+                "+" => Types::OPERATOR(OPERATOR::PLUS),
+                "-" => Types::OPERATOR(OPERATOR::MINUS),
+                "*" => Types::OPERATOR(OPERATOR::MULTIPLY),
+                "," => Types::DELIMITER(DELIMITER::COMMA),
+                ";" => Types::DELIMITER(DELIMITER::SEMICOLON),
+                "(" => Types::DELIMITER(DELIMITER::LPAREN),
+                ")" => Types::DELIMITER(DELIMITER::RPAREN),
+                "{" => Types::DELIMITER(DELIMITER::LBRACE),
+                "}" => Types::DELIMITER(DELIMITER::RBRACE),
+                "[" => Types::DELIMITER(DELIMITER::LBRACKET),
+                "]" => Types::DELIMITER(DELIMITER::RBRACKET),
+                "/" => return self.skip_comment(),
+                "\n" => {
+                    self.line += 1;
+                    self.column = 0;
+                    Types::NL
+                }
+                "=" | "<" | ">" | "!" => self.check_operator(),
+                _ => {
                     panic!(
                         "Invalid character: {}, {}",
                         char,
                         str::from_utf8(&[char]).unwrap()
                     );
-                }
-            }
-        }
+                } // "\"" | "'" => return Some(Self::check_string(self)),
+                  // _ => {
+                  // } else {
+                  // }
+                  //     panic!()
+            },
+            None,
+            self.line,
+            self.column,
+        ));
     }
 
     fn skip_comment(&mut self) -> Option<Token> {
@@ -214,68 +147,25 @@ impl Lexer {
         ));
     }
 
-    fn check_operator(&mut self) -> Token {
+    fn check_operator(&mut self) -> Types {
         let first_char = self.content.as_bytes()[self.index];
         let second_char = self.content.as_bytes()[self.index + 1];
 
         self.index += 2;
 
         match (first_char, second_char) {
-            (61, 61) => {
-                return Token::new(
-                    Types::OPERATOR(OPERATOR::EQUAL),
-                    None,
-                    self.line,
-                    self.column,
-                )
-            }
-            (33, 61) => {
-                return Token::new(
-                    Types::OPERATOR(OPERATOR::NOT_EQUAL),
-                    None,
-                    self.line,
-                    self.column,
-                )
-            }
-            (60, 61) => {
-                return Token::new(
-                    Types::OPERATOR(OPERATOR::LESSER_EQUAL),
-                    None,
-                    self.line,
-                    self.column,
-                )
-            }
-            (62, 61) => {
-                return Token::new(
-                    Types::OPERATOR(OPERATOR::GREATER_EQUAL),
-                    None,
-                    self.line,
-                    self.column,
-                )
-            }
+            (61, 61) => return Types::OPERATOR(OPERATOR::EQUAL),
+            (33, 61) => return Types::OPERATOR(OPERATOR::NOT_EQUAL),
+            (60, 61) => return Types::OPERATOR(OPERATOR::LESSER_EQUAL),
+            (62, 61) => return Types::OPERATOR(OPERATOR::GREATER_EQUAL),
             _ => self.index -= 1,
-        }
+        };
 
         match first_char {
-            33 => Token::new(Types::OPERATOR(OPERATOR::NOT), None, self.line, self.column),
-            61 => Token::new(
-                Types::OPERATOR(OPERATOR::ASSIGN),
-                None,
-                self.line,
-                self.column,
-            ),
-            60 => Token::new(
-                Types::OPERATOR(OPERATOR::LESSER),
-                None,
-                self.line,
-                self.column,
-            ),
-            62 => Token::new(
-                Types::OPERATOR(OPERATOR::GREATER),
-                None,
-                self.line,
-                self.column,
-            ),
+            33 => Types::OPERATOR(OPERATOR::NOT),
+            61 => Types::OPERATOR(OPERATOR::ASSIGN),
+            60 => Types::OPERATOR(OPERATOR::LESSER),
+            62 => Types::OPERATOR(OPERATOR::GREATER),
             _ => panic!("Unexpected token"),
         }
     }
