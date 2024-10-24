@@ -16,15 +16,17 @@ use crate::{
     },
 };
 
-use super::codegen::CodeGen;
+use super::codegen::{CodeGen, VariableStore};
 
 impl<'ctx> CodeGen<'ctx> {
     pub fn add_variable(&self, func_name: &str, node: &AssignmentParserNode) {
-        let alloc = self.new_ptr(node);
+        let ptr = self.new_ptr(node);
         self.variables.borrow_mut().iter_mut().for_each(|x| {
             if x.name == func_name {
-                x.args
-                    .insert(node.var_name.clone(), (alloc, node.is_mutable));
+                x.args.insert(
+                    node.var_name.clone(),
+                    VariableStore{ptr, is_mutable: node.is_mutable, datatype: node.var_type.clone()},
+                );
             }
         });
 
@@ -41,7 +43,7 @@ impl<'ctx> CodeGen<'ctx> {
             self.add_expression(value, func_name, &node.var_type)
         };
 
-        self.builder.build_store(alloc, expr).unwrap();
+        self.builder.build_store(ptr, expr).unwrap();
     }
 
     pub fn mod_variable(&self, func_name: &str, node: &VariableCallParserNode) {
@@ -64,26 +66,26 @@ impl<'ctx> CodeGen<'ctx> {
         };
         let variable = func.args.get(var_name).expect("Variable not found");
 
-        if !variable.1 {
+        if !variable.is_mutable {
             panic!("Cannot modify immutable variable");
         }
 
-        let variable = if node.var_name.get_type() == ParserTypes::VALUE_ITER_CALL {
+        let var_ptr = if node.var_name.get_type() == ParserTypes::VALUE_ITER_CALL {
             self.get_array_val(
                 node.var_name
                     .any()
                     .downcast_ref::<ValueIterCallParserNode>()
                     .unwrap(),
                 func_name,
-                &DATATYPE::U32,
+                &variable.datatype
             )
         } else {
-            variable.0
+            variable.ptr
         };
 
-        let expr = self.add_expression(&node.rhs, func_name, &DATATYPE::U32);
+        let expr = self.add_expression(&node.rhs, func_name, &variable.datatype);
 
-        self.builder.build_store(variable, expr).unwrap();
+        self.builder.build_store(var_ptr, expr).unwrap();
     }
 
     pub fn add_array(
@@ -148,7 +150,7 @@ impl<'ctx> CodeGen<'ctx> {
             .args
             .get(&node.value)
             .unwrap()
-            .0;
+            .ptr;
 
         let val = &[self
             .add_expression(&node.index, func_name, req_type)
@@ -183,7 +185,7 @@ impl<'ctx> CodeGen<'ctx> {
                 let res = {
                     if let Some(var_name) = var_name {
                         self.builder
-                            .build_load(self.def_expr(req_type), var_name.0, &node.value)
+                            .build_load(self.def_expr(req_type), var_name.ptr, &node.value)
                             .unwrap()
                     } else if let Some(func) = self.module.get_function(func_name) {
                         func.get_params()

@@ -20,7 +20,7 @@ type MainFunc = unsafe extern "C" fn() -> u32;
 
 pub struct FunctionStore<'ctx> {
     pub name: String,
-    pub args: HashMap<String, (PointerValue<'ctx>, bool)>,
+    pub args: HashMap<String, VariableStore<'ctx>>,
 }
 
 impl FunctionStore<'_> {
@@ -30,6 +30,12 @@ impl FunctionStore<'_> {
             args: HashMap::new(),
         }
     }
+}
+
+pub struct VariableStore<'ctx> {
+    pub ptr: PointerValue<'ctx>,
+    pub is_mutable: bool,
+    pub datatype: DATATYPE,
 }
 
 pub struct CodeGen<'ctx> {

@@ -59,8 +59,8 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    pub fn def_expr(&self, req_val: &DATATYPE) -> BasicTypeEnum<'ctx> {
-        match req_val {
+    pub fn def_expr(&self, req_type: &DATATYPE) -> BasicTypeEnum<'ctx> {
+        match req_type {
             DATATYPE::U16 => self.context.i16_type().into(),
             DATATYPE::U32 => self.context.i32_type().into(),
             DATATYPE::U64 => self.context.i64_type().into(),
