@@ -189,7 +189,8 @@ impl<'ctx> CodeGen<'ctx> {
                 let vars = self.variables.borrow();
                 let var_name = vars
                     .iter()
-                    .find(|x| x.name == func_name).unwrap()
+                    .find(|x| x.name == func_name)
+                    .unwrap()
                     .args
                     .get(node.value.as_str());
                 let res = {

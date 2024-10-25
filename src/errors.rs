@@ -40,4 +40,3 @@ pub fn compiler_error(msg: &str) -> ! {
     eprintln!("{}", Backtrace::capture());
     exit(1)
 }
-

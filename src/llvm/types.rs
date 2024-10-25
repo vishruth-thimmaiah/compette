@@ -59,6 +59,7 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
+    // TODO: Make U.. unsigned
     pub fn def_expr(&self, req_type: &DATATYPE) -> BasicTypeEnum<'ctx> {
         match req_type {
             DATATYPE::U8 => self.context.i8_type().into(),

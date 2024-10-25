@@ -1,0 +1,22 @@
+[tasks.copy-stdlib]
+dependencies = ["build-stdlib"]
+workspace = false
+command = "cp"
+args = ["target/debug/libstdlib.a", ".build/stdlib.a"]
+
+[tasks.build-stdlib]
+workspace = false
+command = "cargo"
+args = ["build", "-p", "stdlib"]
+
+[tasks.build]
+dependencies = ["copy-stdlib"]
+workspace = false
+command = "cargo"
+args = ["build"]
+
+[tasks.run]
+dependencies = ["copy-stdlib"]
+workspace = false
+command = "cargo"
+args = ["run", "--", "${@}"]

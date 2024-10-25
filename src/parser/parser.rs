@@ -253,7 +253,7 @@ impl Parser {
                     operator: None,
                 });
             }
-                _ => errors::parser_error(self, "invalid token"),
+            _ => errors::parser_error(self, "invalid token"),
         };
     }
 
