@@ -1,7 +1,11 @@
-use inkwell::{types::BasicType, values::BasicValueEnum};
+use inkwell::{
+    types::BasicType,
+    values::{BasicValueEnum, FunctionValue},
+};
 
 use crate::{
     lexer::types::DATATYPE,
+    llvm::stdlib_defs::SUPPORTED_FUNCS,
     parser::nodes::{ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ReturnNode},
 };
 
@@ -43,12 +47,37 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.build_return(Some(&ret_val)).unwrap();
     }
 
+    pub fn def_extern(&self, func_name: &str) -> FunctionValue<'ctx> {
+        println!("Defining external function {}", func_name);
+        let func = SUPPORTED_FUNCS
+            .iter()
+            .find(|f| f.name == func_name)
+            .expect("Function not found");
+        let params = self.def_func_args(
+            &func
+                .args
+                .to_vec()
+                .iter()
+                .map(|p| (p.0.to_string(), p.1.clone()))
+                .collect::<Vec<_>>(),
+        );
+
+        self.module.add_function(
+            func_name,
+            self.def_expr(&func.return_type).fn_type(&params, false),
+            Some(inkwell::module::Linkage::External),
+        )
+    }
+
     pub fn add_func_call(
         &self,
         func_node: &FunctionCallParserNode,
         func_name: &str,
     ) -> BasicValueEnum<'ctx> {
-        let function = self.module.get_function(&func_node.func_name).unwrap();
+        let function = self
+            .module
+            .get_function(&func_node.func_name)
+            .unwrap_or(self.def_extern(&func_node.func_name));
         let mut args = Vec::new();
         let params = function.get_params();
         for (index, arg) in func_node.args.iter().enumerate() {

@@ -4,8 +4,12 @@ use inkwell::module::Module;
 
 fn rust_stdlib_path() -> String {
     #[cfg(target_os = "linux")]
-
-    let home = Command::new("rustup").arg("show").arg("home").output().unwrap().stdout;
+    let home = Command::new("rustup")
+        .arg("show")
+        .arg("home")
+        .output()
+        .unwrap()
+        .stdout;
 
     let rust_lib_path = format!(
         "{}/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/",
