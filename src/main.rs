@@ -9,6 +9,7 @@ mod args;
 mod lexer;
 mod llvm;
 mod parser;
+mod errors;
 
 fn main() {
     let args: Vec<String> = args().collect();

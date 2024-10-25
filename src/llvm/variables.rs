@@ -1,11 +1,10 @@
-use core::panic;
-
 use inkwell::{
     types::VectorType,
     values::{ArrayValue, BasicValueEnum, PointerValue},
 };
 
 use crate::{
+    errors,
     lexer::types::{Types, DATATYPE, OPERATOR},
     parser::{
         nodes::{
@@ -71,7 +70,7 @@ impl<'ctx> CodeGen<'ctx> {
         let variable = func.args.get(var_name).expect("Variable not found");
 
         if !variable.is_mutable {
-            panic!("Cannot modify immutable variable");
+            errors::compiler_error("Cannot modify immutable variable");
         }
 
         let (var_ptr, datatype) = if node.var_name.get_type() == ParserTypes::VALUE_ITER_CALL {
@@ -80,14 +79,17 @@ impl<'ctx> CodeGen<'ctx> {
             } else {
                 unreachable!()
             };
-            (self.get_array_val(
-                node.var_name
-                    .any()
-                    .downcast_ref::<ValueIterCallParserNode>()
-                    .unwrap(),
-                func_name,
+            (
+                self.get_array_val(
+                    node.var_name
+                        .any()
+                        .downcast_ref::<ValueIterCallParserNode>()
+                        .unwrap(),
+                    func_name,
+                    datatype,
+                ),
                 datatype,
-            ), datatype)
+            )
         } else {
             (variable.ptr, &variable.datatype)
         };
@@ -106,7 +108,7 @@ impl<'ctx> CodeGen<'ctx> {
         let array_type = if let DATATYPE::ARRAY(array_type) = req_type {
             array_type
         } else {
-            panic!("Expected array type")
+            errors::compiler_error("Expected array type")
         };
 
         let mut array_val = vec![];
@@ -133,7 +135,7 @@ impl<'ctx> CodeGen<'ctx> {
         let vec_type = if let DATATYPE::ARRAY(array_type) = req_type {
             array_type
         } else {
-            panic!("Expected vec type")
+            errors::compiler_error("Expected vec type")
         };
 
         let mut vec_val = vec![];
@@ -203,12 +205,12 @@ impl<'ctx> CodeGen<'ctx> {
                             .unwrap()
                             .to_owned()
                     } else {
-                        panic!("Invalid type");
+                        errors::compiler_error("Invalid type");
                     }
                 };
                 res
             }
-            _ => panic!("Invalid type"),
+            _ => errors::compiler_error("Invalid type"),
         }
     }
 
@@ -251,7 +253,7 @@ impl<'ctx> CodeGen<'ctx> {
 
                 self.add_func_call(func_node, func_name)
             }
-            _ => panic!("Invalid type: {:?}", node.left.get_type()),
+            _ => errors::compiler_error(&format!("Invalid type: {:?}", node.left.get_type())),
         };
 
         let right_val = {

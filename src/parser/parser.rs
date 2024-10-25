@@ -1,6 +1,5 @@
-use std::process::exit;
-
 use crate::{
+    errors,
     lexer::{
         lexer::Token,
         types::{ArrayDetails, Types, DATATYPE, DELIMITER, KEYWORD, OPERATOR},
@@ -45,7 +44,7 @@ impl Parser {
             .clone()
     }
 
-    fn get_current_token(&self) -> Token {
+    pub fn get_current_token(&self) -> Token {
         self.tree
             .get(self.position)
             .unwrap_or(&Token::default())
@@ -54,16 +53,6 @@ impl Parser {
 
     fn set_next_position(&mut self) {
         self.position += 1;
-    }
-
-    fn handle_error(&self, message: &str) {
-        let curr = self.get_current_token();
-        let prev = self.get_prev_token();
-        let next = self.get_next_token();
-        panic!(
-            "\nError at line: {}, column: {}\nError type: {}\nstopped at: {:?}, {:?}\nprev: {:?}, {:?},\nnext: {:?}, {:?}\n",
-            curr.line+1, curr.column+1, message, curr.r#type, curr.value, prev.r#type, prev.value, next.r#type, next.value
-        );
     }
 
     pub fn parse(&mut self) -> Vec<Box<dyn ParserType>> {
@@ -95,11 +84,11 @@ impl Parser {
                 }
                 Types::DELIMITER(DELIMITER::RBRACE) => {
                     if !nested {
-                        self.handle_error("Invalid close brace");
+                        errors::parser_error(self, "Invalid close brace");
                     }
                     break;
                 }
-                _ => self.handle_error("invalid token"),
+                _ => errors::parser_error(self, "invalid token"),
             }
 
             self.position += 1;
@@ -110,23 +99,19 @@ impl Parser {
 
     fn parse_assignment(&mut self) -> Box<AssignmentParserNode> {
         if self.get_prev_token().r#type != Types::NL {
-            self.handle_error("invalid token")
+            errors::parser_error(self, "invalid token");
         }
 
         let mut var_type = match self.get_next_token().r#type {
             Types::DATATYPE(dt) => dt,
-            _ => {
-                self.handle_error("invalid token");
-                exit(1)
-            }
+            _ => errors::parser_error(self, "invalid token"),
         };
         self.set_next_position();
 
         let is_array = if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACKET) {
             self.set_next_position();
             if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACKET) {
-                self.handle_error("Invalid array declaration");
-                exit(1)
+                errors::parser_error(self, "Invalid array declaration");
             }
             self.set_next_position();
             true
@@ -146,7 +131,7 @@ impl Parser {
         self.set_next_position();
 
         if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
-            self.handle_error("invalid token")
+            errors::parser_error(self, "invalid token")
         }
         self.set_next_position();
 
@@ -156,8 +141,7 @@ impl Parser {
             let try_downcast = value.left.any().downcast_ref::<ValueIterParserNode>();
 
             if try_downcast.is_none() {
-                self.handle_error("Invalid array assignment");
-                exit(1)
+                errors::parser_error(self, "Invalid array assignment");
             }
 
             let length = try_downcast.unwrap().value.len() as u32;
@@ -185,7 +169,7 @@ impl Parser {
             if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::RBRACKET) {
                 break;
             } else if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::COMMA) {
-                self.handle_error("Expected comma after array element");
+                errors::parser_error(self, "Expected comma after array element");
             }
             self.set_next_position();
         }
@@ -208,8 +192,7 @@ impl Parser {
                     self.set_next_position();
                     let index = self.parse_expression();
                     if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACKET) {
-                        self.handle_error("Invalid array access");
-                        exit(1)
+                        errors::parser_error(self, "Invalid array access");
                     }
                     self.set_next_position();
 
@@ -270,23 +253,20 @@ impl Parser {
                     operator: None,
                 });
             }
-            _ => {
-                self.handle_error("invalid token");
-                exit(1)
-            }
+                _ => errors::parser_error(self, "invalid token"),
         };
     }
 
     fn parse_function(&mut self) -> Box<FunctionParserNode> {
         if self.get_prev_token().r#type != Types::NL {
-            self.handle_error("invalid token")
+            errors::parser_error(self, "invalid token")
         }
 
         let func_name = self.get_next_token().value.unwrap();
         self.set_next_position();
 
         if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LPAREN) {
-            self.handle_error("invalid token")
+            errors::parser_error(self, "invalid token")
         }
         self.set_next_position();
 
@@ -295,19 +275,13 @@ impl Parser {
             let var_name = match self.get_next_token().r#type {
                 Types::DELIMITER(DELIMITER::RPAREN) => break,
                 Types::IDENTIFIER => self.get_next_token().value.unwrap(),
-                _ => {
-                    self.handle_error("invalid token");
-                    exit(1)
-                }
+                _ => errors::parser_error(self, "invalid token"),
             };
             self.set_next_position();
 
             let var_type = match self.get_next_token().r#type {
                 Types::DATATYPE(dt) => dt,
-                _ => {
-                    self.handle_error("invalid token");
-                    exit(1)
-                }
+                _ => errors::parser_error(self, "invalid token"),
             };
             self.set_next_position();
 
@@ -316,10 +290,7 @@ impl Parser {
             match self.get_next_token().r#type {
                 Types::DELIMITER(DELIMITER::RPAREN) => break,
                 Types::DELIMITER(DELIMITER::COMMA) => (),
-                _ => {
-                    self.handle_error("invalid token");
-                    exit(1)
-                }
+                _ => errors::parser_error(self, "invalid token"),
             }
             self.set_next_position();
         }
@@ -334,7 +305,7 @@ impl Parser {
         };
 
         if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
-            self.handle_error("invalid token")
+            errors::parser_error(self, "invalid token")
         }
         self.set_next_position();
 
@@ -351,7 +322,7 @@ impl Parser {
 
     fn parse_return(&mut self) -> Box<ReturnNode> {
         if self.get_prev_token().r#type != Types::NL {
-            self.handle_error("invalid token")
+            errors::parser_error(self, "invalid token")
         }
 
         let condition = self.parse_expression();
@@ -381,7 +352,7 @@ impl Parser {
             };
 
         if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
-            self.handle_error("invalid token");
+            errors::parser_error(self, "invalid token");
         }
         self.set_next_position();
         return Box::new(VariableCallParserNode {
@@ -439,7 +410,7 @@ impl Parser {
 
     fn parse_conditional_if(&mut self) -> Box<ConditionalIfParserNode> {
         if self.get_prev_token().r#type != Types::NL {
-            self.handle_error("invalid token")
+            errors::parser_error(self, "invalid token")
         }
 
         let condition = self.parse_expression();
@@ -488,7 +459,7 @@ impl Parser {
         }
 
         if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
-            self.handle_error("invalid token")
+            errors::parser_error(self, "invalid token")
         }
         self.set_next_position();
 
@@ -499,7 +470,7 @@ impl Parser {
 
     fn parse_loop(&mut self) -> Box<LoopParserNode> {
         if self.get_prev_token().r#type != Types::NL {
-            self.handle_error("invalid token")
+            errors::parser_error(self, "invalid token")
         }
 
         let condition = if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACE) {

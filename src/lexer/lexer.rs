@@ -1,5 +1,7 @@
 use core::str;
 
+use crate::errors;
+
 use super::types::{Types, DATATYPE, DELIMITER, KEYWORD, OPERATOR};
 
 #[derive(Debug, PartialEq, Clone)]
@@ -111,13 +113,7 @@ impl Lexer {
                     Types::NL
                 }
                 "=" | "<" | ">" | "!" => self.check_operator(),
-                _ => {
-                    panic!(
-                        "Invalid character: {}, {}",
-                        char,
-                        str::from_utf8(&[char]).unwrap()
-                    );
-                }
+                _ => errors::lexer_error(char, "invalid character", self.line, self.column),
             },
             None,
             self.line,
@@ -163,7 +159,7 @@ impl Lexer {
             61 => Types::OPERATOR(OPERATOR::ASSIGN),
             60 => Types::OPERATOR(OPERATOR::LESSER),
             62 => Types::OPERATOR(OPERATOR::GREATER),
-            _ => panic!("Unexpected token"),
+            _ => errors::lexer_error(first_char, "invalid token", self.line, self.column),
         }
     }
 
