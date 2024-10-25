@@ -55,9 +55,11 @@ pub enum KEYWORD {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum DATATYPE {
+    U8,
     U16,
     U32,
     U64,
+    I8,
     I16,
     I32,
     I64,

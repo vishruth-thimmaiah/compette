@@ -195,10 +195,11 @@ impl Lexer {
             "if" => Token::new(Types::KEYWORD(KEYWORD::IF), None, self.line, self.column),
             "else" => Token::new(Types::KEYWORD(KEYWORD::ELSE), None, self.line, self.column),
             "loop" => Token::new(Types::KEYWORD(KEYWORD::LOOP), None, self.line, self.column),
-            "u16" => Token::new(Types::DATATYPE(DATATYPE::U16), None, self.line, self.column),
+            "u8" => Token::new(Types::DATATYPE(DATATYPE::U8), None, self.line, self.column),
             "u32" => Token::new(Types::DATATYPE(DATATYPE::U32), None, self.line, self.column),
             "u64" => Token::new(Types::DATATYPE(DATATYPE::U64), None, self.line, self.column),
 
+            "i8" => Token::new(Types::DATATYPE(DATATYPE::I8), None, self.line, self.column),
             "i16" => Token::new(Types::DATATYPE(DATATYPE::I16), None, self.line, self.column),
             "i32" => Token::new(Types::DATATYPE(DATATYPE::I32), None, self.line, self.column),
             "i64" => Token::new(Types::DATATYPE(DATATYPE::I64), None, self.line, self.column),

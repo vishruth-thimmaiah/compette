@@ -156,8 +156,8 @@ impl<'ctx> CodeGen<'ctx> {
         let vars = self.variables.borrow();
         let var_name = vars
             .iter()
-            .filter(|x| x.name == func_name)
-            .collect::<Vec<&_>>()[0]
+            .find(|x| x.name == func_name)
+            .unwrap()
             .args
             .get(&node.value)
             .unwrap()
@@ -189,8 +189,7 @@ impl<'ctx> CodeGen<'ctx> {
                 let vars = self.variables.borrow();
                 let var_name = vars
                     .iter()
-                    .filter(|x| x.name == func_name)
-                    .collect::<Vec<&_>>()[0]
+                    .find(|x| x.name == func_name).unwrap()
                     .args
                     .get(node.value.as_str());
                 let res = {
