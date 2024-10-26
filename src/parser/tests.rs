@@ -244,7 +244,6 @@ mod tests {
         let result = parser.parse();
 
         assert_eq!(result.len(), req_result.len());
-        // println!("{:#?}", result);
 
         for i in 0..result.len() {
             //TODO: Check if the actual structs are the same

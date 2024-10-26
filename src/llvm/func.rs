@@ -48,7 +48,6 @@ impl<'ctx> CodeGen<'ctx> {
     }
 
     pub fn def_extern(&self, func_name: &str) -> FunctionValue<'ctx> {
-        println!("Defining external function {}", func_name);
         let func = SUPPORTED_FUNCS
             .iter()
             .find(|f| f.name == func_name)
@@ -82,7 +81,7 @@ impl<'ctx> CodeGen<'ctx> {
         let params = function.get_params();
         for (index, arg) in func_node.args.iter().enumerate() {
             args.push(
-                self.add_expression(arg, func_name, self.get_datatype(params[index]))
+                self.add_expression(arg, func_name, &self.get_datatype(params[index].get_type()))
                     .into(),
             );
         }

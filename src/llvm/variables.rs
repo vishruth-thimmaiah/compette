@@ -1,6 +1,6 @@
 use inkwell::{
     types::VectorType,
-    values::{ArrayValue, BasicValueEnum, PointerValue},
+    values::{ArrayValue, BasicValue, BasicValueEnum, PointerValue},
 };
 
 use crate::{
@@ -117,7 +117,6 @@ impl<'ctx> CodeGen<'ctx> {
             let value = self.add_expression(&value, func_name, &array_type.datatype);
             array_val.push(value);
         }
-
         // Figure out how to do this without unsafe
         let array = unsafe {
             ArrayValue::new_const_array(&self.def_expr(&array_type.datatype), &array_val)
@@ -184,20 +183,22 @@ impl<'ctx> CodeGen<'ctx> {
         match node.r#type {
             Types::NUMBER => self.string_to_value(&node.value, req_type),
             Types::BOOL => self.string_to_value(&node.value, req_type),
+            Types::DATATYPE(DATATYPE::STRING(_)) => self.string_to_value(&node.value, req_type),
 
             Types::IDENTIFIER => {
                 let vars = self.variables.borrow();
-                let var_name = vars
-                    .iter()
-                    .find(|x| x.name == func_name)
-                    .unwrap()
-                    .args
-                    .get(node.value.as_str());
+                let var = vars.iter().find(|x| x.name == func_name).unwrap();
                 let res = {
-                    if let Some(var_name) = var_name {
-                        self.builder
-                            .build_load(self.def_expr(req_type), var_name.ptr, &node.value)
-                            .unwrap()
+                    if let Some(var_name) = var.args.get(node.value.as_str()) {
+                        if let DATATYPE::ARRAY(_) = &var_name.datatype {
+                            var_name.ptr.as_basic_value_enum()
+                        } else if let DATATYPE::STRING(_) = var_name.datatype {
+                            var_name.ptr.as_basic_value_enum()
+                        } else {
+                            self.builder
+                                .build_load(self.def_expr(req_type), var_name.ptr, &node.value)
+                                .unwrap()
+                        }
                     } else if let Some(func) = self.module.get_function(func_name) {
                         func.get_params()
                             .iter()

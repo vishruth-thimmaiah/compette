@@ -65,13 +65,13 @@ impl Lexer {
         while self.index < self.content.len() {
             let char = self.content.as_bytes()[self.index];
 
-            let token = Self::check_char(self, char);
+            let token = self.check_char(char);
 
             if let Some(token) = token {
                 tokens.push(token);
             }
 
-            Self::next_token(self);
+            self.next_token();
         }
 
         tokens.push(Token::new(Types::EOF, None, self.line, self.column));
@@ -214,7 +214,7 @@ impl Lexer {
             "true" => Token::new(Types::BOOL, Some("1".to_string()), self.line, self.column),
             "false" => Token::new(Types::BOOL, Some("0".to_string()), self.line, self.column),
             "string" => Token::new(
-                Types::DATATYPE(DATATYPE::STRING),
+                Types::DATATYPE(DATATYPE::STRING(0)),
                 None,
                 self.line,
                 self.column,
@@ -251,7 +251,7 @@ impl Lexer {
         let start = self.index + 1;
         let mut end = start;
 
-        let mut char = self.content.as_bytes()[self.index];
+        let mut char = self.content.as_bytes()[start];
 
         while 34 != char && char != 39 {
             end += 1;
@@ -260,10 +260,10 @@ impl Lexer {
 
         let result = self.content[start..end].to_string();
 
-        self.index = end - 1;
+        self.index = end;
 
         return Token::new(
-            Types::DATATYPE(DATATYPE::STRING),
+            Types::DATATYPE(DATATYPE::STRING(result.len())),
             Some(result),
             self.line,
             self.column,

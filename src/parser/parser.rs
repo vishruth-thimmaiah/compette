@@ -137,6 +137,13 @@ impl Parser {
 
         let value = self.parse_expression();
 
+        if let DATATYPE::STRING(_) = var_type {
+            let down_cast = value.left.any().downcast_ref::<ValueParserNode>().unwrap();
+            if let Types::DATATYPE(DATATYPE::STRING(len)) = down_cast.r#type {
+                var_type = DATATYPE::STRING(len);
+            }
+        }
+
         if is_array {
             let try_downcast = value.left.any().downcast_ref::<ValueIterParserNode>();
 
@@ -214,6 +221,10 @@ impl Parser {
             Types::BOOL => Box::new(ValueParserNode {
                 value: self.get_current_token().value.unwrap(),
                 r#type: Types::BOOL,
+            }),
+            Types::DATATYPE(DATATYPE::STRING(str)) => Box::new(ValueParserNode {
+                value: self.get_current_token().value.unwrap(),
+                r#type: Types::DATATYPE(DATATYPE::STRING(str)),
             }),
             Types::DELIMITER(DELIMITER::LBRACKET) => self.parse_array(),
             _ => unreachable!(),

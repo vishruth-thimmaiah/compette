@@ -3,7 +3,10 @@ use inkwell::{
     values::{BasicValueEnum, PointerValue},
 };
 
-use crate::{lexer::types::DATATYPE, parser::nodes::AssignmentParserNode};
+use crate::{
+    lexer::types::{ArrayDetails, DATATYPE},
+    parser::nodes::AssignmentParserNode,
+};
 
 use super::codegen::CodeGen;
 
@@ -27,6 +30,8 @@ impl<'ctx> CodeGen<'ctx> {
                 .into_float_type()
                 .const_float(value.parse::<f64>().unwrap())
                 .into()
+        } else if let &DATATYPE::STRING(_) = val_type {
+            self.context.const_string(value.as_bytes(), true).into()
         } else {
             todo!()
         }
@@ -45,16 +50,22 @@ impl<'ctx> CodeGen<'ctx> {
         return result_arr;
     }
 
-    pub fn get_datatype(&self, bt: BasicValueEnum) -> &DATATYPE {
-        match bt.get_type() {
+    pub fn get_datatype(&self, bt: BasicTypeEnum<'ctx>) -> DATATYPE {
+        match bt {
             BasicTypeEnum::IntType(it) => match it.get_bit_width() {
-                1 => &DATATYPE::BOOL,
-                16 => &DATATYPE::U16,
-                32 => &DATATYPE::U32,
-                64 => &DATATYPE::U64,
+                1 => DATATYPE::BOOL,
+                8 => DATATYPE::U8,
+                16 => DATATYPE::U16,
+
+                32 => DATATYPE::U32,
+                64 => DATATYPE::U64,
                 _ => todo!(),
             },
             BasicTypeEnum::FloatType(_) => todo!(),
+            BasicTypeEnum::ArrayType(arr) => DATATYPE::ARRAY(Box::new(ArrayDetails {
+                datatype: self.get_datatype(arr.get_element_type()).clone(),
+                length: arr.len(),
+            })),
             _ => todo!(),
         }
     }
@@ -74,7 +85,12 @@ impl<'ctx> CodeGen<'ctx> {
             DATATYPE::F32 => self.context.f32_type().into(),
             DATATYPE::F64 => self.context.f64_type().into(),
 
-            DATATYPE::STRING => todo!(),
+            DATATYPE::STRING(len) => {
+                self.context
+                    .const_string(&vec![0; *len], true)
+                    .get_type()
+                    .into()
+            }
             DATATYPE::ARRAY(inner) => self
                 .def_expr(&inner.datatype)
                 .array_type(inner.length)

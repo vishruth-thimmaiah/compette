@@ -66,7 +66,7 @@ pub enum DATATYPE {
     F32,
     F64,
     BOOL,
-    STRING,
+    STRING(usize),
     ARRAY(Box<ArrayDetails>),
 }
 
