@@ -18,6 +18,8 @@ use crate::{
 use super::codegen::{CodeGen, VariableStore};
 
 impl<'ctx> CodeGen<'ctx> {
+    /// used to create a new variable with a name and value. stores a pointer at the corresponding
+    /// func at self.variable.
     pub fn add_variable(&self, func_name: &str, node: &AssignmentParserNode) {
         let ptr = self.new_ptr(node);
         self.variables.borrow_mut().iter_mut().for_each(|x| {
@@ -49,6 +51,7 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.build_store(ptr, expr).unwrap();
     }
 
+    /// used to update a variable.
     pub fn mod_variable(&self, func_name: &str, node: &VariableCallParserNode) {
         let variables = self.variables.borrow();
         let func = variables.iter().find(|x| x.name == func_name).unwrap();
@@ -99,6 +102,7 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.build_store(var_ptr, expr).unwrap();
     }
 
+    /// used to create an array. does not assign variable name.
     pub fn add_array(
         &self,
         node: &ValueIterParserNode,
@@ -125,6 +129,7 @@ impl<'ctx> CodeGen<'ctx> {
         array.into()
     }
 
+    /// used to create an vec, used when an array is declared as mut. does not assign variable name.
     pub fn add_vec(
         &self,
         node: &ValueIterParserNode,
@@ -146,6 +151,7 @@ impl<'ctx> CodeGen<'ctx> {
         VectorType::const_vector(&vec_val).into()
     }
 
+    /// used to get an array's index value.
     pub fn get_array_val(
         &self,
         node: &ValueIterCallParserNode,
@@ -174,6 +180,8 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
+    // Converts a string to a valid datatype. does not store, evaluate values. A raw value can be
+    // passed, or an identifier name.
     pub fn add_value(
         &self,
         node: &ValueParserNode,
@@ -215,6 +223,7 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
+    /// Handles any operations, breaking down more complex structures into BasicValueEnums.
     pub fn add_expression(
         &self,
         node: &ExpressionParserNode,
