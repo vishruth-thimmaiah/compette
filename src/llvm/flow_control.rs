@@ -1,12 +1,14 @@
+use inkwell::IntPredicate;
+
 use crate::{
     lexer::types::DATATYPE,
     parser::{
-        nodes::{ConditionalIfParserNode, LoopParserNode, ParserType},
+        nodes::{ConditionalIfParserNode, ForLoopParserNode, LoopParserNode, ParserType},
         types::ParserTypes,
     },
 };
 
-use super::codegen::CodeGen;
+use super::codegen::{CodeGen, VariableStore};
 
 impl<'ctx> CodeGen<'ctx> {
     pub fn add_conditional_if(&self, func_name: &str, node: &ConditionalIfParserNode) {
@@ -92,6 +94,94 @@ impl<'ctx> CodeGen<'ctx> {
             }
         }
         self.builder.build_unconditional_branch(move_to).unwrap();
+    }
+
+    pub fn add_for_loop(&self, func_name: &str, node: &ForLoopParserNode) {
+        let function = self.module.get_function(func_name).unwrap();
+
+        let index = self.context.i32_type().const_zero();
+        let index_ptr = self
+            .builder
+            .build_alloca(self.context.i32_type(), &node.index)
+            .unwrap();
+        self.builder.build_store(index_ptr, index).unwrap();
+
+        self.variables
+            .borrow_mut()
+            .iter_mut()
+            .find(|x| x.name == func_name)
+            .unwrap()
+            .args
+            .insert(
+                node.index.clone(),
+                VariableStore {
+                    ptr: index_ptr,
+                    is_mutable: true,
+                    datatype: DATATYPE::U32,
+                },
+            );
+
+        let vars = self.variables.borrow();
+        let var = vars.iter().find(|x| x.name == func_name).unwrap();
+
+        let loop_block = self.context.append_basic_block(function, "for_loop");
+        let cont = self.context.append_basic_block(function, "for_loop_cont");
+
+        let expr_ptr = self
+            .builder
+            .build_alloca(self.context.bool_type(), "")
+            .unwrap();
+
+        let expr = self
+            .builder
+            .build_int_compare(
+                IntPredicate::SLT,
+                index,
+                self.context.i32_type().const_int(5, false),
+                "",
+            )
+            .unwrap();
+
+        self.builder.build_store(expr_ptr, expr).unwrap();
+
+        self.builder
+            .build_conditional_branch(expr, loop_block, cont)
+            .unwrap();
+
+        self.builder.position_at_end(loop_block);
+
+        self.nested_codegen(&node.body, func_name, &DATATYPE::U32);
+
+        let index = self
+            .builder
+            .build_load(self.context.i32_type(), index_ptr, "")
+            .unwrap();
+
+        let new_index = self
+            .builder
+            .build_int_add(
+                index.into_int_value(),
+                self.context.i32_type().const_int(1, false),
+                "",
+            )
+            .unwrap();
+        self.builder.build_store(index_ptr, new_index).unwrap();
+        let expr = self
+            .builder
+            .build_int_compare(
+                IntPredicate::SLT,
+                index.into_int_value(),
+                self.context
+                    .i32_type()
+                    .const_int(var.args.len() as u64 + 1, false),
+                "",
+            )
+            .unwrap();
+
+        self.builder
+            .build_conditional_branch(expr, loop_block, cont)
+            .unwrap();
+        self.builder.position_at_end(cont);
     }
 
     pub fn add_loop(&self, func_name: &str, node: &LoopParserNode) {

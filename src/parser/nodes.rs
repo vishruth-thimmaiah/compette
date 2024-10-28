@@ -194,3 +194,19 @@ impl ParserType for LoopParserNode {
         self
     }
 }
+
+#[derive(Debug)]
+pub struct ForLoopParserNode {
+    pub iterator: Box<dyn ParserType>,
+    pub index: String,
+    pub incr_value: String,
+    pub body: Vec<Box<dyn ParserType>>,
+}
+impl ParserType for ForLoopParserNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::FOR_LOOP
+    }
+    fn any(&self) -> &dyn Any {
+        self
+    }
+}

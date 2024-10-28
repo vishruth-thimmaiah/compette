@@ -51,6 +51,7 @@ pub enum KEYWORD {
     IF,
     ELSE,
     LOOP,
+    RANGE,
 }
 
 #[derive(Debug, PartialEq, Clone)]

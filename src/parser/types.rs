@@ -3,6 +3,7 @@
 pub enum ParserTypes {
     CONDITIONAL,
     LOOP,
+    FOR_LOOP,
     FUNCTION,
     FUNCTION_CALL,
     RETURN,

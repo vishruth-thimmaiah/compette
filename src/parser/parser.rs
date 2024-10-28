@@ -9,9 +9,9 @@ use crate::{
 
 use super::nodes::{
     AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
-    ConditionalIfParserNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode,
-    LoopParserNode, ParserType, ReturnNode, ValueIterCallParserNode, ValueIterParserNode,
-    VariableCallParserNode,
+    ConditionalIfParserNode, ExpressionParserNode, ForLoopParserNode, FunctionCallParserNode,
+    FunctionParserNode, LoopParserNode, ParserType, ReturnNode, ValueIterCallParserNode,
+    ValueIterParserNode, VariableCallParserNode,
 };
 
 pub struct Parser {
@@ -232,6 +232,11 @@ impl Parser {
 
         match self.get_next_token().r#type {
             Types::OPERATOR(operator) => match operator {
+                OPERATOR::ASSIGN => Box::new(ExpressionParserNode {
+                    left,
+                    right: None,
+                    operator: None,
+                }),
                 OPERATOR::PLUS
                 | OPERATOR::DOT
                 | OPERATOR::MINUS
@@ -252,7 +257,6 @@ impl Parser {
                     });
                 }
                 OPERATOR::NOT => todo!(),
-                OPERATOR::ASSIGN => unreachable!(),
             },
             Types::NL
             | Types::DELIMITER(DELIMITER::LBRACE)
@@ -265,7 +269,7 @@ impl Parser {
                 });
             }
             _ => errors::parser_error(self, "invalid token"),
-        };
+        }
     }
 
     fn parse_function(&mut self) -> Box<FunctionParserNode> {
@@ -479,9 +483,45 @@ impl Parser {
         return Some(ConditionalElseParserNode { body });
     }
 
-    fn parse_loop(&mut self) -> Box<LoopParserNode> {
+    fn parse_for_loop(&mut self) -> Box<ForLoopParserNode> {
+        self.set_next_position();
+
+        let iterator = self.parse_expression();
+
+        self.set_next_position();
+        if self.get_current_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
+            errors::parser_error(self, "invalid token")
+        }
+        self.set_next_position();
+
+        let incr_value = self.get_current_token().value.unwrap();
+        self.set_next_position();
+
+        if self.get_current_token().r#type != Types::DELIMITER(DELIMITER::COMMA) {
+            errors::parser_error(self, "invalid token")
+        }
+
+        self.set_next_position();
+        let index = self.get_current_token().value.unwrap();
+        self.set_next_position();
+
+
+        let body = self.parse_scope();
+        Box::new(ForLoopParserNode {
+            body,
+            iterator,
+            index,
+            incr_value,
+        })
+    }
+
+    fn parse_loop(&mut self) -> Box<dyn ParserType> {
         if self.get_prev_token().r#type != Types::NL {
             errors::parser_error(self, "invalid token")
+        }
+
+        if self.get_next_token().r#type == Types::KEYWORD(KEYWORD::RANGE) {
+            return self.parse_for_loop();
         }
 
         let condition = if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACE) {
