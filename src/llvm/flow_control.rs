@@ -2,10 +2,7 @@ use inkwell::IntPredicate;
 
 use crate::{
     lexer::types::DATATYPE,
-    parser::{
-        nodes::{ConditionalIfParserNode, ForLoopParserNode, LoopParserNode, ParserType},
-        types::ParserTypes,
-    },
+    parser::nodes::{ConditionalIfParserNode, ForLoopParserNode, LoopParserNode},
 };
 
 use super::codegen::{CodeGen, VariableStore};
@@ -40,7 +37,7 @@ impl<'ctx> CodeGen<'ctx> {
             self.builder.position_at_end(cond_block);
             self.nested_codegen(&else_if_cond.body, func_name, &DATATYPE::U32);
 
-            self.add_unconditional(else_if_cond.body.last(), cont);
+            self.add_unconditional(cont);
 
             self.builder.position_at_end(cond_eval_block);
 
@@ -54,7 +51,7 @@ impl<'ctx> CodeGen<'ctx> {
             self.builder.position_at_end(else_block);
             self.nested_codegen(&else_body.body, func_name, &DATATYPE::U32);
 
-            self.add_unconditional(else_body.body.last(), cont);
+            self.add_unconditional(cont);
 
             else_block
         } else if prev_block.0 == if_block {
@@ -63,8 +60,7 @@ impl<'ctx> CodeGen<'ctx> {
             prev_block.0
         };
 
-        self.builder
-            .position_at_end(cont_eval_block);
+        self.builder.position_at_end(cont_eval_block);
 
         let expr = self.add_expression(prev_block.1, func_name, &DATATYPE::U32);
 
@@ -79,19 +75,23 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.position_at_end(if_block);
         self.nested_codegen(&node.body, func_name, &DATATYPE::U32);
 
-        self.add_unconditional(node.body.last(), cont);
+        self.add_unconditional(cont);
 
         cont.move_after(last_block).unwrap();
         self.builder.position_at_end(cont);
     }
 
-    pub fn add_unconditional(
-        &self,
-        last_item: Option<&Box<dyn ParserType>>,
-        move_to: inkwell::basic_block::BasicBlock,
-    ) {
-        if let Some(last) = last_item {
-            if last.get_type() == ParserTypes::RETURN {
+    pub fn add_unconditional(&self, move_to: inkwell::basic_block::BasicBlock) {
+        let last_instruction = self
+            .builder
+            .get_insert_block()
+            .unwrap()
+            .get_last_instruction();
+
+        if let Some(last) = last_instruction {
+            if last.get_opcode() == inkwell::values::InstructionOpcode::Return {
+                return;
+            } else if last.get_opcode() == inkwell::values::InstructionOpcode::Br {
                 return;
             }
         }
@@ -216,5 +216,6 @@ impl<'ctx> CodeGen<'ctx> {
             .unwrap();
 
         self.builder.build_unconditional_branch(block).unwrap();
+        self.add_unconditional(block);
     }
 }
