@@ -25,11 +25,7 @@ impl<'ctx> CodeGen<'ctx> {
             let expr = self.add_expression(prev_block.1, func_name, &DATATYPE::U32);
 
             self.builder
-                .build_conditional_branch(
-                    self.to_bool(&expr).into_int_value(),
-                    prev_block.0,
-                    cond_eval_block,
-                )
+                .build_conditional_branch(self.to_bool(&expr), prev_block.0, cond_eval_block)
                 .unwrap();
 
             let cond_block = self.context.append_basic_block(function, b_name);
@@ -65,11 +61,7 @@ impl<'ctx> CodeGen<'ctx> {
         let expr = self.add_expression(prev_block.1, func_name, &DATATYPE::U32);
 
         self.builder
-            .build_conditional_branch(
-                self.to_bool(&expr).into_int_value(),
-                prev_block.0,
-                last_block,
-            )
+            .build_conditional_branch(self.to_bool(&expr), prev_block.0, last_block)
             .unwrap();
 
         self.builder.position_at_end(if_block);
@@ -195,7 +187,7 @@ impl<'ctx> CodeGen<'ctx> {
         let expr = self.add_expression(&node.condition, func_name, &DATATYPE::U32);
 
         self.builder
-            .build_conditional_branch(self.to_bool(&expr).into_int_value(), loop_block, cont)
+            .build_conditional_branch(self.to_bool(&expr), loop_block, cont)
             .unwrap();
 
         self.builder.position_at_end(loop_block);
@@ -203,7 +195,7 @@ impl<'ctx> CodeGen<'ctx> {
 
         let expr = self.add_expression(&node.condition, func_name, &DATATYPE::U32);
         self.builder
-            .build_conditional_branch(self.to_bool(&expr).into_int_value(), loop_block, cont)
+            .build_conditional_branch(self.to_bool(&expr), loop_block, cont)
             .unwrap();
         self.builder.position_at_end(cont);
     }

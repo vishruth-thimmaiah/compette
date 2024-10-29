@@ -1,4 +1,4 @@
-use inkwell::values::BasicValueEnum;
+use inkwell::values::{BasicValueEnum, IntValue};
 
 use crate::lexer::types::{DATATYPE, OPERATOR};
 
@@ -117,12 +117,12 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    pub fn to_bool(&self, expr: &BasicValueEnum<'ctx>) -> BasicValueEnum<'ctx> {
+    pub fn to_bool(&self, expr: &BasicValueEnum<'ctx>) -> IntValue<'ctx> {
         let datatype = self.get_datatype(expr.get_type());
         if expr.is_int_value() {
             let val = self.def_expr(&datatype).const_zero().into_int_value();
             if datatype == DATATYPE::BOOL {
-                return *expr;
+                return expr.into_int_value();
             }
             self.builder
                 .build_int_compare(inkwell::IntPredicate::NE, expr.into_int_value(), val, "")
@@ -138,7 +138,6 @@ impl<'ctx> CodeGen<'ctx> {
                     "",
                 )
                 .unwrap()
-                .into()
         }
     }
 
