@@ -87,7 +87,7 @@ impl<'ctx> CodeGen<'ctx> {
         }
 
         self.builder
-            .build_call(function, &args, &func_node.func_name)
+            .build_call(function, &args, "")
             .unwrap()
             .try_as_basic_value()
             .left()
