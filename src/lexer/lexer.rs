@@ -82,37 +82,37 @@ impl Lexer {
         self.column += self.index - self.prev_index;
         self.prev_index = self.index;
 
-        if 48 <= char && char <= 57 {
+        if b'0' <= char && char <= b'9' {
             return Some(self.check_number());
-        } else if 65 <= char && char <= 90 || 97 <= char && char <= 122 {
+        } else if b'A' <= char && char <= b'Z' || b'a' <= char && char <= b'z' || char == b'_' {
             return Some(self.check_identifier());
-        } else if char == 32 || char == 9 {
+        } else if char == b' ' || char == b'\t' {
             return None;
-        } else if char == 34 || char == 39 {
+        } else if char == b'"' || char == b'\'' {
             return Some(self.check_string());
         }
 
         return Some(Token::new(
-            match str::from_utf8(&[char]).unwrap() {
-                "+" => Types::OPERATOR(OPERATOR::PLUS),
-                "-" => Types::OPERATOR(OPERATOR::MINUS),
-                "*" => Types::OPERATOR(OPERATOR::MULTIPLY),
-                "," => Types::DELIMITER(DELIMITER::COMMA),
-                ";" => Types::DELIMITER(DELIMITER::SEMICOLON),
-                "(" => Types::DELIMITER(DELIMITER::LPAREN),
-                ")" => Types::DELIMITER(DELIMITER::RPAREN),
-                "{" => Types::DELIMITER(DELIMITER::LBRACE),
-                "}" => Types::DELIMITER(DELIMITER::RBRACE),
-                "[" => Types::DELIMITER(DELIMITER::LBRACKET),
-                "]" => Types::DELIMITER(DELIMITER::RBRACKET),
-                "." => Types::OPERATOR(OPERATOR::DOT),
-                "/" => return self.skip_comment(),
-                "\n" => {
+            match char {
+                b'+' => Types::OPERATOR(OPERATOR::PLUS),
+                b'-' => Types::OPERATOR(OPERATOR::MINUS),
+                b'*' => Types::OPERATOR(OPERATOR::MULTIPLY),
+                b',' => Types::DELIMITER(DELIMITER::COMMA),
+                b';' => Types::DELIMITER(DELIMITER::SEMICOLON),
+                b'(' => Types::DELIMITER(DELIMITER::LPAREN),
+                b')' => Types::DELIMITER(DELIMITER::RPAREN),
+                b'{' => Types::DELIMITER(DELIMITER::LBRACE),
+                b'}' => Types::DELIMITER(DELIMITER::RBRACE),
+                b'[' => Types::DELIMITER(DELIMITER::LBRACKET),
+                b']' => Types::DELIMITER(DELIMITER::RBRACKET),
+                b'.' => Types::OPERATOR(OPERATOR::DOT),
+                b'/' => return self.skip_comment(),
+                b'\n' => {
                     self.line += 1;
                     self.column = 0;
                     Types::NL
                 }
-                "=" | "<" | ">" | "!" => self.check_operator(),
+                b'=' | b'<' | b'>' | b'!' => self.check_operator(),
                 _ => errors::lexer_error(char, "invalid character", self.line, self.column),
             },
             None,
@@ -124,8 +124,8 @@ impl Lexer {
     fn skip_comment(&mut self) -> Option<Token> {
         let second_char = self.content.as_bytes()[self.index + 1];
 
-        if second_char == 47 {
-            while self.content.as_bytes()[self.index + 1] != 10 {
+        if second_char == b'/' {
+            while self.content.as_bytes()[self.index + 1] != b'\n' {
                 self.index += 1;
             }
             self.index += 2;
@@ -147,18 +147,18 @@ impl Lexer {
         self.index += 2;
 
         match (first_char, second_char) {
-            (61, 61) => return Types::OPERATOR(OPERATOR::EQUAL),
-            (33, 61) => return Types::OPERATOR(OPERATOR::NOT_EQUAL),
-            (60, 61) => return Types::OPERATOR(OPERATOR::LESSER_EQUAL),
-            (62, 61) => return Types::OPERATOR(OPERATOR::GREATER_EQUAL),
+            (b'=', b'=') => return Types::OPERATOR(OPERATOR::EQUAL),
+            (b'!', b'=') => return Types::OPERATOR(OPERATOR::NOT_EQUAL),
+            (b'<', b'=') => return Types::OPERATOR(OPERATOR::LESSER_EQUAL),
+            (b'>', b'=') => return Types::OPERATOR(OPERATOR::GREATER_EQUAL),
             _ => self.index -= 1,
         };
 
         match first_char {
-            33 => Types::OPERATOR(OPERATOR::NOT),
-            61 => Types::OPERATOR(OPERATOR::ASSIGN),
-            60 => Types::OPERATOR(OPERATOR::LESSER),
-            62 => Types::OPERATOR(OPERATOR::GREATER),
+            b'!' => Types::OPERATOR(OPERATOR::NOT),
+            b'=' => Types::OPERATOR(OPERATOR::ASSIGN),
+            b'<' => Types::OPERATOR(OPERATOR::LESSER),
+            b'>' => Types::OPERATOR(OPERATOR::GREATER),
             _ => errors::lexer_error(first_char, "invalid token", self.line, self.column),
         }
     }
@@ -169,7 +169,11 @@ impl Lexer {
 
         let mut char = self.content.as_bytes()[self.index];
 
-        while 48 <= char && char <= 57 || 65 <= char && char <= 90 || 97 <= char && char <= 122 {
+        while b'0' <= char && char <= b'9'
+            || b'a' <= char && char <= b'z'
+            || b'A' <= char && char <= b'Z'
+            || char == b'_'
+        {
             end += 1;
             char = self.content.as_bytes()[end];
         }
@@ -237,7 +241,7 @@ impl Lexer {
 
         let mut char = self.content.as_bytes()[self.index];
 
-        while 48 <= char && char <= 57 {
+        while (b'0' <= char && char <= b'9') || char == b'.' {
             end += 1;
             char = self.content.as_bytes()[end];
         }

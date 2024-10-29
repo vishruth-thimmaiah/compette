@@ -1,8 +1,4 @@
 func main() u32 {
-	let i8[] a = [1, 2, 3, 4, 5]
-	let i32! b = 0
-	loop range a = val, i {
-		b = add(i, 2)
-	}
-	return b
+	let i32 _a_1 = 10
+	return _a_1
 }
