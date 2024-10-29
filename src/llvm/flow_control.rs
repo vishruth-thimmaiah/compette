@@ -47,6 +47,8 @@ impl<'ctx> CodeGen<'ctx> {
             prev_block = (cond_block, &else_if_cond.condition);
         }
 
+        let cont_eval_block = self.builder.get_insert_block().unwrap();
+
         let last_block = if let Some(else_body) = &node.else_body {
             let else_block = self.context.append_basic_block(function, "else");
             self.builder.position_at_end(else_block);
@@ -62,7 +64,7 @@ impl<'ctx> CodeGen<'ctx> {
         };
 
         self.builder
-            .position_at_end(prev_block.0.get_previous_basic_block().unwrap());
+            .position_at_end(cont_eval_block);
 
         let expr = self.add_expression(prev_block.1, func_name, &DATATYPE::U32);
 
