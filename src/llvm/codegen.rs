@@ -11,8 +11,7 @@ use inkwell::OptimizationLevel;
 use crate::lexer::types::DATATYPE;
 use crate::llvm::builder;
 use crate::parser::nodes::{
-    AssignmentParserNode, ConditionalIfParserNode, ForLoopParserNode, FunctionCallParserNode,
-    FunctionParserNode, LoopParserNode, ParserType, ReturnNode, VariableCallParserNode,
+    AssignmentParserNode, ConditionalIfParserNode, ForLoopParserNode, FunctionCallParserNode, FunctionParserNode, LoopParserNode, ParserType, ReturnNode, VariableCallParserNode
 };
 use crate::parser::types::ParserTypes;
 
@@ -123,10 +122,12 @@ impl<'ctx> CodeGen<'ctx> {
                     let downcast_node = node.any().downcast_ref::<ForLoopParserNode>().unwrap();
                     self.add_for_loop(func_name, downcast_node);
                 }
-                _ => {
-                    println!("{:?}", node);
-                    todo!()
+                ParserTypes::FUNCTION_CALL => {
+                    let downcast_node =
+                        node.any().downcast_ref::<FunctionCallParserNode>().unwrap();
+                    self.add_func_call(downcast_node, func_name);
                 }
+                _ => todo!(),
             }
         }
     }
