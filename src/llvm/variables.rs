@@ -210,7 +210,7 @@ impl<'ctx> CodeGen<'ctx> {
                     } else if let Some(func) = self.module.get_function(func_name) {
                         func.get_params()
                             .iter()
-                            .find(|x| { x.get_name().to_str().unwrap() == node.value})
+                            .find(|x| x.get_name().to_str().unwrap() == node.value)
                             .unwrap()
                             .to_owned()
                     } else {
@@ -232,7 +232,6 @@ impl<'ctx> CodeGen<'ctx> {
     ) -> BasicValueEnum<'ctx> {
         let left_val = match node.left.get_type() {
             ParserTypes::VALUE_ITER_CALL => {
-
                 let iter_node = node
                     .left
                     .any()

@@ -125,7 +125,7 @@ impl<'ctx> CodeGen<'ctx> {
         let var = vars.iter().find(|x| x.name == func_name).unwrap();
 
         let loop_block = self.context.append_basic_block(function, "for_loop");
-        let cont = self.context.append_basic_block(function, "for_loop_cont");
+        let cont = self.context.append_basic_block(function, "loop_cont");
 
         let expr_ptr = self
             .builder
@@ -204,5 +204,15 @@ impl<'ctx> CodeGen<'ctx> {
             .build_conditional_branch(self.to_bool(&expr).into_int_value(), loop_block, cont)
             .unwrap();
         self.builder.position_at_end(cont);
+    }
+
+    pub fn add_break(&self, func_name: &str) {
+        let function = self.module.get_function(func_name).unwrap();
+        let block = function
+            .get_basic_block_iter()
+            .find(|x| x.get_name().to_str().unwrap() == "loop_cont")
+            .unwrap();
+
+        self.builder.build_unconditional_branch(block).unwrap();
     }
 }

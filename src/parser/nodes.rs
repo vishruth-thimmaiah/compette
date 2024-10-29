@@ -70,6 +70,17 @@ impl ParserType for ReturnNode {
 }
 
 #[derive(Debug)]
+pub struct BreakNode {}
+impl ParserType for BreakNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::BREAK
+    }
+    fn any(&self) -> &dyn Any {
+        self
+    }
+}
+
+#[derive(Debug)]
 pub struct FunctionCallParserNode {
     pub func_name: String,
     pub args: Vec<ExpressionParserNode>,

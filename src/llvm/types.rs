@@ -85,12 +85,11 @@ impl<'ctx> CodeGen<'ctx> {
             DATATYPE::F32 => self.context.f32_type().into(),
             DATATYPE::F64 => self.context.f64_type().into(),
 
-            DATATYPE::STRING(len) => {
-                self.context
-                    .const_string(&vec![0; *len], true)
-                    .get_type()
-                    .into()
-            }
+            DATATYPE::STRING(len) => self
+                .context
+                .const_string(&vec![0; *len], true)
+                .get_type()
+                .into(),
             DATATYPE::ARRAY(inner) => self
                 .def_expr(&inner.datatype)
                 .array_type(inner.length)

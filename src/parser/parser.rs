@@ -8,7 +8,7 @@ use crate::{
 };
 
 use super::nodes::{
-    AssignmentParserNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
+    AssignmentParserNode, BreakNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
     ConditionalIfParserNode, ExpressionParserNode, ForLoopParserNode, FunctionCallParserNode,
     FunctionParserNode, LoopParserNode, ParserType, ReturnNode, ValueIterCallParserNode,
     ValueIterParserNode, VariableCallParserNode,
@@ -72,6 +72,7 @@ impl Parser {
                 Types::KEYWORD(KEYWORD::LET) => tokens.push(self.parse_assignment()),
                 Types::KEYWORD(KEYWORD::IF) => tokens.push(self.parse_conditional_if()),
                 Types::KEYWORD(KEYWORD::FUNCTION) => tokens.push(self.parse_function()),
+                Types::KEYWORD(KEYWORD::BREAK) => tokens.push(self.parse_break()),
                 Types::IDENTIFIER => tokens.push(self.parse_identifier_call()),
                 Types::IDENTIFIER_FUNC => tokens.push(self.parse_function_call()),
                 Types::KEYWORD(KEYWORD::LOOP) => tokens.push(self.parse_loop()),
@@ -348,6 +349,14 @@ impl Parser {
         })
     }
 
+    fn parse_break(&mut self) -> Box<BreakNode> {
+        if self.get_prev_token().r#type != Types::NL {
+            errors::parser_error(self, "invalid token")
+        }
+
+        Box::new(BreakNode {})
+    }
+
     fn parse_identifier_call(&mut self) -> Box<VariableCallParserNode> {
         let var_name: Box<dyn ParserType> =
             if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACKET) {
@@ -504,7 +513,6 @@ impl Parser {
         self.set_next_position();
         let index = self.get_current_token().value.unwrap();
         self.set_next_position();
-
 
         let body = self.parse_scope();
         Box::new(ForLoopParserNode {
