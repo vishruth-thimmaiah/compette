@@ -15,25 +15,13 @@ use crate::{
     },
 };
 
-use super::codegen::{CodeGen, VariableStore};
+use super::codegen::CodeGen;
 
 impl<'ctx> CodeGen<'ctx> {
     /// used to create a new variable with a name and value. stores a pointer at the corresponding
     /// func at self.variable.
     pub fn add_variable(&self, func_name: &str, node: &AssignmentParserNode) {
-        let ptr = self.new_ptr(node);
-        self.variables.borrow_mut().iter_mut().for_each(|x| {
-            if x.name == func_name {
-                x.args.insert(
-                    node.var_name.clone(),
-                    VariableStore {
-                        ptr,
-                        is_mutable: node.is_mutable,
-                        datatype: node.var_type.clone(),
-                    },
-                );
-            }
-        });
+        let ptr = self.store_var(func_name, &node.var_name, &node.var_type, node.is_mutable);
 
         let value = node
             .value
@@ -70,7 +58,7 @@ impl<'ctx> CodeGen<'ctx> {
                 .unwrap()
                 .value
         };
-        let variable = func.args.get(var_name).expect("Variable not found");
+        let variable = func.vars.get(var_name).expect("Variable not found");
 
         if !variable.is_mutable {
             errors::compiler_error("Cannot modify immutable variable");
@@ -163,7 +151,7 @@ impl<'ctx> CodeGen<'ctx> {
             .iter()
             .find(|x| x.name == func_name)
             .unwrap()
-            .args
+            .vars
             .get(&node.value)
             .unwrap()
             .ptr;
@@ -197,7 +185,7 @@ impl<'ctx> CodeGen<'ctx> {
                 let vars = self.variables.borrow();
                 let var = vars.iter().find(|x| x.name == func_name).unwrap();
                 let res = {
-                    if let Some(var_name) = var.args.get(node.value.as_str()) {
+                    if let Some(var_name) = var.vars.get(node.value.as_str()) {
                         if let DATATYPE::ARRAY(_) = &var_name.datatype {
                             var_name.ptr.as_basic_value_enum()
                         } else if let DATATYPE::STRING(_) = var_name.datatype {

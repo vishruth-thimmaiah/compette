@@ -1,5 +1,5 @@
 use inkwell::{
-    types::BasicType,
+    types::{BasicMetadataTypeEnum, BasicType},
     values::{BasicValueEnum, FunctionValue},
 };
 
@@ -93,4 +93,18 @@ impl<'ctx> CodeGen<'ctx> {
             .left()
             .unwrap()
     }
+
+    pub fn def_func_args(
+        &self,
+        args: &Vec<(String, DATATYPE)>,
+    ) -> Vec<BasicMetadataTypeEnum<'ctx>> {
+        let mut result_arr: Vec<BasicMetadataTypeEnum<'ctx>> = Vec::new();
+
+        for arg in args {
+            result_arr.push(self.def_expr(&arg.1).into());
+        }
+
+        return result_arr;
+    }
+
 }

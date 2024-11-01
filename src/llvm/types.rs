@@ -1,21 +1,13 @@
 use inkwell::{
-    types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum},
-    values::{BasicValueEnum, PointerValue},
+    types::{BasicType, BasicTypeEnum},
+    values::BasicValueEnum,
 };
 
-use crate::{
-    lexer::types::{ArrayDetails, DATATYPE},
-    parser::nodes::AssignmentParserNode,
-};
+use crate::lexer::types::{ArrayDetails, DATATYPE};
 
 use super::codegen::CodeGen;
 
 impl<'ctx> CodeGen<'ctx> {
-    pub fn new_ptr(&self, node: &AssignmentParserNode) -> PointerValue<'ctx> {
-        let ty = self.def_expr(&node.var_type);
-        self.builder.build_alloca(ty, &node.var_name).unwrap()
-    }
-
     pub fn string_to_value(&self, value: &str, val_type: &DATATYPE) -> BasicValueEnum<'ctx> {
         let expr_type = self.def_expr(val_type);
 
@@ -35,19 +27,6 @@ impl<'ctx> CodeGen<'ctx> {
         } else {
             todo!()
         }
-    }
-
-    pub fn def_func_args(
-        &self,
-        args: &Vec<(String, DATATYPE)>,
-    ) -> Vec<BasicMetadataTypeEnum<'ctx>> {
-        let mut result_arr: Vec<BasicMetadataTypeEnum<'ctx>> = Vec::new();
-
-        for arg in args {
-            result_arr.push(self.def_expr(&arg.1).into());
-        }
-
-        return result_arr;
     }
 
     pub fn get_datatype(&self, bt: BasicTypeEnum<'ctx>) -> DATATYPE {

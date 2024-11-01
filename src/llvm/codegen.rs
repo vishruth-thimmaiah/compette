@@ -20,14 +20,14 @@ type MainFunc = unsafe extern "C" fn() -> u32;
 
 pub struct FunctionStore<'ctx> {
     pub name: String,
-    pub args: HashMap<String, VariableStore<'ctx>>,
+    pub vars: HashMap<String, VariableStore<'ctx>>,
 }
 
 impl FunctionStore<'_> {
     pub fn new(name: String) -> Self {
         Self {
             name,
-            args: HashMap::new(),
+            vars: HashMap::new(),
         }
     }
 }

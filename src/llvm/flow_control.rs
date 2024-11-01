@@ -5,7 +5,7 @@ use crate::{
     parser::nodes::{ConditionalIfParserNode, ForLoopParserNode, LoopParserNode},
 };
 
-use super::codegen::{CodeGen, VariableStore};
+use super::codegen::CodeGen;
 
 impl<'ctx> CodeGen<'ctx> {
     pub fn add_conditional_if(&self, func_name: &str, node: &ConditionalIfParserNode) {
@@ -94,26 +94,9 @@ impl<'ctx> CodeGen<'ctx> {
         let function = self.module.get_function(func_name).unwrap();
 
         let index = self.context.i32_type().const_zero();
-        let index_ptr = self
-            .builder
-            .build_alloca(self.context.i32_type(), &node.index)
-            .unwrap();
-        self.builder.build_store(index_ptr, index).unwrap();
+        let index_ptr = self.store_var(func_name, &node.index, &DATATYPE::U32, true);
 
-        self.variables
-            .borrow_mut()
-            .iter_mut()
-            .find(|x| x.name == func_name)
-            .unwrap()
-            .args
-            .insert(
-                node.index.clone(),
-                VariableStore {
-                    ptr: index_ptr,
-                    is_mutable: true,
-                    datatype: DATATYPE::U32,
-                },
-            );
+        self.builder.build_store(index_ptr, index).unwrap();
 
         let vars = self.variables.borrow();
         let var = vars.iter().find(|x| x.name == func_name).unwrap();
@@ -167,7 +150,7 @@ impl<'ctx> CodeGen<'ctx> {
                 index.into_int_value(),
                 self.context
                     .i32_type()
-                    .const_int(var.args.len() as u64 + 1, false),
+                    .const_int(var.vars.len() as u64 + 1, false),
                 "",
             )
             .unwrap();
