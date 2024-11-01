@@ -262,6 +262,7 @@ impl Parser {
             Types::NL
             | Types::DELIMITER(DELIMITER::LBRACE)
             | Types::DELIMITER(DELIMITER::COMMA)
+            | Types::DELIMITER(DELIMITER::RPAREN)
             | Types::DELIMITER(DELIMITER::RBRACKET) => {
                 return Box::new(ExpressionParserNode {
                     left,
@@ -394,35 +395,36 @@ impl Parser {
             let token = self.get_next_token();
             if token.r#type == Types::DELIMITER(DELIMITER::RPAREN) {
                 break;
-            } else if token.r#type == Types::IDENTIFIER {
-                args.push(ExpressionParserNode {
-                    left: Box::new(ValueParserNode {
-                        value: token.value.unwrap(),
-                        r#type: Types::IDENTIFIER,
-                    }),
-                    right: None,
-                    operator: None,
-                });
-            } else if token.r#type == Types::NUMBER {
-                args.push(ExpressionParserNode {
-                    left: Box::new(ValueParserNode {
-                        value: token.value.unwrap(),
-                        r#type: Types::NUMBER,
-                    }),
-                    right: None,
-                    operator: None,
-                });
-            } else if token.r#type == Types::BOOL {
-                args.push(ExpressionParserNode {
-                    left: Box::new(ValueParserNode {
-                        value: token.value.unwrap(),
-                        r#type: Types::BOOL,
-                    }),
-                    right: None,
-                    operator: None,
-                });
-            }
+            } // else if token.r#type == Types::IDENTIFIER {
+              //     args.push(ExpressionParserNode {
+              //         left: Box::new(ValueParserNode {
+              //             value: token.value.unwrap(),
+              //             r#type: Types::IDENTIFIER,
+              //         }),
+              //         right: None,
+              //         operator: None,
+              //     });
+              // } else if token.r#type == Types::NUMBER {
+              //     args.push(ExpressionParserNode {
+              //         left: Box::new(ValueParserNode {
+              //             value: token.value.unwrap(),
+              //             r#type: Types::NUMBER,
+              //         }),
+              //         right: None,
+              //         operator: None,
+              //     });
+              // } else if token.r#type == Types::BOOL {
+              //     args.push(ExpressionParserNode {
+              //         left: Box::new(ValueParserNode {
+              //             value: token.value.unwrap(),
+              //             r#type: Types::BOOL,
+              //         }),
+              //         right: None,
+              //         operator: None,
+              //     });
+              // }
             self.set_next_position();
+            args.push(*self.parse_expression());
         }
         self.set_next_position();
 

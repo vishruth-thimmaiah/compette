@@ -179,7 +179,9 @@ impl<'ctx> CodeGen<'ctx> {
         match node.r#type {
             Types::NUMBER => self.string_to_value(&node.value, req_type),
             Types::BOOL => self.string_to_value(&node.value, req_type),
-            Types::DATATYPE(DATATYPE::STRING(_)) => self.string_to_value(&node.value, req_type),
+            Types::DATATYPE(DATATYPE::STRING(str)) => {
+                self.string_to_value(&node.value, &DATATYPE::STRING(str))
+            }
 
             Types::IDENTIFIER => {
                 let vars = self.variables.borrow();
