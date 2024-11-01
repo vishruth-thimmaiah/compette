@@ -42,4 +42,16 @@ mod tests {
 
         assert_eq!(4, generate_result(contents).unwrap());
     }
+
+    #[test]
+    fn check_array() {
+        let contents = r#"
+        func main() u32 {
+            let u32[] a = [1, 2, 3]
+            return a[0]
+        }
+        "#;
+
+        assert_eq!(1, generate_result(contents).unwrap());
+    }
 }
