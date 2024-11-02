@@ -1,6 +1,6 @@
 use inkwell::{
     types::{BasicMetadataTypeEnum, BasicType},
-    values::{BasicValue, BasicValueEnum, FunctionValue},
+    values::{BasicValueEnum, FunctionValue},
 };
 
 use crate::{
@@ -84,7 +84,7 @@ impl<'ctx> CodeGen<'ctx> {
         let function = self
             .module
             .get_function(&func_node.func_name)
-            .unwrap_or(self.def_extern(&func_node.func_name));
+            .unwrap_or_else(|| self.def_extern(&func_node.func_name));
         let mut args = Vec::new();
         let params = function.get_params();
         for (index, arg) in func_node.args.iter().enumerate() {
@@ -93,9 +93,7 @@ impl<'ctx> CodeGen<'ctx> {
                 let arg_val = self.add_expression(arg, func_name, req_type);
                 if let DATATYPE::ARRAY(_) = req_type {
                     if !arg_val.is_pointer_value() {
-                        let ptr = self.builder
-                            .build_alloca(arg_val.get_type(), "")
-                            .unwrap();
+                        let ptr = self.builder.build_alloca(arg_val.get_type(), "").unwrap();
                         self.builder.build_store(ptr, arg_val).unwrap();
                         ptr.into()
                     } else {

@@ -29,6 +29,22 @@ mod tests {
     }
 
     #[test]
+    fn check_mult_func() {
+        let contents = r#"
+        func add(a u32, b u32) u32 {
+            return a + b
+        }
+
+        func main() u32 {
+            let u32 a = add(2, 3)
+            return a
+        }
+        "#;
+
+        assert_eq!(5, generate_result(contents).unwrap());
+    }
+
+    #[test]
     fn check_mut() {
         let contents = r#"
         func main() u32 {
