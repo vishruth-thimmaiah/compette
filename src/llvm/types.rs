@@ -9,7 +9,7 @@ use super::codegen::CodeGen;
 
 impl<'ctx> CodeGen<'ctx> {
     pub fn string_to_value(&self, value: &str, val_type: &DATATYPE) -> BasicValueEnum<'ctx> {
-        let expr_type = self.def_expr(val_type);
+        let expr_type = self.def_expr(val_type).unwrap();
 
         if expr_type.is_int_type() {
             expr_type
@@ -50,29 +50,34 @@ impl<'ctx> CodeGen<'ctx> {
     }
 
     // TODO: Make U.. unsigned
-    pub fn def_expr(&self, req_type: &DATATYPE) -> BasicTypeEnum<'ctx> {
+    pub fn def_expr(&self, req_type: &DATATYPE) -> Option<BasicTypeEnum<'ctx>> {
         match req_type {
-            DATATYPE::U8 => self.context.i8_type().into(),
-            DATATYPE::U16 => self.context.i16_type().into(),
-            DATATYPE::U32 => self.context.i32_type().into(),
-            DATATYPE::U64 => self.context.i64_type().into(),
-            DATATYPE::I8 => self.context.i8_type().into(),
-            DATATYPE::I16 => self.context.i16_type().into(),
-            DATATYPE::I32 => self.context.i32_type().into(),
-            DATATYPE::I64 => self.context.i64_type().into(),
-            DATATYPE::BOOL => self.context.bool_type().into(),
-            DATATYPE::F32 => self.context.f32_type().into(),
-            DATATYPE::F64 => self.context.f64_type().into(),
+            DATATYPE::U8 => Some(self.context.i8_type().into()),
+            DATATYPE::U16 => Some(self.context.i16_type().into()),
+            DATATYPE::U32 => Some(self.context.i32_type().into()),
+            DATATYPE::U64 => Some(self.context.i64_type().into()),
+            DATATYPE::I8 => Some(self.context.i8_type().into()),
+            DATATYPE::I16 => Some(self.context.i16_type().into()),
+            DATATYPE::I32 => Some(self.context.i32_type().into()),
+            DATATYPE::I64 => Some(self.context.i64_type().into()),
+            DATATYPE::BOOL => Some(self.context.bool_type().into()),
+            DATATYPE::F32 => Some(self.context.f32_type().into()),
+            DATATYPE::F64 => Some(self.context.f64_type().into()),
 
-            DATATYPE::STRING(len) => self
-                .context
-                .const_string(&vec![0; *len], true)
-                .get_type()
-                .into(),
-            DATATYPE::ARRAY(inner) => self
-                .def_expr(&inner.datatype)
-                .array_type(inner.length)
-                .into(),
+            DATATYPE::STRING(len) => Some(
+                self.context
+                    .const_string(&vec![0; *len], true)
+                    .get_type()
+                    .into(),
+            ),
+            DATATYPE::ARRAY(inner) => Some(
+                self.def_expr(&inner.datatype)
+                    .unwrap()
+                    .array_type(inner.length)
+                    .into(),
+            ),
+
+            DATATYPE::NONE => None,
         }
     }
 }

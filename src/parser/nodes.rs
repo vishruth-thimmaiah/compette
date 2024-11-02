@@ -44,7 +44,7 @@ impl ParserType for ExpressionParserNode {
 pub struct FunctionParserNode {
     pub func_name: String,
     pub args: Vec<(String, DATATYPE)>,
-    pub return_type: Option<DATATYPE>,
+    pub return_type: DATATYPE,
     pub body: Vec<Box<dyn ParserType>>,
 }
 impl ParserType for FunctionParserNode {

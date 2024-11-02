@@ -18,8 +18,14 @@ impl<'ctx> CodeGen<'ctx> {
             .push(FunctionStore::new(node.func_name.clone()));
         let args = self.def_func_args(&node.args);
 
-        let ret_type = node.return_type.as_ref().unwrap();
-        let fn_type = self.def_expr(ret_type).fn_type(&args, false);
+        let ret_type = &node.return_type;
+
+        let fn_type = if let Some(expr) = self.def_expr(&ret_type) {
+            expr.fn_type(&args, false)
+        } else {
+            self.context.void_type().fn_type(&args, false)
+        };
+
         let function = self.module.add_function(&node.func_name, fn_type, None);
 
         for (index, arg) in function.get_param_iter().enumerate() {
@@ -29,11 +35,7 @@ impl<'ctx> CodeGen<'ctx> {
         let basic_block = self.context.append_basic_block(function, "entry");
         self.builder.position_at_end(basic_block);
 
-        self.nested_codegen(
-            &node.body,
-            &node.func_name,
-            node.return_type.as_ref().unwrap(),
-        );
+        self.nested_codegen(&node.body, &node.func_name, &node.return_type);
     }
 
     pub fn add_return(&self, node: &ReturnNode, func_name: &str, ret_type: &DATATYPE) {
@@ -42,9 +44,13 @@ impl<'ctx> CodeGen<'ctx> {
             .any()
             .downcast_ref::<ExpressionParserNode>()
             .unwrap();
-        let ret_val = self.add_expression(ret_expr, func_name, ret_type);
+        if ret_type == &DATATYPE::NONE {
+            self.builder.build_return(None).unwrap();
+        } else {
+            let ret_val = self.add_expression(ret_expr, func_name, ret_type);
+            self.builder.build_return(Some(&ret_val)).unwrap();
+        }
 
-        self.builder.build_return(Some(&ret_val)).unwrap();
     }
 
     pub fn def_extern(&self, func_name: &str) -> FunctionValue<'ctx> {
@@ -61,11 +67,14 @@ impl<'ctx> CodeGen<'ctx> {
                 .collect::<Vec<_>>(),
         );
 
-        self.module.add_function(
-            func_name,
-            self.def_expr(&func.return_type).fn_type(&params, false),
-            Some(inkwell::module::Linkage::External),
-        )
+        let fn_type = if let Some(expr) = self.def_expr(&func.return_type) {
+            expr.fn_type(&params, false)
+        } else {
+            self.context.void_type().fn_type(&params, false)
+        };
+
+        self.module
+            .add_function(func_name, fn_type, Some(inkwell::module::Linkage::External))
     }
 
     pub fn add_func_call(
@@ -91,7 +100,8 @@ impl<'ctx> CodeGen<'ctx> {
             .unwrap()
             .try_as_basic_value()
             .left()
-            .unwrap()
+            // FIXME: Temporary fix for functions that return nothing
+            .unwrap_or(self.context.i32_type().const_zero().into())
     }
 
     pub fn def_func_args(
@@ -101,10 +111,9 @@ impl<'ctx> CodeGen<'ctx> {
         let mut result_arr: Vec<BasicMetadataTypeEnum<'ctx>> = Vec::new();
 
         for arg in args {
-            result_arr.push(self.def_expr(&arg.1).into());
+            result_arr.push(self.def_expr(&arg.1).unwrap().into());
         }
 
         return result_arr;
     }
-
 }

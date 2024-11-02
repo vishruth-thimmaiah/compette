@@ -70,6 +70,7 @@ pub enum DATATYPE {
     BOOL,
     STRING(usize),
     ARRAY(Box<ArrayDetails>),
+    NONE,
 }
 
 #[derive(Debug, PartialEq, Clone)]

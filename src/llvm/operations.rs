@@ -120,7 +120,11 @@ impl<'ctx> CodeGen<'ctx> {
     pub fn to_bool(&self, expr: &BasicValueEnum<'ctx>) -> IntValue<'ctx> {
         let datatype = self.get_datatype(expr.get_type());
         if expr.is_int_value() {
-            let val = self.def_expr(&datatype).const_zero().into_int_value();
+            let val = self
+                .def_expr(&datatype)
+                .unwrap()
+                .const_zero()
+                .into_int_value();
             if datatype == DATATYPE::BOOL {
                 return expr.into_int_value();
             }
@@ -129,7 +133,11 @@ impl<'ctx> CodeGen<'ctx> {
                 .unwrap()
                 .into()
         } else {
-            let val = self.def_expr(&datatype).const_zero().into_float_value();
+            let val = self
+                .def_expr(&datatype)
+                .unwrap()
+                .const_zero()
+                .into_float_value();
             self.builder
                 .build_float_compare(
                     inkwell::FloatPredicate::ONE,

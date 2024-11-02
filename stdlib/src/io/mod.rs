@@ -4,17 +4,15 @@ use std::{
 };
 
 #[no_mangle]
-extern "C" fn print(s: *const c_char) -> i32 {
+extern "C" fn print(s: *const c_char) {
     let string = unsafe { CStr::from_ptr(s) };
     std::io::stdout().write_all(string.to_bytes()).unwrap();
     std::io::stdout().flush().unwrap();
-    return 0;
 }
 
 #[no_mangle]
-extern "C" fn println(s: *const c_char) -> i32 {
+extern "C" fn println(s: *const c_char) {
     let string = unsafe { CStr::from_ptr(s) };
     std::io::stdout().write_all(string.to_bytes()).unwrap();
     std::io::stdout().write(b"\n").unwrap();
-    return 0;
 }

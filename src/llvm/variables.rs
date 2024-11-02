@@ -111,7 +111,7 @@ impl<'ctx> CodeGen<'ctx> {
         }
         // Figure out how to do this without unsafe
         let array = unsafe {
-            ArrayValue::new_const_array(&self.def_expr(&array_type.datatype), &array_val)
+            ArrayValue::new_const_array(&self.def_expr(&array_type.datatype).unwrap(), &array_val)
         };
 
         array.into()
@@ -163,7 +163,7 @@ impl<'ctx> CodeGen<'ctx> {
 
         unsafe {
             self.builder
-                .build_in_bounds_gep(array_type, var_name, val, "")
+                .build_in_bounds_gep(array_type.unwrap(), var_name, val, "")
                 .unwrap()
         }
     }
@@ -182,7 +182,6 @@ impl<'ctx> CodeGen<'ctx> {
             Types::DATATYPE(DATATYPE::STRING(str)) => {
                 self.string_to_value(&node.value, &DATATYPE::STRING(str))
             }
-
             Types::IDENTIFIER => {
                 let vars = self.variables.borrow();
                 let var = vars.iter().find(|x| x.name == func_name).unwrap();
@@ -194,7 +193,7 @@ impl<'ctx> CodeGen<'ctx> {
                             var_name.ptr.as_basic_value_enum()
                         } else {
                             self.builder
-                                .build_load(self.def_expr(req_type), var_name.ptr, &node.value)
+                                .build_load(self.def_expr(req_type).unwrap(), var_name.ptr, &node.value)
                                 .unwrap()
                         }
                     } else if let Some(func) = self.module.get_function(func_name) {
@@ -229,7 +228,7 @@ impl<'ctx> CodeGen<'ctx> {
                     .unwrap();
                 let array = self.get_array_val(iter_node, func_name, req_type);
                 self.builder
-                    .build_load(self.def_expr(req_type), array, "")
+                    .build_load(self.def_expr(req_type).unwrap(), array, "")
                     .unwrap()
             }
             ParserTypes::VALUE_ITER => {

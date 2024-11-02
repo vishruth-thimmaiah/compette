@@ -181,7 +181,7 @@ mod tests {
                     ("x".to_string(), DATATYPE::U32),
                     ("y".to_string(), DATATYPE::U32),
                 ],
-                return_type: Some(DATATYPE::U32),
+                return_type: DATATYPE::U32,
                 body: vec![
                     Box::new(AssignmentParserNode {
                         var_name: "q".to_string(),
@@ -308,7 +308,7 @@ mod tests {
             }),
             Box::new(FunctionParserNode {
                 func_name: "add".to_string(),
-                return_type: Some(DATATYPE::U32),
+                return_type: DATATYPE::U32,
                 args: vec![
                     ("x".to_string(), DATATYPE::U32),
                     ("y".to_string(), DATATYPE::U32),
@@ -388,7 +388,7 @@ mod tests {
             Box::new(FunctionParserNode {
                 func_name: "num".to_string(),
                 args: vec![],
-                return_type: Some(DATATYPE::U32),
+                return_type: DATATYPE::U32,
                 body: vec![Box::new(ReturnNode {
                     return_value: Box::new(ExpressionParserNode {
                         left: Box::new(ValueParserNode {
@@ -403,7 +403,7 @@ mod tests {
             Box::new(FunctionParserNode {
                 func_name: "main".to_string(),
                 args: vec![],
-                return_type: Some(DATATYPE::U32),
+                return_type: DATATYPE::U32,
                 body: vec![
                     Box::new(AssignmentParserNode {
                         var_name: "a".to_string(),

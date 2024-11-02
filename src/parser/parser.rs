@@ -316,9 +316,9 @@ impl Parser {
         let return_type = match self.get_next_token().r#type {
             Types::DATATYPE(dt) => {
                 self.set_next_position();
-                Some(dt)
+                dt
             }
-            _ => None,
+            _ => DATATYPE::NONE,
         };
 
         if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
@@ -342,7 +342,18 @@ impl Parser {
             errors::parser_error(self, "invalid token")
         }
 
-        let condition = self.parse_expression();
+        let condition = if self.get_next_token().r#type != Types::NL {
+            self.parse_expression()
+        } else {
+            Box::new(ExpressionParserNode {
+                left: Box::new(ValueParserNode {
+                    value: "".to_string(),
+                    r#type: Types::DATATYPE(DATATYPE::NONE),
+                }),
+                right: None,
+                operator: None,
+            })
+        };
         self.set_next_position();
 
         Box::new(ReturnNode {

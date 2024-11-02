@@ -18,7 +18,7 @@ impl<'ctx> CodeGen<'ctx> {
 
         let ptr = self
             .builder
-            .build_alloca(self.def_expr(dt), var_name)
+            .build_alloca(self.def_expr(dt).unwrap(), var_name)
             .unwrap();
 
         var.vars.insert(
