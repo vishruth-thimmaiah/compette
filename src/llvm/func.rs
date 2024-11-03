@@ -89,20 +89,7 @@ impl<'ctx> CodeGen<'ctx> {
         let params = function.get_params();
         for (index, arg) in func_node.args.iter().enumerate() {
             let req_type = &self.get_datatype(params[index].get_type());
-            let arg_val = {
-                let arg_val = self.add_expression(arg, func_name, req_type);
-                if let DATATYPE::ARRAY(_) = req_type {
-                    if !arg_val.is_pointer_value() {
-                        let ptr = self.builder.build_alloca(arg_val.get_type(), "").unwrap();
-                        self.builder.build_store(ptr, arg_val).unwrap();
-                        ptr.into()
-                    } else {
-                        arg_val.into()
-                    }
-                } else {
-                    arg_val.into()
-                }
-            };
+            let arg_val = self.add_expression(arg, func_name, req_type).into();
             args.push(arg_val);
         }
 

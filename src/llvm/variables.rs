@@ -193,7 +193,11 @@ impl<'ctx> CodeGen<'ctx> {
                             var_name.ptr.as_basic_value_enum()
                         } else {
                             self.builder
-                                .build_load(self.def_expr(req_type).unwrap(), var_name.ptr, &node.value)
+                                .build_load(
+                                    self.def_expr(req_type).unwrap(),
+                                    var_name.ptr,
+                                    &node.value,
+                                )
                                 .unwrap()
                         }
                     } else if let Some(func) = self.module.get_function(func_name) {

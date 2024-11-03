@@ -23,7 +23,9 @@ impl<'ctx> CodeGen<'ctx> {
                 .const_float(value.parse::<f64>().unwrap())
                 .into()
         } else if let &DATATYPE::STRING(_) = val_type {
-            self.context.const_string(value.as_bytes(), true).into()
+            let ptr = self.builder.build_alloca(expr_type, "").unwrap();
+            self.builder.build_store(ptr, self.context.const_string(value.as_bytes(), true)).unwrap();
+            ptr.into()
         } else {
             todo!()
         }
