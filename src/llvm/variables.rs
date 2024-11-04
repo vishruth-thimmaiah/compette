@@ -147,29 +147,55 @@ impl<'ctx> CodeGen<'ctx> {
         req_type: &DATATYPE,
     ) -> PointerValue<'ctx> {
         let vars = self.variables.borrow();
-        let var_name = vars
+        let array = vars
             .iter()
             .find(|x| x.name == func_name)
             .unwrap()
             .vars
             .get(&node.value)
-            .unwrap()
-            .ptr;
+            .unwrap();
 
-        let val = &[self
+        let array_index = self
             .add_expression(&node.index, func_name, req_type)
-            .into_int_value()];
+            .into_int_value();
         let array_type = self.def_expr(req_type);
 
-        unsafe {
+        let array_size = if let DATATYPE::ARRAY(array_type) = &array.datatype {
+            self.context
+                .i32_type()
+                .const_int(array_type.length.into(), false)
+        } else {
+            unreachable!()
+        };
+
+        let cmp = self
+            .builder
+            .build_int_compare(inkwell::IntPredicate::ULT, array_index, array_size, "")
+            .unwrap();
+
+        let val_at_index = unsafe {
             self.builder
-                .build_in_bounds_gep(array_type.unwrap(), var_name, val, "")
+                .build_in_bounds_gep(array_type.unwrap(), array.ptr, &[array_index], "")
                 .unwrap()
-        }
+        };
+
+        // FIXME: Panic instead of returning 0.
+        let zero = self
+            .builder
+            .build_alloca(self.context.i32_type(), "")
+            .unwrap();
+
+        self.builder
+            .build_store(zero, self.context.i32_type().const_zero())
+            .unwrap();
+        self.builder
+            .build_select(cmp, val_at_index, zero, "")
+            .unwrap()
+            .into_pointer_value()
     }
 
-    // Converts a string to a valid datatype. does not store, evaluate values. A raw value can be
-    // passed, or an identifier name.
+    /// Converts a string to a valid datatype. does not store, evaluate values. A raw value can be
+    /// passed, or an identifier name.
     pub fn add_value(
         &self,
         node: &ValueParserNode,
