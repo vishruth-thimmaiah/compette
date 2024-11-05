@@ -10,6 +10,19 @@ pub trait ParserType: Debug {
 }
 
 #[derive(Debug)]
+pub struct ImportParserNode {
+    pub path: Vec<String>,
+}
+impl ParserType for ImportParserNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::IMPORT
+    }
+    fn any(&self) -> &dyn Any {
+        self
+    }
+}
+
+#[derive(Debug)]
 pub struct AssignmentParserNode {
     pub var_name: String,
     pub var_type: DATATYPE,
@@ -84,6 +97,7 @@ impl ParserType for BreakNode {
 pub struct FunctionCallParserNode {
     pub func_name: String,
     pub args: Vec<ExpressionParserNode>,
+    pub imported: Option<Vec<String>>,
 }
 impl ParserType for FunctionCallParserNode {
     fn get_type(&self) -> ParserTypes {

@@ -5,11 +5,13 @@ use inkwell::{
 
 use crate::{
     lexer::types::DATATYPE,
-    llvm::stdlib_defs::SUPPORTED_FUNCS,
     parser::nodes::{ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ReturnNode},
 };
 
-use super::codegen::{CodeGen, FunctionStore};
+use super::{
+    codegen::{CodeGen, FunctionStore},
+    stdlib_defs::SUPPORTED_FUNCS,
+};
 
 impl<'ctx> CodeGen<'ctx> {
     pub fn add_function(&self, node: &FunctionParserNode) {
@@ -52,11 +54,14 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    pub fn def_extern(&self, func_name: &str) -> FunctionValue<'ctx> {
+    pub fn def_extern(&self, func_name: &str, imported: &Vec<String>) -> FunctionValue<'ctx> {
+        if !self.check_if_imported(imported) {
+            panic!("Function not found");
+        }
         let func = SUPPORTED_FUNCS
             .iter()
             .find(|f| f.name == func_name)
-            .expect("Function not found");
+            .unwrap();
         let params = self.def_func_args(
             &func
                 .args
@@ -81,10 +86,11 @@ impl<'ctx> CodeGen<'ctx> {
         func_node: &FunctionCallParserNode,
         func_name: &str,
     ) -> BasicValueEnum<'ctx> {
-        let function = self
-            .module
-            .get_function(&func_node.func_name)
-            .unwrap_or_else(|| self.def_extern(&func_node.func_name));
+        let function = if let Some(imported) = &func_node.imported {
+            self.def_extern(&func_node.func_name, imported)
+        } else {
+            self.module.get_function(&func_node.func_name).unwrap()
+        };
         let mut args = Vec::new();
         let params = function.get_params();
         for (index, arg) in func_node.args.iter().enumerate() {
@@ -113,5 +119,13 @@ impl<'ctx> CodeGen<'ctx> {
         }
 
         return result_arr;
+    }
+
+    fn check_if_imported(&self, import_path: &Vec<String>) -> bool {
+        self.imports
+            .borrow()
+            .iter()
+            .find(|x| x.last() == import_path.last())
+            .is_some()
     }
 }

@@ -217,6 +217,7 @@ mod tests {
             }),
             Box::new(FunctionCallParserNode {
                 func_name: "add".to_string(),
+                imported: None,
                 args: vec![
                     ExpressionParserNode {
                         left: Box::new(ValueParserNode {
@@ -336,6 +337,7 @@ mod tests {
             }),
             Box::new(FunctionCallParserNode {
                 func_name: "add".to_string(),
+                imported: None,
                 args: vec![
                     ExpressionParserNode {
                         left: Box::new(ValueParserNode {
@@ -425,6 +427,7 @@ mod tests {
                         value: Box::new(FunctionCallParserNode {
                             func_name: "num".to_string(),
                             args: vec![],
+                            imported: None,
                         }),
                     }),
                     Box::new(ReturnNode {

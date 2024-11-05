@@ -106,6 +106,7 @@ impl Lexer {
                 b'[' => Types::DELIMITER(DELIMITER::LBRACKET),
                 b']' => Types::DELIMITER(DELIMITER::RBRACKET),
                 b'.' => Types::OPERATOR(OPERATOR::DOT),
+                b':' => Types::OPERATOR(OPERATOR::COLON),
                 b'/' => return self.skip_comment(),
                 b'\n' => {
                     self.line += 1;
@@ -182,57 +183,43 @@ impl Lexer {
 
         self.index = end - 1;
 
-        match result.as_str() {
-            "func" => Token::new(
-                Types::KEYWORD(KEYWORD::FUNCTION),
-                None,
-                self.line,
-                self.column,
-            ),
-            "let" => Token::new(Types::KEYWORD(KEYWORD::LET), None, self.line, self.column),
-            "return" => Token::new(
-                Types::KEYWORD(KEYWORD::RETURN),
-                None,
-                self.line,
-                self.column,
-            ),
-            "if" => Token::new(Types::KEYWORD(KEYWORD::IF), None, self.line, self.column),
-            "else" => Token::new(Types::KEYWORD(KEYWORD::ELSE), None, self.line, self.column),
-            "loop" => Token::new(Types::KEYWORD(KEYWORD::LOOP), None, self.line, self.column),
-            "range" => Token::new(Types::KEYWORD(KEYWORD::RANGE), None, self.line, self.column),
-            "break" => Token::new(Types::KEYWORD(KEYWORD::BREAK), None, self.line, self.column),
-            "u8" => Token::new(Types::DATATYPE(DATATYPE::U8), None, self.line, self.column),
-            "u32" => Token::new(Types::DATATYPE(DATATYPE::U32), None, self.line, self.column),
-            "u64" => Token::new(Types::DATATYPE(DATATYPE::U64), None, self.line, self.column),
-
-            "i8" => Token::new(Types::DATATYPE(DATATYPE::I8), None, self.line, self.column),
-            "i16" => Token::new(Types::DATATYPE(DATATYPE::I16), None, self.line, self.column),
-            "i32" => Token::new(Types::DATATYPE(DATATYPE::I32), None, self.line, self.column),
-            "i64" => Token::new(Types::DATATYPE(DATATYPE::I64), None, self.line, self.column),
-            "f32" => Token::new(Types::DATATYPE(DATATYPE::F32), None, self.line, self.column),
-            "f64" => Token::new(Types::DATATYPE(DATATYPE::F64), None, self.line, self.column),
-            "bool" => Token::new(
-                Types::DATATYPE(DATATYPE::BOOL),
-                None,
-                self.line,
-                self.column,
-            ),
-            "true" => Token::new(Types::BOOL, Some("1".to_string()), self.line, self.column),
-            "false" => Token::new(Types::BOOL, Some("0".to_string()), self.line, self.column),
-            "string" => Token::new(
-                Types::DATATYPE(DATATYPE::STRING(0)),
-                None,
-                self.line,
-                self.column,
-            ),
+        let (token_type, token_value) = match result.as_str() {
+            "func" => (Types::KEYWORD(KEYWORD::FUNCTION), None),
+            "import" => (Types::KEYWORD(KEYWORD::IMPORT), None),
+            "let" => (Types::KEYWORD(KEYWORD::LET), None),
+            "return" => (Types::KEYWORD(KEYWORD::RETURN), None),
+            "if" => (Types::KEYWORD(KEYWORD::IF), None),
+            "else" => (Types::KEYWORD(KEYWORD::ELSE), None),
+            "loop" => (Types::KEYWORD(KEYWORD::LOOP), None),
+            "range" => (Types::KEYWORD(KEYWORD::RANGE), None),
+            "break" => (Types::KEYWORD(KEYWORD::BREAK), None),
+            "u8" => (Types::DATATYPE(DATATYPE::U8), None),
+            "u16" => (Types::DATATYPE(DATATYPE::U16), None),
+            "u32" => (Types::DATATYPE(DATATYPE::U32), None),
+            "u64" => (Types::DATATYPE(DATATYPE::U64), None),
+            "i8" => (Types::DATATYPE(DATATYPE::I8), None),
+            "i16" => (Types::DATATYPE(DATATYPE::I16), None),
+            "i32" => (Types::DATATYPE(DATATYPE::I32), None),
+            "i64" => (Types::DATATYPE(DATATYPE::I64), None),
+            "f32" => (Types::DATATYPE(DATATYPE::F32), None),
+            "f64" => (Types::DATATYPE(DATATYPE::F64), None),
+            "bool" => (Types::DATATYPE(DATATYPE::BOOL), None),
+            "true" => (Types::BOOL, Some("1".to_string())),
+            "false" => (Types::BOOL, Some("0".to_string())),
+            "string" => (Types::DATATYPE(DATATYPE::STRING(0)), None),
             _ => {
-                if self.content.as_bytes()[self.index + 1] == 40 {
-                    Token::new(Types::IDENTIFIER_FUNC, Some(result), self.line, self.column)
+                if self.content.as_bytes()[self.index + 1] == b':' {
+                    self.index += 1;
+                    (Types::IMPORT_CALL, Some(result))
+                } else if self.content.as_bytes()[self.index + 1] == b'(' {
+                    (Types::IDENTIFIER_FUNC, Some(result))
                 } else {
-                    Token::new(Types::IDENTIFIER, Some(result), self.line, self.column)
+                    (Types::IDENTIFIER, Some(result))
                 }
             }
-        }
+        };
+
+        Token::new(token_type, token_value, self.line, self.column)
     }
 
     fn check_number(&mut self) -> Token {

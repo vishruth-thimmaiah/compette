@@ -1,6 +1,7 @@
 #[derive(Debug, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum ParserTypes {
+    IMPORT,
     CONDITIONAL,
     LOOP,
     FOR_LOOP,

@@ -12,7 +12,8 @@ use crate::lexer::types::DATATYPE;
 use crate::llvm::builder;
 use crate::parser::nodes::{
     AssignmentParserNode, ConditionalIfParserNode, ForLoopParserNode, FunctionCallParserNode,
-    FunctionParserNode, LoopParserNode, ParserType, ReturnNode, VariableCallParserNode,
+    FunctionParserNode, ImportParserNode, LoopParserNode, ParserType, ReturnNode,
+    VariableCallParserNode,
 };
 use crate::parser::types::ParserTypes;
 
@@ -45,6 +46,7 @@ pub struct CodeGen<'ctx> {
     pub execution_engine: ExecutionEngine<'ctx>,
     pub tokens: Vec<Box<dyn ParserType>>,
     pub variables: RefCell<Vec<FunctionStore<'ctx>>>,
+    pub imports: RefCell<Vec<Vec<String>>>,
 }
 
 impl<'ctx> CodeGen<'ctx> {
@@ -60,16 +62,19 @@ impl<'ctx> CodeGen<'ctx> {
             execution_engine,
             tokens,
             variables: RefCell::new(Vec::new()),
+            imports: RefCell::new(Vec::new()),
         }
     }
 
     pub fn compile(&self, build: bool) -> Option<u32> {
         for node in &self.tokens {
-            // functions should be the only type of node at the top level
             match node.get_type() {
+                ParserTypes::IMPORT => {
+                    let downcast_node = node.any().downcast_ref::<ImportParserNode>().unwrap();
+                    self.add_import(downcast_node);
+                }
                 ParserTypes::FUNCTION => {
                     let downcast_node = node.any().downcast_ref::<FunctionParserNode>().unwrap();
-
                     self.add_function(downcast_node);
                 }
                 _ => todo!(),
@@ -134,5 +139,11 @@ impl<'ctx> CodeGen<'ctx> {
                 _ => todo!(),
             }
         }
+    }
+
+    fn add_import(&self, node: &ImportParserNode) {
+        let mut imports = self.imports.borrow_mut();
+
+        imports.push(node.path.clone());
     }
 }

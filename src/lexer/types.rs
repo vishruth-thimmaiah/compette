@@ -7,9 +7,10 @@ pub enum Types {
     DELIMITER(DELIMITER),
     KEYWORD(KEYWORD),
     IDENTIFIER,
+    IDENTIFIER_FUNC,
+    IMPORT_CALL,
     NUMBER,
     BOOL,
-    IDENTIFIER_FUNC,
     DATATYPE(DATATYPE),
 }
 
@@ -29,6 +30,7 @@ pub enum OPERATOR {
     LESSER_EQUAL,
     GREATER_EQUAL,
     NOT_EQUAL,
+    COLON,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -45,6 +47,7 @@ pub enum DELIMITER {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum KEYWORD {
+    IMPORT,
     FUNCTION,
     LET,
     RETURN,
