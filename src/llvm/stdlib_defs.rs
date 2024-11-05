@@ -12,15 +12,21 @@ pub struct StdLibFunc {
     pub return_type: &'static DATATYPE,
 }
 
-pub const SUPPORTED_FUNCS: &[StdLibFunc] = &[
-    StdLibFunc {
-        name: "print",
-        args: &[("s", &DATATYPE::STRING(0))],
-        return_type: &DATATYPE::NONE,
-    },
-    StdLibFunc {
-        name: "println",
-        args: &[("s", &DATATYPE::STRING(0))],
-        return_type: &DATATYPE::NONE,
+pub const STDLIB_MODULES: &[StdLibModule] = &[
+    StdLibModule {
+        name: "io",
+        funcs: &[
+            StdLibFunc {
+                name: "print",
+                args: &[("s", &DATATYPE::STRING(0))],
+                return_type: &DATATYPE::NONE,
+            },
+            StdLibFunc {
+                name: "println",
+                args: &[("s", &DATATYPE::STRING(0))],
+                return_type: &DATATYPE::NONE,
+            },
+        ],
+        sub_modules: &[],
     },
 ];

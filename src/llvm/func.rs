@@ -4,13 +4,14 @@ use inkwell::{
 };
 
 use crate::{
+    errors,
     lexer::types::DATATYPE,
     parser::nodes::{ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ReturnNode},
 };
 
 use super::{
     codegen::{CodeGen, FunctionStore},
-    stdlib_defs::SUPPORTED_FUNCS,
+    stdlib_defs::STDLIB_MODULES,
 };
 
 impl<'ctx> CodeGen<'ctx> {
@@ -55,13 +56,29 @@ impl<'ctx> CodeGen<'ctx> {
     }
 
     pub fn def_extern(&self, func_name: &str, imported: &Vec<String>) -> FunctionValue<'ctx> {
-        if !self.check_if_imported(imported) {
-            panic!("Function not found");
+        let import_path = self.check_if_imported(imported);
+        if import_path.is_none() {
+            errors::compiler_error(&format!("Module '{}' not imported", imported.join(":")));
         }
-        let func = SUPPORTED_FUNCS
-            .iter()
-            .find(|f| f.name == func_name)
-            .unwrap();
+
+        let import_path = import_path.unwrap();
+
+        // TODO: Add support for nested modules
+        let func = if import_path.first().unwrap() == "std" {
+            let req_module = STDLIB_MODULES
+                .iter()
+                .find(|x| x.name == import_path.last().unwrap())
+                .expect("Module not found");
+
+            let req_func = req_module
+                .funcs
+                .iter()
+                .find(|x| x.name == func_name)
+                .expect("Function not found");
+            req_func
+        } else {
+            todo!("user defined functions are not supported yet");
+        };
         let params = self.def_func_args(
             &func
                 .args
@@ -121,11 +138,11 @@ impl<'ctx> CodeGen<'ctx> {
         return result_arr;
     }
 
-    fn check_if_imported(&self, import_path: &Vec<String>) -> bool {
+    fn check_if_imported(&self, import_path: &Vec<String>) -> Option<Vec<String>> {
         self.imports
             .borrow()
             .iter()
             .find(|x| x.last() == import_path.last())
-            .is_some()
+            .map(|x| x.clone())
     }
 }
