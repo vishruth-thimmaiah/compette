@@ -56,6 +56,11 @@ impl<'ctx> CodeGen<'ctx> {
     }
 
     pub fn def_extern(&self, func_name: &str, imported: &Vec<String>) -> FunctionValue<'ctx> {
+        if let Some(e) = self.module.get_function(func_name) {
+            if e.get_linkage() == inkwell::module::Linkage::External {
+                return e;
+            }
+        }
         let import_path = self.check_if_imported(imported);
         if import_path.is_none() {
             errors::compiler_error(&format!("Module '{}' not imported", imported.join(":")));
