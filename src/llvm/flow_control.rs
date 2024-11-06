@@ -94,7 +94,7 @@ impl<'ctx> CodeGen<'ctx> {
         let function = self.module.get_function(func_name).unwrap();
 
         let index = self.context.i32_type().const_zero();
-        let index_ptr = self.store_var(func_name, &node.index, &DATATYPE::U32, true);
+        let index_ptr = self.store_new_var(func_name, &node.index, &DATATYPE::U32, true);
 
         self.builder.build_store(index_ptr, index).unwrap();
 

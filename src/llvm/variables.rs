@@ -21,8 +21,6 @@ impl<'ctx> CodeGen<'ctx> {
     /// used to create a new variable with a name and value. stores a pointer at the corresponding
     /// func at self.variable.
     pub fn add_variable(&self, func_name: &str, node: &AssignmentParserNode) {
-        let ptr = self.store_var(func_name, &node.var_name, &node.var_type, node.is_mutable);
-
         let value = node
             .value
             .any()
@@ -36,7 +34,21 @@ impl<'ctx> CodeGen<'ctx> {
             self.add_expression(value, func_name, &node.var_type)
         };
 
-        self.builder.build_store(ptr, expr).unwrap();
+        if expr.is_pointer_value() {
+            let ptr = expr.into_pointer_value();
+            ptr.set_name(&node.var_name);
+            self.store_ptr(
+                func_name,
+                &node.var_name,
+                node.is_mutable,
+                &node.var_type,
+                ptr,
+            );
+        } else {
+            let ptr =
+                self.store_new_var(func_name, &node.var_name, &node.var_type, node.is_mutable);
+            self.builder.build_store(ptr, expr).unwrap();
+        };
     }
 
     /// used to update a variable.
