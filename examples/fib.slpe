@@ -1,0 +1,10 @@
+func fib(num i32) i32 {
+	if num < 3 {
+		return 1
+	}
+	return fib(num - 1) + fib(num - 2)
+}
+
+func main() i32 {
+	return fib(12)
+}
