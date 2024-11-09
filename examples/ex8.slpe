@@ -1,0 +1,8 @@
+struct Test {
+	a u32,
+	b u32,
+}
+
+func main() u32 {
+	return 0
+}

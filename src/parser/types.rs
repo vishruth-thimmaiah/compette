@@ -2,6 +2,7 @@
 #[allow(non_camel_case_types)]
 pub enum ParserTypes {
     IMPORT,
+    STRUCT,
     CONDITIONAL,
     LOOP,
     FOR_LOOP,

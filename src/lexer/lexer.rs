@@ -184,6 +184,7 @@ impl Lexer {
         self.index = end - 1;
 
         let (token_type, token_value) = match result.as_str() {
+            "struct" => (Types::KEYWORD(KEYWORD::STRUCT), None),
             "func" => (Types::KEYWORD(KEYWORD::FUNCTION), None),
             "import" => (Types::KEYWORD(KEYWORD::IMPORT), None),
             "let" => (Types::KEYWORD(KEYWORD::LET), None),

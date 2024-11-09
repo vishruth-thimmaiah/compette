@@ -48,6 +48,7 @@ pub enum DELIMITER {
 #[derive(Debug, PartialEq, Clone)]
 pub enum KEYWORD {
     IMPORT,
+    STRUCT,
     FUNCTION,
     LET,
     RETURN,

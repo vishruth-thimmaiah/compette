@@ -12,7 +12,7 @@ use crate::lexer::types::DATATYPE;
 use crate::llvm::builder;
 use crate::parser::nodes::{
     AssignmentParserNode, ConditionalIfParserNode, ForLoopParserNode, FunctionCallParserNode,
-    FunctionParserNode, ImportParserNode, LoopParserNode, ParserType, ReturnNode,
+    FunctionParserNode, ImportParserNode, LoopParserNode, ParserType, ReturnNode, StructParserNode,
     VariableCallParserNode,
 };
 use crate::parser::types::ParserTypes;
@@ -76,6 +76,10 @@ impl<'ctx> CodeGen<'ctx> {
                 ParserTypes::FUNCTION => {
                     let downcast_node = node.any().downcast_ref::<FunctionParserNode>().unwrap();
                     self.add_function(downcast_node);
+                }
+                ParserTypes::STRUCT => {
+                    let downcast_node = node.any().downcast_ref::<StructParserNode>().unwrap();
+                    self.def_struct(downcast_node);
                 }
                 _ => todo!(),
             }

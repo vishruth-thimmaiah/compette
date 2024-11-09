@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     errors,
     lexer::{
@@ -10,7 +12,7 @@ use crate::{
 use super::nodes::{
     AssignmentParserNode, BreakNode, ConditionalElseIfParserNode, ConditionalElseParserNode,
     ConditionalIfParserNode, ExpressionParserNode, ForLoopParserNode, FunctionCallParserNode,
-    FunctionParserNode, ImportParserNode, LoopParserNode, ParserType, ReturnNode,
+    FunctionParserNode, ImportParserNode, LoopParserNode, ParserType, ReturnNode, StructParserNode,
     ValueIterCallParserNode, ValueIterParserNode, VariableCallParserNode,
 };
 
@@ -69,6 +71,7 @@ impl Parser {
             match token_type {
                 Types::NL => (),
                 Types::EOF => break,
+                Types::KEYWORD(KEYWORD::STRUCT) => tokens.push(self.parse_struct()),
                 Types::KEYWORD(KEYWORD::IMPORT) => tokens.push(self.parse_import()),
                 Types::KEYWORD(KEYWORD::LET) => tokens.push(self.parse_assignment()),
                 Types::KEYWORD(KEYWORD::IF) => tokens.push(self.parse_conditional_if()),
@@ -579,5 +582,51 @@ impl Parser {
         let body = self.parse_scope();
 
         return Box::new(LoopParserNode { condition, body });
+    }
+
+    fn parse_struct(&mut self) -> Box<StructParserNode> {
+        let struct_name = self.get_next_token().value.unwrap();
+
+        self.set_next_position();
+
+        if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
+            errors::parser_error(self, "invalid token")
+        }
+
+        self.set_next_position();
+
+        let mut fields: HashMap<String, DATATYPE> = HashMap::new();
+
+        while self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACE) {
+            if self.get_next_token().r#type == Types::NL
+                || self.get_next_token().r#type == Types::DELIMITER(DELIMITER::COMMA)
+            {
+                self.set_next_position();
+                continue;
+            }
+
+            self.set_next_position();
+
+            if self.get_current_token().r#type != Types::IDENTIFIER {
+                errors::parser_error(self, "invalid token");
+            }
+
+            let field_type = if let Types::DATATYPE(field_type) = self.get_next_token().r#type {
+                field_type
+            } else {
+                errors::parser_error(self, "invalid token");
+            };
+
+            fields.insert(self.get_current_token().value.unwrap(), field_type);
+
+            self.set_next_position();
+        }
+
+        self.set_next_position();
+
+        Box::new(StructParserNode {
+            struct_name,
+            fields,
+        })
     }
 }

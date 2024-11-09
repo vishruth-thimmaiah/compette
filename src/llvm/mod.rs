@@ -5,6 +5,7 @@ mod func;
 mod helpers;
 mod operations;
 mod stdlib_defs;
+mod structs;
 mod tests;
 mod types;
 mod variables;
