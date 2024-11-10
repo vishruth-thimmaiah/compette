@@ -309,7 +309,11 @@ impl<'ctx> CodeGen<'ctx> {
             if let Some(right) = &node.right {
                 let right_expr = right.any().downcast_ref::<ExpressionParserNode>().unwrap();
                 if node.operator.as_ref().unwrap() == &OPERATOR::DOT {
-                    let field_name = right_expr.left.any().downcast_ref::<ValueParserNode>().unwrap();
+                    let field_name = right_expr
+                        .left
+                        .any()
+                        .downcast_ref::<ValueParserNode>()
+                        .unwrap();
                     return self.index_struct("t", &field_name.value, func_name).into();
                 }
                 self.add_expression(right_expr, func_name, req_type)

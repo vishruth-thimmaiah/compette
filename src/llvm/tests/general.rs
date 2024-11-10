@@ -1,4 +1,4 @@
-use crate::{lexer::lexer::Lexer, llvm::codegen::CodeGen, parser::parser::Parser};
+use crate::{lexer::lexer::Lexer, llvm::codegen::CodeGen, parser::Parser};
 use inkwell::context::Context;
 
 #[allow(dead_code)]

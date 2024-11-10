@@ -3,7 +3,7 @@ use std::{env::args, fs};
 use inkwell::context::Context;
 use lexer::lexer::Lexer;
 use llvm::codegen::CodeGen;
-use parser::parser::Parser;
+use parser::Parser;
 
 mod args;
 mod errors;

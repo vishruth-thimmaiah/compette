@@ -1,6 +1,6 @@
 use std::{backtrace::Backtrace, process::exit};
 
-use crate::parser::parser::Parser;
+use crate::parser::Parser;
 
 pub fn parser_error(parser: &Parser, msg: &str) -> ! {
     eprintln!("ParserError");

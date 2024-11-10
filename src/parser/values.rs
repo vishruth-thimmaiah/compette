@@ -1,0 +1,182 @@
+use std::collections::HashMap;
+
+use crate::{
+    errors,
+    lexer::types::{ArrayDetails, Types, DATATYPE, DELIMITER, OPERATOR},
+};
+
+use super::{
+    nodes::{
+        AssignmentParserNode, ParserType, StructParserNode, ValueIterCallParserNode,
+        ValueIterParserNode, ValueParserNode, VariableCallParserNode,
+    },
+    Parser,
+};
+
+impl Parser {
+    pub fn parse_assignment(&mut self) -> Box<AssignmentParserNode> {
+        if self.get_prev_token().r#type != Types::NL {
+            errors::parser_error(self, "invalid token");
+        }
+
+        let mut var_type = match self.get_next_token().r#type {
+            Types::DATATYPE(dt) => dt,
+            Types::IDENTIFIER => DATATYPE::CUSTOM(self.get_next_token().value.unwrap()),
+            _ => errors::parser_error(self, "invalid token"),
+        };
+        self.set_next_position();
+
+        let is_array = if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACKET) {
+            self.set_next_position();
+            if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACKET) {
+                errors::parser_error(self, "Invalid array declaration");
+            }
+            self.set_next_position();
+            true
+        } else {
+            false
+        };
+
+        let is_mutable = match self.get_next_token().r#type {
+            Types::OPERATOR(OPERATOR::NOT) => {
+                self.set_next_position();
+                true
+            }
+            _ => false,
+        };
+
+        let var_name = self.get_next_token().value.unwrap();
+        self.set_next_position();
+
+        if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
+            errors::parser_error(self, "invalid token")
+        }
+        self.set_next_position();
+
+        let value = self.parse_expression();
+
+        if let DATATYPE::STRING(_) = var_type {
+            let down_cast = value.left.any().downcast_ref::<ValueParserNode>().unwrap();
+            if let Types::DATATYPE(DATATYPE::STRING(len)) = down_cast.r#type {
+                var_type = DATATYPE::STRING(len);
+            }
+        }
+
+        if is_array {
+            let try_downcast = value.left.any().downcast_ref::<ValueIterParserNode>();
+
+            if try_downcast.is_none() {
+                errors::parser_error(self, "Invalid array assignment");
+            }
+
+            let length = try_downcast.unwrap().value.len() as u32;
+
+            var_type = DATATYPE::ARRAY(Box::new(ArrayDetails {
+                datatype: var_type,
+                length,
+            }));
+        }
+
+        self.set_next_position();
+
+        return Box::new(AssignmentParserNode {
+            var_name,
+            var_type,
+            is_mutable,
+            value,
+        });
+    }
+
+    pub fn parse_array(&mut self) -> Box<ValueIterParserNode> {
+        let mut array_contents = vec![];
+        while self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACKET) {
+            array_contents.push(*self.parse_expression());
+            if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::RBRACKET) {
+                break;
+            } else if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::COMMA) {
+                errors::parser_error(self, "Expected comma after array element");
+            }
+            self.set_next_position();
+        }
+
+        self.set_next_position();
+
+        return Box::new(ValueIterParserNode {
+            value: array_contents,
+        });
+    }
+
+    pub fn parse_identifier_call(&mut self) -> Box<VariableCallParserNode> {
+        let var_name: Box<dyn ParserType> =
+            if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACKET) {
+                let name = self.get_current_token().value.unwrap();
+                self.set_next_position();
+                let val = Box::new(ValueIterCallParserNode {
+                    value: name,
+                    index: self.parse_expression(),
+                });
+                self.set_next_position();
+                val
+            } else {
+                Box::new(ValueParserNode {
+                    value: self.get_current_token().value.unwrap(),
+                    r#type: Types::IDENTIFIER,
+                })
+            };
+
+        if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
+            errors::parser_error(self, "invalid token");
+        }
+        self.set_next_position();
+        return Box::new(VariableCallParserNode {
+            var_name,
+            rhs: self.parse_expression(),
+        });
+    }
+
+    pub fn parse_struct(&mut self) -> Box<StructParserNode> {
+        let struct_name = self.get_next_token().value.unwrap();
+
+        self.set_next_position();
+
+        if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
+            errors::parser_error(self, "invalid token")
+        }
+
+        self.set_next_position();
+
+        let mut fields: HashMap<String, DATATYPE> = HashMap::new();
+
+        while self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACE) {
+            if self.get_next_token().r#type == Types::NL
+                || self.get_next_token().r#type == Types::DELIMITER(DELIMITER::COMMA)
+            {
+                self.set_next_position();
+                continue;
+            }
+
+            self.set_next_position();
+
+            if self.get_current_token().r#type != Types::IDENTIFIER {
+                errors::parser_error(self, "invalid token");
+            }
+
+            let field_type = if let Types::DATATYPE(field_type) = self.get_next_token().r#type {
+                field_type
+            } else {
+                errors::parser_error(self, "invalid token");
+            };
+
+            fields.insert(self.get_current_token().value.unwrap(), field_type);
+
+            self.set_next_position();
+        }
+
+        self.set_next_position();
+
+        Box::new(StructParserNode {
+            struct_name,
+            fields,
+        })
+    }
+}

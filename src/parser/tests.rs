@@ -1,14 +1,17 @@
 #[cfg(test)]
 mod tests {
-    use crate::lexer::{
-        lexer::Lexer,
-        types::{
-            Types::{self, *},
-            DATATYPE, OPERATOR,
+    use crate::{
+        lexer::{
+            lexer::Lexer,
+            types::{
+                Types::{self, *},
+                DATATYPE, OPERATOR,
+            },
         },
+        parser::Parser,
     };
 
-    use super::super::{nodes::*, parser};
+    use super::super::nodes::*;
 
     #[test]
     fn test_parser() {
@@ -241,7 +244,7 @@ mod tests {
 
         let lexer_output = Lexer::new(contents).tokenize();
 
-        let mut parser = parser::Parser::new(lexer_output);
+        let mut parser = Parser::new(lexer_output);
         let result = parser.parse();
 
         assert_eq!(result.len(), req_result.len());
@@ -361,7 +364,7 @@ mod tests {
 
         let lexer_output = Lexer::new(contents).tokenize();
 
-        let mut parser = parser::Parser::new(lexer_output);
+        let mut parser = Parser::new(lexer_output);
         let result = parser.parse();
 
         assert_eq!(result.len(), req_result.len());
@@ -453,7 +456,7 @@ mod tests {
 
         let lexer_output = Lexer::new(contents).tokenize();
 
-        let mut parser = parser::Parser::new(lexer_output);
+        let mut parser = Parser::new(lexer_output);
         let result = parser.parse();
 
         assert_eq!(result.len(), req_result.len());

@@ -2,7 +2,7 @@ use inkwell::values::{BasicValueEnum, PointerValue};
 
 use crate::{
     lexer::types::DATATYPE,
-    parser::nodes::{ExpressionParserNode, StructParserNode, ValueIterParserNode},
+    parser::nodes::{StructParserNode, ValueIterParserNode},
 };
 
 use super::codegen::{CodeGen, StructStore};
