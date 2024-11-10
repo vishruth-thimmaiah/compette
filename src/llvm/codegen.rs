@@ -19,6 +19,7 @@ use crate::parser::types::ParserTypes;
 
 type MainFunc = unsafe extern "C" fn() -> u32;
 
+#[derive(Debug)]
 pub struct FunctionStore<'ctx> {
     pub name: String,
     pub vars: HashMap<String, VariableStore<'ctx>>,
@@ -33,10 +34,16 @@ impl FunctionStore<'_> {
     }
 }
 
+#[derive(Debug)]
 pub struct VariableStore<'ctx> {
     pub ptr: PointerValue<'ctx>,
     pub is_mutable: bool,
     pub datatype: DATATYPE,
+}
+
+pub struct StructStore {
+    pub name: String,
+    pub fields: Vec<String>,
 }
 
 pub struct CodeGen<'ctx> {
@@ -46,6 +53,7 @@ pub struct CodeGen<'ctx> {
     pub execution_engine: ExecutionEngine<'ctx>,
     pub tokens: Vec<Box<dyn ParserType>>,
     pub variables: RefCell<Vec<FunctionStore<'ctx>>>,
+    pub structs: RefCell<Vec<StructStore>>,
     pub imports: RefCell<Vec<Vec<String>>>,
 }
 
@@ -62,6 +70,7 @@ impl<'ctx> CodeGen<'ctx> {
             execution_engine,
             tokens,
             variables: RefCell::new(Vec::new()),
+            structs: RefCell::new(Vec::new()),
             imports: RefCell::new(Vec::new()),
         }
     }

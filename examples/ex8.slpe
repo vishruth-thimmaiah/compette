@@ -4,5 +4,6 @@ struct Test {
 }
 
 func main() u32 {
-	return 0
+	let Test t = [10, 20]
+	return t.b
 }

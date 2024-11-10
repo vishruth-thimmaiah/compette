@@ -261,6 +261,14 @@ impl<'ctx> CodeGen<'ctx> {
         func_name: &str,
         req_type: &DATATYPE,
     ) -> BasicValueEnum<'ctx> {
+        if let DATATYPE::CUSTOM(name) = req_type {
+            let iter_node = node
+                .left
+                .any()
+                .downcast_ref::<ValueIterParserNode>()
+                .unwrap();
+            return self.create_struct(name, iter_node).into();
+        }
         let left_val = match node.left.get_type() {
             ParserTypes::VALUE_ITER_CALL => {
                 let iter_node = node
@@ -300,6 +308,10 @@ impl<'ctx> CodeGen<'ctx> {
         let right_val = {
             if let Some(right) = &node.right {
                 let right_expr = right.any().downcast_ref::<ExpressionParserNode>().unwrap();
+                if node.operator.as_ref().unwrap() == &OPERATOR::DOT {
+                    let field_name = right_expr.left.any().downcast_ref::<ValueParserNode>().unwrap();
+                    return self.index_struct("t", &field_name.value, func_name).into();
+                }
                 self.add_expression(right_expr, func_name, req_type)
             } else {
                 return left_val;

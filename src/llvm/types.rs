@@ -24,7 +24,9 @@ impl<'ctx> CodeGen<'ctx> {
                 .into()
         } else if let &DATATYPE::STRING(_) = val_type {
             let ptr = self.builder.build_alloca(expr_type, "").unwrap();
-            self.builder.build_store(ptr, self.context.const_string(value.as_bytes(), true)).unwrap();
+            self.builder
+                .build_store(ptr, self.context.const_string(value.as_bytes(), true))
+                .unwrap();
             ptr.into()
         } else {
             todo!()
@@ -80,6 +82,8 @@ impl<'ctx> CodeGen<'ctx> {
             ),
 
             DATATYPE::NONE => None,
+
+            DATATYPE::CUSTOM(_) => todo!(),
         }
     }
 }

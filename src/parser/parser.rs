@@ -147,6 +147,7 @@ impl Parser {
 
         let mut var_type = match self.get_next_token().r#type {
             Types::DATATYPE(dt) => dt,
+            Types::IDENTIFIER => DATATYPE::CUSTOM(self.get_next_token().value.unwrap()),
             _ => errors::parser_error(self, "invalid token"),
         };
         self.set_next_position();

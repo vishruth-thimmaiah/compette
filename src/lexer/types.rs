@@ -74,6 +74,7 @@ pub enum DATATYPE {
     BOOL,
     STRING(usize),
     ARRAY(Box<ArrayDetails>),
+    CUSTOM(String),
     NONE,
 }
 
