@@ -42,7 +42,7 @@ impl Parser {
 
         let mut nested = false;
 
-        loop {
+        while self.position < self.tree.len() {
             let token_type = self.get_current_token().r#type;
             match token_type {
                 Types::NL => (),

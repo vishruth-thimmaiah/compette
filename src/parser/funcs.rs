@@ -124,7 +124,6 @@ impl Parser {
             }
             args.push(*self.parse_expression());
         }
-        self.set_next_position();
 
         return Box::new(FunctionCallParserNode {
             func_name: name,

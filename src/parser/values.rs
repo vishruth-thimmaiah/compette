@@ -54,7 +54,7 @@ impl Parser {
         self.set_next_position();
 
         let value = self.parse_expression();
-
+        
         if let DATATYPE::STRING(_) = var_type {
             let down_cast = value.left.any().downcast_ref::<ValueParserNode>().unwrap();
             if let Types::DATATYPE(DATATYPE::STRING(len)) = down_cast.r#type {

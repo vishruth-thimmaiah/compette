@@ -1,5 +1,6 @@
 mod builder;
 pub mod codegen;
+mod expr;
 mod flow_control;
 mod func;
 mod helpers;
