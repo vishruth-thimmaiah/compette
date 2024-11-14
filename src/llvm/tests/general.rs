@@ -25,7 +25,7 @@ mod tests {
         }
         "#;
 
-        assert_eq!(12, generate_result(contents).unwrap());
+        assert_eq!(6 * 3 - 1, generate_result(contents).unwrap());
     }
 
     #[test]

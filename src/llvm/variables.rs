@@ -30,7 +30,10 @@ impl<'ctx> CodeGen<'ctx> {
         let possible_iter_node = value.left.any().downcast_ref::<ValueIterParserNode>();
         let expr = if node.is_mutable && possible_iter_node.is_some() {
             self.add_vec(possible_iter_node.unwrap(), func_name, &node.var_type)
-        } else {
+        } else if possible_iter_node.is_some() {
+            self.add_array(possible_iter_node.unwrap(), func_name, &node.var_type)
+        }
+        else {
             self.add_expression(value, func_name, &node.var_type)
         };
 

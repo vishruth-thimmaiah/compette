@@ -37,7 +37,9 @@ impl Parser {
             self.set_next_position();
         }
         if self.get_current_token().r#type == Types::IDENTIFIER_FUNC {
-            return self.parse_function_call(Some(path));
+            let func_call = self.parse_function_call(Some(path));
+            self.set_next_position();
+            return func_call
         } else {
             errors::parser_error(self, "invalid token");
         }
