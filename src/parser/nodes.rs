@@ -1,4 +1,4 @@
-use std::{any::Any, collections::HashMap, fmt::Debug};
+use std::{any::Any, fmt::Debug};
 
 use crate::lexer::types::{Types, DATATYPE, OPERATOR};
 
@@ -240,7 +240,7 @@ impl ParserType for ForLoopParserNode {
 #[derive(Debug)]
 pub struct StructParserNode {
     pub struct_name: String,
-    pub fields: HashMap<String, DATATYPE>,
+    pub fields: Vec<(String, DATATYPE)>,
 }
 impl ParserType for StructParserNode {
     fn get_type(&self) -> ParserTypes {

@@ -12,14 +12,14 @@ impl<'ctx> CodeGen<'ctx> {
         let a = self.context.opaque_struct_type(&node.struct_name);
         let fields = node
             .fields
-            .values()
-            .map(|dt| self.def_expr(dt).unwrap())
+            .iter()
+            .map(|field| self.def_expr(&field.1).unwrap())
             .collect::<Vec<_>>();
         a.set_body(&fields, false);
 
         self.structs.borrow_mut().push(StructStore {
             name: node.struct_name.clone(),
-            fields: node.fields.keys().map(|x| x.clone()).collect(),
+            fields: node.fields.iter().map(|x| x.0.clone()).collect(),
         });
     }
 

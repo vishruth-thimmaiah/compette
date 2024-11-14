@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{
     errors,
     lexer::types::{ArrayDetails, Types, DATATYPE, DELIMITER, OPERATOR},
@@ -54,7 +52,7 @@ impl Parser {
         self.set_next_position();
 
         let value = self.parse_expression();
-        
+
         if let DATATYPE::STRING(_) = var_type {
             let down_cast = value.left.any().downcast_ref::<ValueParserNode>().unwrap();
             if let Types::DATATYPE(DATATYPE::STRING(len)) = down_cast.r#type {
@@ -145,7 +143,7 @@ impl Parser {
 
         self.set_next_position();
 
-        let mut fields: HashMap<String, DATATYPE> = HashMap::new();
+        let mut fields: Vec<(String, DATATYPE)> = vec![];
 
         while self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACE) {
             if self.get_next_token().r#type == Types::NL
@@ -167,7 +165,7 @@ impl Parser {
                 errors::parser_error(self, "invalid token");
             };
 
-            fields.insert(self.get_current_token().value.unwrap(), field_type);
+            fields.push((self.get_current_token().value.unwrap(), field_type));
 
             self.set_next_position();
         }
