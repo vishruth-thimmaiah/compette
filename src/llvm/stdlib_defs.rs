@@ -1,5 +1,6 @@
 use crate::lexer::types::DATATYPE;
 
+#[allow(dead_code)]
 pub struct StdLibModule {
     pub name: &'static str,
     pub funcs: &'static [StdLibFunc],

@@ -28,12 +28,16 @@ impl<'ctx> CodeGen<'ctx> {
             .unwrap();
 
         let possible_iter_node = value.left.any().downcast_ref::<ValueIterParserNode>();
-        let expr = if node.is_mutable && possible_iter_node.is_some() {
+        let is_iter = possible_iter_node.is_some();
+        let expr = if node.is_mutable && is_iter {
             self.add_vec(possible_iter_node.unwrap(), func_name, &node.var_type)
-        } else if possible_iter_node.is_some() {
-            self.add_array(possible_iter_node.unwrap(), func_name, &node.var_type)
-        }
-        else {
+        } else if is_iter {
+            if let DATATYPE::CUSTOM(dt) = &node.var_type {
+                self.create_struct(&dt, possible_iter_node.unwrap()).into()
+            } else {
+                self.add_array(possible_iter_node.unwrap(), func_name, &node.var_type)
+            }
+        } else {
             self.add_expression(value, func_name, &node.var_type)
         };
 

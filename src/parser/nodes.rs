@@ -221,6 +221,7 @@ impl ParserType for LoopParserNode {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ForLoopParserNode {
     pub iterator: Box<dyn ParserType>,
     pub index: String,

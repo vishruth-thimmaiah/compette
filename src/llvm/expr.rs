@@ -20,6 +20,24 @@ impl<'ctx> CodeGen<'ctx> {
         func_name: &str,
         req_type: &DATATYPE,
     ) -> BasicValueEnum<'ctx> {
+        if node.operator.is_some() && node.operator.as_ref().unwrap() == &OPERATOR::DOT {
+            let struct_name = &node
+                .left
+                .any()
+                .downcast_ref::<ValueParserNode>()
+                .unwrap()
+                .value;
+            let field_name = &node
+                .right
+                .as_ref()
+                .unwrap()
+                .any()
+                .downcast_ref::<ValueParserNode>()
+                .unwrap()
+                .value;
+            return self.index_struct(&struct_name, &field_name, func_name);
+        }
+
         let left_expr = self.add_expr_hand(&node.left, func_name, req_type);
 
         if node.right.is_none() {
