@@ -75,7 +75,7 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    pub fn compile(&self, build: bool) -> Option<u32> {
+    pub fn compile(&self, build: bool, run: bool) -> Option<u32> {
         for node in &self.tokens {
             match node.get_type() {
                 ParserTypes::IMPORT => {
@@ -94,7 +94,7 @@ impl<'ctx> CodeGen<'ctx> {
             }
         }
         if build {
-            builder::build_ir(&self.module);
+            builder::build_ir(&self.module, run);
             None
         } else {
             unsafe {

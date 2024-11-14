@@ -16,6 +16,6 @@ pub fn generate_result(contents: &str) -> Option<u32> {
 
     let context = Context::create();
     let codegen = CodeGen::new(&context, parser);
-    codegen.compile(false)
+    codegen.compile(false, false)
 }
 

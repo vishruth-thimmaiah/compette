@@ -2,7 +2,18 @@ use std::{fs, path::PathBuf, process::Command};
 
 use inkwell::module::Module;
 
-pub fn build_ir(module: &Module) {
+fn run_binary() {
+    let path = PathBuf::from(".build/output");
+    let run_cmd = Command::new(path).status();
+
+    if let Ok(output) = run_cmd {
+        println!("\n> Binary ran with {}", output)
+    } else {
+        panic!("\n> Error running the binary.")
+    }
+}
+
+pub fn build_ir(module: &Module, run: bool) {
     let path = PathBuf::from(".build/llvm-ir/");
     let _ = fs::create_dir_all(&path);
 
@@ -21,14 +32,17 @@ pub fn build_ir(module: &Module) {
 
     if let Ok(output) = clang_build {
         if output.status.success() {
-            println!("Binary built.")
+            println!("> Binary built.\n")
         } else {
             panic!(
-                "Error while building the binary: {}",
+                "> Error while building the binary: {}",
                 std::str::from_utf8(&output.stderr).unwrap()
             )
         }
     } else {
-        panic!("Error running clang to build the binary.")
+        panic!("> Error running clang to build the binary.")
+    }
+    if run {
+        run_binary();
     }
 }

@@ -16,7 +16,7 @@ fn main() {
     let parsed_args = args::parse_args(&args);
 
     if args.len() > 1 {
-        let contents = fs::read_to_string(&args[1]).unwrap();
+        let contents = fs::read_to_string(parsed_args.path.unwrap()).unwrap();
 
         let lexer = Lexer::new(&contents).tokenize();
         if parsed_args.print_lexer_ouput {
@@ -35,13 +35,11 @@ fn main() {
         let context = Context::create();
         let codegen = CodeGen::new(&context, parser);
 
-        if parsed_args.use_jit {
-            let output = codegen.compile(false);
+        if parsed_args.jit {
+            let output = codegen.compile(false, false);
             println!("Exit Code: {}", output.unwrap());
         } else {
-            codegen.compile(true);
+            codegen.compile(true, parsed_args.run);
         }
-    } else {
-        println!("Usage: sloppee <file>");
     }
 }
