@@ -1,20 +1,6 @@
-use crate::{lexer::lexer::Lexer, llvm::codegen::CodeGen, parser::Parser};
-use inkwell::context::Context;
-
-#[allow(dead_code)]
-pub fn generate_result(contents: &str) -> Option<u32> {
-    let lexer = Lexer::new(&contents).tokenize();
-
-    let parser = Parser::new(lexer.clone()).parse();
-
-    let context = Context::create();
-    let codegen = CodeGen::new(&context, parser);
-    codegen.compile(false)
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::llvm::tests::general::generate_result;
+    use crate::llvm::tests::generate_result;
 
     #[test]
     fn check_main_func() {
@@ -65,6 +51,36 @@ mod tests {
         func main() u32 {
             let u32[] a = [1, 2, 3]
             return a[0]
+        }
+        "#;
+
+        assert_eq!(1, generate_result(contents).unwrap());
+    }
+
+    #[test]
+    fn check_array_assign() {
+        let contents = r#"
+        func main() u32 {
+            let u32[]! a = [1, 2, 3]
+            a[0] = 4
+            return a[0]
+        }
+        "#;
+
+        assert_eq!(4, generate_result(contents).unwrap());
+    }
+
+    #[test]
+    fn check_struct() {
+        let contents = r#"
+        struct Point {
+            x u32
+            y u32
+        }
+
+        func main() u32 {
+            let Point p = [ 1, 2 ]
+            return p.x
         }
         "#;
 

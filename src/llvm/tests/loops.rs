@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::llvm::tests::general::generate_result;
+    use crate::llvm::tests::generate_result;
+
 
     #[test]
     fn test_loop() {
