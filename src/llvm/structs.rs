@@ -1,14 +1,15 @@
 use inkwell::values::{BasicValueEnum, PointerValue};
 
 use crate::{
+    errors,
     lexer::types::DATATYPE,
-    parser::nodes::{StructParserNode, ValueIterParserNode},
+    parser::nodes::{StructDefParserNode, StructParserNode},
 };
 
 use super::codegen::{CodeGen, StructStore};
 
 impl<'ctx> CodeGen<'ctx> {
-    pub fn def_struct(&self, node: &StructParserNode) {
+    pub fn def_struct(&self, node: &StructDefParserNode) {
         let a = self.context.opaque_struct_type(&node.struct_name);
         let fields = node
             .fields
@@ -23,19 +24,30 @@ impl<'ctx> CodeGen<'ctx> {
         });
     }
 
-    pub fn create_struct(&self, name: &str, fields: &ValueIterParserNode) -> PointerValue<'ctx> {
+    pub fn create_struct(&self, name: &str, fields: &StructParserNode) -> PointerValue<'ctx> {
         let struct_type = self.module.get_struct_type(name).unwrap();
+        let ref_cell = &self.structs.borrow();
+        let struct_def = &ref_cell.iter().find(|x| &x.name == name).unwrap().fields;
 
-        let mut struct_val = vec![];
+        let len = struct_def.len();
+        let _ = fields.fields.len() == len
+            || errors::compiler_error("invalid struct: fields do not match");
 
-        for (i, value) in fields.value.iter().enumerate() {
+        let mut struct_fields = vec![self.context.i32_type().const_zero().into(); len];
+
+        for (i, value) in fields.fields.iter() {
+            let field = struct_def
+                .iter()
+                .position(|x| x == i)
+                .unwrap_or_else(|| errors::compiler_error("invalid struct: field not found"));
+
             let req_type =
-                self.get_datatype(struct_type.get_field_type_at_index(i as u32).unwrap());
+                self.get_datatype(struct_type.get_field_type_at_index(field as u32).unwrap());
             let value = self.add_expression(&value, name, &req_type);
-            struct_val.push(value);
+            struct_fields[field] = value;
         }
 
-        let struct_value = struct_type.const_named_struct(&struct_val);
+        let struct_value = struct_type.const_named_struct(&struct_fields);
 
         let ptr = self.builder.build_alloca(struct_type, "").unwrap();
         self.builder.build_store(ptr, struct_value).unwrap();

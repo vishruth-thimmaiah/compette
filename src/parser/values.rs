@@ -5,8 +5,8 @@ use crate::{
 
 use super::{
     nodes::{
-        AssignmentParserNode, ParserType, StructParserNode, ValueIterCallParserNode,
-        ValueIterParserNode, ValueParserNode, VariableCallParserNode,
+        AssignmentParserNode, ParserType, StructDefParserNode, StructParserNode,
+        ValueIterCallParserNode, ValueIterParserNode, ValueParserNode, VariableCallParserNode,
     },
     Parser,
 };
@@ -132,7 +132,7 @@ impl Parser {
         });
     }
 
-    pub fn parse_struct(&mut self) -> Box<StructParserNode> {
+    pub fn parse_def_struct(&mut self) -> Box<StructDefParserNode> {
         let struct_name = self.get_next_token().value.unwrap();
 
         self.set_next_position();
@@ -172,9 +172,40 @@ impl Parser {
 
         self.set_next_position();
 
-        Box::new(StructParserNode {
+        Box::new(StructDefParserNode {
             struct_name,
             fields,
         })
+    }
+
+    pub fn parse_struct(&mut self) -> Box<StructParserNode> {
+        let mut fields = vec![];
+
+        while self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACE) {
+            if self.get_next_token().r#type == Types::NL
+                || self.get_next_token().r#type == Types::DELIMITER(DELIMITER::COMMA)
+            {
+                self.set_next_position();
+                continue;
+            }
+
+
+            self.set_next_position();
+            if self.get_current_token().r#type != Types::IDENTIFIER {
+                errors::parser_error(self, "invalid token");
+            }
+
+            let field_name = self.get_current_token().value.unwrap();
+
+            let field_value = self.parse_expression();
+
+            fields.push((field_name, *field_value));
+
+            self.set_next_position();
+        }
+
+        self.set_next_position();
+
+        Box::new(StructParserNode { fields })
     }
 }

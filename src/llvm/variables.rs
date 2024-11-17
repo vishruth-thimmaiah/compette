@@ -8,7 +8,7 @@ use crate::{
     lexer::types::{Types, DATATYPE},
     parser::{
         nodes::{
-            AssignmentParserNode, ExpressionParserNode, ValueIterCallParserNode,
+            AssignmentParserNode, ExpressionParserNode, StructParserNode, ValueIterCallParserNode,
             ValueIterParserNode, ValueParserNode, VariableCallParserNode,
         },
         types::ParserTypes,
@@ -32,11 +32,10 @@ impl<'ctx> CodeGen<'ctx> {
         let expr = if node.is_mutable && is_iter {
             self.add_vec(possible_iter_node.unwrap(), func_name, &node.var_type)
         } else if is_iter {
-            if let DATATYPE::CUSTOM(dt) = &node.var_type {
-                self.create_struct(&dt, possible_iter_node.unwrap()).into()
-            } else {
-                self.add_array(possible_iter_node.unwrap(), func_name, &node.var_type)
-            }
+            self.add_array(possible_iter_node.unwrap(), func_name, &node.var_type)
+        } else if let DATATYPE::CUSTOM(name) = &node.var_type {
+            let struct_node = value.left.any().downcast_ref::<StructParserNode>().unwrap();
+            self.create_struct(name, struct_node).into()
         } else {
             self.add_expression(value, func_name, &node.var_type)
         };

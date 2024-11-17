@@ -79,7 +79,10 @@ mod tests {
         }
 
         func main() u32 {
-            let Point p = [ 1, 2 ]
+            let Point p = {
+                x 1,
+                y 2
+            }
             return p.x
         }
         "#;

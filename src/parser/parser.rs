@@ -47,7 +47,7 @@ impl Parser {
             match token_type {
                 Types::NL => (),
                 Types::EOF => break,
-                Types::KEYWORD(KEYWORD::STRUCT) => tokens.push(self.parse_struct()),
+                Types::KEYWORD(KEYWORD::STRUCT) => tokens.push(self.parse_def_struct()),
                 Types::KEYWORD(KEYWORD::IMPORT) => tokens.push(self.parse_import()),
                 Types::KEYWORD(KEYWORD::LET) => tokens.push(self.parse_assignment()),
                 Types::KEYWORD(KEYWORD::IF) => tokens.push(self.parse_conditional_if()),

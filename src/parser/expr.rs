@@ -27,6 +27,14 @@ impl Parser {
                     operator: None,
                 });
             }
+            Types::DELIMITER(DELIMITER::LBRACE) => {
+                self.set_next_position();
+                return Box::new(ExpressionParserNode {
+                    left: self.parse_struct(),
+                    right: None,
+                    operator: None,
+                });
+            }
             Types::DATATYPE(DATATYPE::STRING(str)) => {
                 self.set_next_position();
                 return Box::new(ExpressionParserNode {

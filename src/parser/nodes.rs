@@ -238,9 +238,22 @@ impl ParserType for ForLoopParserNode {
 }
 
 #[derive(Debug)]
-pub struct StructParserNode {
+pub struct StructDefParserNode {
     pub struct_name: String,
     pub fields: Vec<(String, DATATYPE)>,
+}
+impl ParserType for StructDefParserNode {
+    fn get_type(&self) -> ParserTypes {
+        ParserTypes::STRUCT
+    }
+    fn any(&self) -> &dyn Any {
+        self
+    }
+}
+
+#[derive(Debug)]
+pub struct StructParserNode {
+    pub fields: Vec<(String, ExpressionParserNode)>,
 }
 impl ParserType for StructParserNode {
     fn get_type(&self) -> ParserTypes {
