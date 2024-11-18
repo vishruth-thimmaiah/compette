@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use inkwell::values::BasicValueEnum;
 
 use crate::{
@@ -45,7 +47,9 @@ impl<'ctx> CodeGen<'ctx> {
         };
         let right_expr = self.add_expr_hand(node.right.as_ref().unwrap(), func_name, req_type);
 
-        match node.operator.as_ref().unwrap() {
+        let (left_expr, right_expr) = self.cast_expr(left_expr, right_expr);
+
+        let expr = match node.operator.as_ref().unwrap() {
             OPERATOR::PLUS => self.add_binary_operation(&left_expr, &right_expr),
             OPERATOR::MINUS => self.sub_binary_operation(&left_expr, &right_expr),
             OPERATOR::MULTIPLY => self.mul_binary_operation(&left_expr, &right_expr),
@@ -61,7 +65,8 @@ impl<'ctx> CodeGen<'ctx> {
                 &right_expr,
             ),
             _ => todo!(),
-        }
+        };
+        expr
     }
 
     fn add_expr_hand(
@@ -98,5 +103,49 @@ impl<'ctx> CodeGen<'ctx> {
             _ => todo!(),
         };
         expr
+    }
+
+    fn cast_expr(
+        &self,
+        left_expr: BasicValueEnum<'ctx>,
+        right_expr: BasicValueEnum<'ctx>,
+    ) -> (BasicValueEnum<'ctx>, BasicValueEnum<'ctx>) {
+        let left_type = left_expr.get_type();
+        let right_type = right_expr.get_type();
+        if left_type == right_type {
+            return (left_expr, right_expr);
+        } else if left_type.is_int_type() && right_type.is_int_type() {
+            let bigger = left_type
+                .into_int_type()
+                .get_bit_width()
+                .cmp(&right_type.into_int_type().get_bit_width());
+            if bigger == Ordering::Less {
+                let new_expr = self
+                    .builder
+                    .build_cast(
+                        inkwell::values::InstructionOpcode::ZExt,
+                        left_expr,
+                        right_type,
+                        "",
+                    )
+                    .unwrap();
+                return (new_expr, right_expr);
+            } else {
+                let new_expr = self
+                    .builder
+                    .build_cast(
+                        inkwell::values::InstructionOpcode::ZExt,
+                        right_expr,
+                        left_type,
+                        "",
+                    )
+                    .unwrap();
+                return (left_expr, new_expr);
+            }
+        } else if left_type.is_float_type() && right_type.is_float_type() {
+            todo!()
+        } else {
+            todo!()
+        }
     }
 }

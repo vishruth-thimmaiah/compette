@@ -8,7 +8,12 @@ use crate::{
 use super::codegen::CodeGen;
 
 impl<'ctx> CodeGen<'ctx> {
-    pub fn add_conditional_if(&self, func_name: &str, node: &ConditionalIfParserNode) {
+    pub fn add_conditional_if(
+        &self,
+        func_name: &str,
+        node: &ConditionalIfParserNode,
+        ret_type: &DATATYPE,
+    ) {
         let function = self.module.get_function(func_name).unwrap();
         let if_block = self.context.append_basic_block(function, "if");
 
@@ -31,7 +36,7 @@ impl<'ctx> CodeGen<'ctx> {
             let cond_block = self.context.append_basic_block(function, b_name);
             else_if_blocks.push(cond_block);
             self.builder.position_at_end(cond_block);
-            self.nested_codegen(&else_if_cond.body, func_name, &DATATYPE::U32);
+            self.nested_codegen(&else_if_cond.body, func_name, ret_type);
 
             self.add_unconditional(cont);
 
@@ -45,7 +50,7 @@ impl<'ctx> CodeGen<'ctx> {
         let last_block = if let Some(else_body) = &node.else_body {
             let else_block = self.context.append_basic_block(function, "else");
             self.builder.position_at_end(else_block);
-            self.nested_codegen(&else_body.body, func_name, &DATATYPE::U32);
+            self.nested_codegen(&else_body.body, func_name, ret_type);
 
             self.add_unconditional(cont);
 
@@ -65,7 +70,7 @@ impl<'ctx> CodeGen<'ctx> {
             .unwrap();
 
         self.builder.position_at_end(if_block);
-        self.nested_codegen(&node.body, func_name, &DATATYPE::U32);
+        self.nested_codegen(&node.body, func_name, ret_type);
 
         self.add_unconditional(cont);
 
@@ -90,7 +95,7 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.build_unconditional_branch(move_to).unwrap();
     }
 
-    pub fn add_for_loop(&self, func_name: &str, node: &ForLoopParserNode) {
+    pub fn add_for_loop(&self, func_name: &str, node: &ForLoopParserNode, ret_type: &DATATYPE) {
         let function = self.module.get_function(func_name).unwrap();
 
         let index = self.context.i32_type().const_zero();
@@ -127,7 +132,7 @@ impl<'ctx> CodeGen<'ctx> {
 
         self.builder.position_at_end(loop_block);
 
-        self.nested_codegen(&node.body, func_name, &DATATYPE::U32);
+        self.nested_codegen(&node.body, func_name, ret_type);
 
         let index = self
             .builder
@@ -161,7 +166,7 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.position_at_end(cont);
     }
 
-    pub fn add_loop(&self, func_name: &str, node: &LoopParserNode) {
+    pub fn add_loop(&self, func_name: &str, node: &LoopParserNode, ret_type: &DATATYPE) {
         let function = self.module.get_function(func_name).unwrap();
 
         let loop_block = self.context.append_basic_block(function, "loop");
@@ -174,7 +179,7 @@ impl<'ctx> CodeGen<'ctx> {
             .unwrap();
 
         self.builder.position_at_end(loop_block);
-        self.nested_codegen(&node.body, func_name, &DATATYPE::U32);
+        self.nested_codegen(&node.body, func_name, ret_type);
 
         let expr = self.add_expression(&node.condition, func_name, &DATATYPE::U32);
         self.builder

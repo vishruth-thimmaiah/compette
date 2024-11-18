@@ -127,11 +127,11 @@ impl<'ctx> CodeGen<'ctx> {
                         .any()
                         .downcast_ref::<ConditionalIfParserNode>()
                         .unwrap();
-                    self.add_conditional_if(func_name, downcast_if);
+                    self.add_conditional_if(func_name, downcast_if, ret_type);
                 }
                 ParserTypes::LOOP => {
                     let downcast_node = node.any().downcast_ref::<LoopParserNode>().unwrap();
-                    self.add_loop(func_name, downcast_node);
+                    self.add_loop(func_name, downcast_node, ret_type);
                 }
                 ParserTypes::RETURN => {
                     let downcast_node = node.any().downcast_ref::<ReturnNode>().unwrap();
@@ -142,7 +142,7 @@ impl<'ctx> CodeGen<'ctx> {
                 }
                 ParserTypes::FOR_LOOP => {
                     let downcast_node = node.any().downcast_ref::<ForLoopParserNode>().unwrap();
-                    self.add_for_loop(func_name, downcast_node);
+                    self.add_for_loop(func_name, downcast_node, ret_type);
                 }
                 ParserTypes::FUNCTION_CALL => {
                     let downcast_node =
