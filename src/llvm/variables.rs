@@ -1,5 +1,5 @@
 use inkwell::{
-    types::VectorType,
+    types::{BasicType, VectorType},
     values::{ArrayValue, BasicValue, BasicValueEnum, PointerValue},
 };
 
@@ -132,7 +132,23 @@ impl<'ctx> CodeGen<'ctx> {
             ArrayValue::new_const_array(&self.def_expr(&array_type.datatype).unwrap(), &array_val)
         };
 
-        array.into()
+        let array_struct = self.context.struct_type(
+            &[self.context.i64_type().into(), array.get_type().into()],
+            false,
+        );
+
+        let val_struct = array_struct.const_named_struct(&[
+            self.context
+                .i64_type()
+                .const_int(array_val.len() as u64, false)
+                .into(),
+            array.into(),
+        ]);
+
+        let ptr = self.builder.build_alloca(array_struct, "").unwrap();
+        self.builder.build_store(ptr, val_struct).unwrap();
+
+        ptr.into()
     }
 
     /// used to create an vec, used when an array is declared as mut. does not assign variable name.
@@ -178,22 +194,42 @@ impl<'ctx> CodeGen<'ctx> {
             .into_int_value();
         let array_type = self.def_expr(req_type);
 
-        let array_size = if let DATATYPE::ARRAY(array_type) = &array.datatype {
-            self.context
-                .i32_type()
-                .const_int(array_type.length.into(), false)
+        let array_details = if let DATATYPE::ARRAY(array_details) = &array.datatype {
+            array_details
         } else {
             unreachable!()
         };
+
+        let array_size = self
+            .context
+            .i64_type()
+            .const_int(array_details.length.into(), false);
 
         let cmp = self
             .builder
             .build_int_compare(inkwell::IntPredicate::ULT, array_index, array_size, "")
             .unwrap();
 
+        let struct_type = self.context.struct_type(
+            &[
+                self.context.i64_type().into(),
+                array_type.unwrap().array_type(array_details.length).into(),
+            ],
+            false,
+        );
+
         let val_at_index = unsafe {
             self.builder
-                .build_in_bounds_gep(array_type.unwrap(), array.ptr, &[array_index], "")
+                .build_in_bounds_gep(
+                    struct_type,
+                    array.ptr,
+                    &[
+                        self.context.i32_type().const_int(0, false).into(),
+                        self.context.i32_type().const_int(1, false).into(),
+                        array_index,
+                    ],
+                    "",
+                )
                 .unwrap()
         };
 
