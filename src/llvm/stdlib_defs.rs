@@ -26,6 +26,17 @@ pub const STDLIB_MODULES: &[StdLibModule] = &[StdLibModule {
             args: &[("s", &DATATYPE::STRING(0))],
             return_type: &DATATYPE::NONE,
         },
+        // Temporary funtion until format print is implemented
+        StdLibFunc {
+            name: "printint",
+            args: &[("s", &DATATYPE::I32)],
+            return_type: &DATATYPE::NONE,
+        },
+        StdLibFunc {
+            name: "printfl",
+            args: &[("s", &DATATYPE::F32)],
+            return_type: &DATATYPE::NONE,
+        },
     ],
     sub_modules: &[],
 }];

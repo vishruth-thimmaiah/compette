@@ -44,7 +44,9 @@ impl<'ctx> CodeGen<'ctx> {
                 64 => DATATYPE::U64,
                 _ => todo!(),
             },
-            BasicTypeEnum::FloatType(_) => todo!(),
+            BasicTypeEnum::FloatType(_) => {
+                DATATYPE::F32
+            },
             BasicTypeEnum::ArrayType(arr) => DATATYPE::ARRAY(Box::new(ArrayDetails {
                 datatype: self.get_datatype(arr.get_element_type()).clone(),
                 length: arr.len(),

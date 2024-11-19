@@ -16,3 +16,13 @@ extern "C" fn println(s: *const c_char) {
     std::io::stdout().write_all(string.to_bytes()).unwrap();
     std::io::stdout().write(b"\n").unwrap();
 }
+
+// Temporary funtion until format print is implemented
+#[no_mangle]
+extern "C" fn printint(s: i32) {
+    println!("{}", s);
+}
+#[no_mangle]
+extern "C" fn printfl(s: f32) {
+    println!("{}", s);
+}
