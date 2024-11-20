@@ -89,4 +89,17 @@ mod tests {
 
         assert_eq!(1, generate_result(contents).unwrap());
     }
+
+    #[test]
+    fn check_explicit_struct() {
+        let contents = r#"
+        func main() u32 {
+            let f32 a = 34.1
+            let u32 b = a -> u32
+            
+            return b
+        }
+        "#;
+        assert_eq!(34, generate_result(contents).unwrap());
+    }
 }

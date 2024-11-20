@@ -95,7 +95,6 @@ impl Lexer {
         return Some(Token::new(
             match char {
                 b'+' => Types::OPERATOR(OPERATOR::PLUS),
-                b'-' => Types::OPERATOR(OPERATOR::MINUS),
                 b'*' => Types::OPERATOR(OPERATOR::MULTIPLY),
                 b',' => Types::DELIMITER(DELIMITER::COMMA),
                 b';' => Types::DELIMITER(DELIMITER::SEMICOLON),
@@ -113,7 +112,7 @@ impl Lexer {
                     self.column = 0;
                     Types::NL
                 }
-                b'=' | b'<' | b'>' | b'!' => self.check_operator(),
+                b'=' | b'<' | b'>' | b'!' | b'-' => self.check_multi_char_type(),
                 _ => errors::lexer_error(char, "invalid character", self.line, self.column),
             },
             None,
@@ -141,7 +140,7 @@ impl Lexer {
         ));
     }
 
-    fn check_operator(&mut self) -> Types {
+    fn check_multi_char_type(&mut self) -> Types {
         let first_char = self.content.as_bytes()[self.index];
         let second_char = self.content.as_bytes()[self.index + 1];
 
@@ -152,6 +151,7 @@ impl Lexer {
             (b'!', b'=') => return Types::OPERATOR(OPERATOR::NOT_EQUAL),
             (b'<', b'=') => return Types::OPERATOR(OPERATOR::LESSER_EQUAL),
             (b'>', b'=') => return Types::OPERATOR(OPERATOR::GREATER_EQUAL),
+            (b'-', b'>') => return Types::OPERATOR(OPERATOR::CAST),
             _ => self.index -= 1,
         };
 
@@ -160,6 +160,7 @@ impl Lexer {
             b'=' => Types::OPERATOR(OPERATOR::ASSIGN),
             b'<' => Types::OPERATOR(OPERATOR::LESSER),
             b'>' => Types::OPERATOR(OPERATOR::GREATER),
+            b'-' => Types::OPERATOR(OPERATOR::MINUS),
             _ => errors::lexer_error(first_char, "invalid token", self.line, self.column),
         }
     }

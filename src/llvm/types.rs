@@ -3,33 +3,46 @@ use inkwell::{
     values::BasicValueEnum,
 };
 
-use crate::lexer::types::{ArrayDetails, DATATYPE};
+use crate::lexer::types::{ArrayDetails, Types, DATATYPE};
 
 use super::codegen::CodeGen;
 
 impl<'ctx> CodeGen<'ctx> {
-    pub fn string_to_value(&self, value: &str, val_type: &DATATYPE) -> BasicValueEnum<'ctx> {
-        let expr_type = self.def_expr(val_type).unwrap();
-
-        if expr_type.is_int_type() {
-            expr_type
-                .into_int_type()
-                .const_int_from_string(value, inkwell::types::StringRadix::Decimal)
-                .unwrap()
+    pub fn string_to_value(
+        &self,
+        value: &str,
+        val_type: &Types,
+        req_type: &DATATYPE,
+    ) -> BasicValueEnum<'ctx> {
+        if val_type == &Types::BOOL {
+            self.context
+                .bool_type()
+                .const_int(value.parse::<u64>().unwrap(), false)
                 .into()
-        } else if expr_type.is_float_type() {
-            expr_type
-                .into_float_type()
-                .const_float(value.parse::<f64>().unwrap())
-                .into()
-        } else if let &DATATYPE::STRING(_) = val_type {
-            let ptr = self.builder.build_alloca(expr_type, "").unwrap();
-            self.builder
-                .build_store(ptr, self.context.const_string(value.as_bytes(), true))
-                .unwrap();
+        } else if val_type == &Types::NUMBER {
+            let dt = self.def_expr(req_type).unwrap();
+            if value.contains('.') {
+                let f64_value = value.parse::<f64>().unwrap();
+                if dt.is_float_type() {
+                    dt.into_float_type().const_float(f64_value).into()
+                } else {
+                    self.context.f64_type().const_float(f64_value).into()
+                }
+            } else {
+                let i64_value = value.parse::<u64>().unwrap();
+                if dt.is_int_type() {
+                    dt.into_int_type().const_int(i64_value, false).into()
+                } else {
+                    self.context.i64_type().const_int(i64_value, false).into()
+                }
+            }
+        } else if let Types::DATATYPE(DATATYPE::STRING(_)) = val_type {
+            let value = self.context.const_string(value.as_bytes(), true);
+            let ptr = self.builder.build_alloca(value.get_type(), "").unwrap();
+            self.builder.build_store(ptr, value).unwrap();
             ptr.into()
         } else {
-            todo!()
+            unreachable!()
         }
     }
 
@@ -44,9 +57,7 @@ impl<'ctx> CodeGen<'ctx> {
                 64 => DATATYPE::U64,
                 _ => todo!(),
             },
-            BasicTypeEnum::FloatType(_) => {
-                DATATYPE::F32
-            },
+            BasicTypeEnum::FloatType(_) => DATATYPE::F32,
             BasicTypeEnum::ArrayType(arr) => DATATYPE::ARRAY(Box::new(ArrayDetails {
                 datatype: self.get_datatype(arr.get_element_type()).clone(),
                 length: arr.len(),

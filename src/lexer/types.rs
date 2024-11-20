@@ -31,6 +31,7 @@ pub enum OPERATOR {
     GREATER_EQUAL,
     NOT_EQUAL,
     COLON,
+    CAST, // ->
 }
 
 #[derive(Debug, PartialEq, Clone)]

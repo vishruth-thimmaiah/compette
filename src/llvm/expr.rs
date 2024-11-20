@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use inkwell::values::BasicValueEnum;
 
 use crate::{
-    lexer::types::{DATATYPE, OPERATOR},
+    lexer::types::{Types, DATATYPE, OPERATOR},
     parser::{
         nodes::{
             ExpressionParserNode, FunctionCallParserNode, ParserType, ValueIterCallParserNode,
@@ -45,9 +45,23 @@ impl<'ctx> CodeGen<'ctx> {
         if node.right.is_none() {
             return left_expr;
         };
+
+        if node.operator.as_ref().unwrap() == &OPERATOR::CAST {
+            return self.cast_expr(
+                &left_expr,
+                &node
+                    .right
+                    .as_ref()
+                    .unwrap()
+                    .any()
+                    .downcast_ref::<ValueParserNode>()
+                    .unwrap(),
+            );
+        }
+
         let right_expr = self.add_expr_hand(node.right.as_ref().unwrap(), func_name, req_type);
 
-        let (left_expr, right_expr) = self.cast_expr(left_expr, right_expr);
+        let (left_expr, right_expr) = self.impl_cast_expr(left_expr, right_expr);
 
         let expr = match node.operator.as_ref().unwrap() {
             OPERATOR::PLUS => self.add_binary_operation(&left_expr, &right_expr),
@@ -95,9 +109,9 @@ impl<'ctx> CodeGen<'ctx> {
                     .any()
                     .downcast_ref::<ValueIterCallParserNode>()
                     .unwrap();
-                let array = self.get_array_val(iter_node, func_name, req_type);
+                let (array, dt) = self.get_array_val(iter_node, func_name);
                 self.builder
-                    .build_load(self.def_expr(req_type).unwrap(), array, "")
+                    .build_load(self.def_expr(&dt).unwrap(), array, "")
                     .unwrap()
             }
             _ => todo!(),
@@ -105,7 +119,7 @@ impl<'ctx> CodeGen<'ctx> {
         expr
     }
 
-    fn cast_expr(
+    fn impl_cast_expr(
         &self,
         left_expr: BasicValueEnum<'ctx>,
         right_expr: BasicValueEnum<'ctx>,
@@ -145,6 +159,44 @@ impl<'ctx> CodeGen<'ctx> {
         } else if left_type.is_float_type() && right_type.is_float_type() {
             todo!()
         } else {
+            todo!()
+        }
+    }
+
+    fn cast_expr(
+        &self,
+        left_expr: &BasicValueEnum<'ctx>,
+        cast_to: &ValueParserNode,
+    ) -> BasicValueEnum<'ctx> {
+        let left_type = left_expr.get_type();
+
+        let cast_to = if let Types::DATATYPE(cast_to) = cast_to.r#type.clone() {
+            cast_to
+        } else {
+            unreachable!()
+        };
+
+        let cast_to_type = self.def_expr(&cast_to).unwrap();
+        if left_type.is_int_type() && cast_to == DATATYPE::F64 || cast_to == DATATYPE::F32 {
+            self.builder
+                .build_cast(
+                    inkwell::values::InstructionOpcode::SIToFP,
+                    *left_expr,
+                    cast_to_type,
+                    "",
+                )
+                .unwrap()
+        } else if left_type.is_float_type() && self.def_expr(&cast_to).unwrap().is_int_type() {
+            self.builder
+                .build_cast(
+                    inkwell::values::InstructionOpcode::FPToSI,
+                    *left_expr,
+                    cast_to_type,
+                    "",
+                )
+                .unwrap()
+        } else {
+            println!("{:?} {:?}", left_type, cast_to);
             todo!()
         }
     }

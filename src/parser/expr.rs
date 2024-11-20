@@ -73,6 +73,14 @@ impl Parser {
                         }))
                     }
                 }
+                Types::DATATYPE(dt) => {
+                    if self.get_current_token().r#type == Types::OPERATOR(OPERATOR::CAST) {
+                        operands.push(Box::new(ValueParserNode {
+                            r#type: Types::DATATYPE(dt),
+                            value: "".to_string(),
+                        }));
+                    }
+                }
                 Types::IDENTIFIER_FUNC => {
                     self.set_next_position();
                     operands.push(self.parse_function_call(None));
@@ -123,6 +131,7 @@ impl Parser {
                 value: value.value.unwrap_or("".to_string()),
             }));
         }
+
 
         self.postfix_to_tree(&mut operands)
     }
@@ -194,6 +203,7 @@ impl Parser {
             Types::OPERATOR(OPERATOR::PLUS) | Types::OPERATOR(OPERATOR::MINUS) => 1,
             Types::OPERATOR(OPERATOR::MULTIPLY) | Types::OPERATOR(OPERATOR::DIVIDE) => 2,
             Types::DELIMITER(DELIMITER::LPAREN) => 0,
+            Types::OPERATOR(OPERATOR::CAST) => 0,
             _ => unreachable!(),
         }
     }

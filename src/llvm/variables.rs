@@ -83,22 +83,14 @@ impl<'ctx> CodeGen<'ctx> {
         }
 
         let (var_ptr, datatype) = if node.var_name.get_type() == ParserTypes::VALUE_ITER_CALL {
-            let datatype = if let DATATYPE::ARRAY(array_type) = &variable.datatype {
-                &array_type.datatype
-            } else {
-                unreachable!()
-            };
-            (
-                self.get_array_val(
-                    node.var_name
-                        .any()
-                        .downcast_ref::<ValueIterCallParserNode>()
-                        .unwrap(),
-                    func_name,
-                    datatype,
-                ),
-                datatype,
-            )
+            let array = self.get_array_val(
+                node.var_name
+                    .any()
+                    .downcast_ref::<ValueIterCallParserNode>()
+                    .unwrap(),
+                func_name,
+            );
+            (array.0, &array.1.clone())
         } else {
             (variable.ptr, &variable.datatype)
         };
@@ -178,8 +170,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         node: &ValueIterCallParserNode,
         func_name: &str,
-        req_type: &DATATYPE,
-    ) -> PointerValue<'ctx> {
+    ) -> (PointerValue<'ctx>, DATATYPE) {
         let vars = self.variables.borrow();
         let array = vars
             .iter()
@@ -189,16 +180,17 @@ impl<'ctx> CodeGen<'ctx> {
             .get(&node.value)
             .unwrap();
 
-        let array_index = self
-            .add_expression(&node.index, func_name, req_type)
-            .into_int_value();
-        let array_type = self.def_expr(req_type);
-
         let array_details = if let DATATYPE::ARRAY(array_details) = &array.datatype {
             array_details
         } else {
             unreachable!()
         };
+
+        let array_index = self
+            .add_expression(&node.index, func_name, &DATATYPE::U64)
+            .into_int_value();
+
+        let array_type = self.def_expr(&array_details.datatype);
 
         let array_size = self
             .context
@@ -234,18 +226,19 @@ impl<'ctx> CodeGen<'ctx> {
         };
 
         // FIXME: Panic instead of returning 0.
-        let zero = self
-            .builder
-            .build_alloca(self.context.i32_type(), "")
-            .unwrap();
+        let zero = self.builder.build_alloca(array_type.unwrap(), "").unwrap();
 
         self.builder
             .build_store(zero, self.context.i32_type().const_zero())
             .unwrap();
-        self.builder
+
+        let ptr = self
+            .builder
             .build_select(cmp, val_at_index, zero, "")
             .unwrap()
-            .into_pointer_value()
+            .into_pointer_value();
+
+        (ptr, array_details.datatype.clone())
     }
 
     /// Converts a string to a valid datatype. does not store, evaluate values. A raw value can be
@@ -257,10 +250,8 @@ impl<'ctx> CodeGen<'ctx> {
         req_type: &DATATYPE,
     ) -> BasicValueEnum<'ctx> {
         match node.r#type {
-            Types::NUMBER => self.string_to_value(&node.value, req_type),
-            Types::BOOL => self.string_to_value(&node.value, req_type),
-            Types::DATATYPE(DATATYPE::STRING(str)) => {
-                self.string_to_value(&node.value, &DATATYPE::STRING(str))
+            Types::NUMBER | Types::BOOL | Types::DATATYPE(DATATYPE::STRING(_)) => {
+                self.string_to_value(&node.value, &node.r#type, req_type)
             }
             Types::IDENTIFIER => {
                 let vars = self.variables.borrow();
@@ -274,7 +265,7 @@ impl<'ctx> CodeGen<'ctx> {
                         } else {
                             self.builder
                                 .build_load(
-                                    self.def_expr(req_type).unwrap(),
+                                    self.def_expr(&var_name.datatype).unwrap(),
                                     var_name.ptr,
                                     &node.value,
                                 )
