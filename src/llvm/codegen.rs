@@ -3,10 +3,12 @@ use std::collections::HashMap;
 
 use inkwell::builder::Builder;
 use inkwell::context::Context;
-use inkwell::execution_engine::{ExecutionEngine, JitFunction};
+use inkwell::execution_engine::ExecutionEngine;
 use inkwell::module::Module;
-use inkwell::values::PointerValue;
+use inkwell::values::{FunctionValue, PointerValue};
 use inkwell::OptimizationLevel;
+
+extern crate stdlib;
 
 use crate::lexer::types::DATATYPE;
 use crate::llvm::builder;
@@ -16,8 +18,6 @@ use crate::parser::nodes::{
     StructDefParserNode, VariableCallParserNode,
 };
 use crate::parser::types::ParserTypes;
-
-type MainFunc = unsafe extern "C" fn() -> u32;
 
 #[derive(Debug)]
 pub struct FunctionStore<'ctx> {
@@ -50,7 +50,7 @@ pub struct CodeGen<'ctx> {
     pub context: &'ctx Context,
     pub builder: Builder<'ctx>,
     pub module: Module<'ctx>,
-    execution_engine: ExecutionEngine<'ctx>,
+    execution_engine: Option<ExecutionEngine<'ctx>>,
     tokens: Vec<Box<dyn ParserType>>,
     pub variables: RefCell<Vec<FunctionStore<'ctx>>>,
     pub structs: RefCell<Vec<StructStore>>,
@@ -58,11 +58,17 @@ pub struct CodeGen<'ctx> {
 }
 
 impl<'ctx> CodeGen<'ctx> {
-    pub fn new(context: &'ctx Context, tokens: Vec<Box<dyn ParserType>>) -> Self {
+    pub fn new(context: &'ctx Context, tokens: Vec<Box<dyn ParserType>>, use_jit: bool) -> Self {
         let module = context.create_module("main");
-        let execution_engine = module
-            .create_jit_execution_engine(OptimizationLevel::None)
-            .expect("failed to create execution engine");
+        let execution_engine = if use_jit {
+            Some(
+                module
+                    .create_jit_execution_engine(OptimizationLevel::None)
+                    .expect("failed to create execution engine"),
+            )
+        } else {
+            None
+        };
         Self {
             context: &context,
             module,
@@ -75,7 +81,7 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    pub fn compile(&self, build: bool, run: bool) -> Option<u32> {
+    pub fn compile(&self, build: bool, run: bool) -> Option<i32> {
         for node in &self.tokens {
             match node.get_type() {
                 ParserTypes::IMPORT => {
@@ -97,11 +103,14 @@ impl<'ctx> CodeGen<'ctx> {
             builder::build_ir(&self.module, run);
             None
         } else {
-            unsafe {
-                let exec: JitFunction<MainFunc> =
-                    self.execution_engine.get_function("main").unwrap();
-                Some(exec.call())
-            }
+            let function = self.module.get_function("main").unwrap();
+            let result = unsafe {
+                self.execution_engine
+                    .as_ref()
+                    .unwrap()
+                    .run_function_as_main(function, &[])
+            };
+            return Some(result);
         }
     }
 
@@ -158,5 +167,20 @@ impl<'ctx> CodeGen<'ctx> {
         let mut imports = self.imports.borrow_mut();
 
         imports.push(node.path.clone());
+    }
+
+    pub fn add_stdlib_import(&self, func_name: &str, func_val: FunctionValue<'ctx>) {
+        let exec_engine = if let Some(exec_engine) = self.execution_engine.as_ref() {
+            exec_engine
+        } else {
+            return;
+        };
+        let req_func = match func_name {
+            "print" => stdlib::io::print,
+            "println" => stdlib::io::println,
+            _ => todo!(),
+        };
+
+        exec_engine.add_global_mapping(&func_val, req_func as usize);
     }
 }

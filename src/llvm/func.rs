@@ -99,8 +99,12 @@ impl<'ctx> CodeGen<'ctx> {
             self.context.void_type().fn_type(&params, false)
         };
 
-        self.module
-            .add_function(func_name, fn_type, Some(inkwell::module::Linkage::External))
+        let func =
+            self.module
+                .add_function(func_name, fn_type, Some(inkwell::module::Linkage::External));
+
+        self.add_stdlib_import(func_name, func);
+        func
     }
 
     pub fn add_func_call(

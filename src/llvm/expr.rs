@@ -196,7 +196,6 @@ impl<'ctx> CodeGen<'ctx> {
                 )
                 .unwrap()
         } else {
-            println!("{:?} {:?}", left_type, cast_to);
             todo!()
         }
     }

@@ -33,7 +33,7 @@ fn main() {
         }
 
         let context = Context::create();
-        let codegen = CodeGen::new(&context, parser);
+        let codegen = CodeGen::new(&context, parser, parsed_args.jit);
 
         if parsed_args.jit {
             let output = codegen.compile(false, false);
