@@ -189,7 +189,6 @@ impl Parser {
                 continue;
             }
 
-
             self.set_next_position();
             if self.get_current_token().r#type != Types::IDENTIFIER {
                 errors::parser_error(self, "invalid token");

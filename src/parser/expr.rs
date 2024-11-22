@@ -132,7 +132,6 @@ impl Parser {
             }));
         }
 
-
         self.postfix_to_tree(&mut operands)
     }
 

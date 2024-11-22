@@ -5,7 +5,7 @@ use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::execution_engine::ExecutionEngine;
 use inkwell::module::Module;
-use inkwell::values::{FunctionValue, PointerValue};
+use inkwell::values::PointerValue;
 use inkwell::OptimizationLevel;
 
 extern crate stdlib;
@@ -50,7 +50,7 @@ pub struct CodeGen<'ctx> {
     pub context: &'ctx Context,
     pub builder: Builder<'ctx>,
     pub module: Module<'ctx>,
-    execution_engine: Option<ExecutionEngine<'ctx>>,
+    pub execution_engine: Option<ExecutionEngine<'ctx>>,
     tokens: Vec<Box<dyn ParserType>>,
     pub variables: RefCell<Vec<FunctionStore<'ctx>>>,
     pub structs: RefCell<Vec<StructStore>>,
@@ -167,20 +167,5 @@ impl<'ctx> CodeGen<'ctx> {
         let mut imports = self.imports.borrow_mut();
 
         imports.push(node.path.clone());
-    }
-
-    pub fn add_stdlib_import(&self, func_name: &str, func_val: FunctionValue<'ctx>) {
-        let exec_engine = if let Some(exec_engine) = self.execution_engine.as_ref() {
-            exec_engine
-        } else {
-            return;
-        };
-        let req_func = match func_name {
-            "print" => stdlib::io::print,
-            "println" => stdlib::io::println,
-            _ => todo!(),
-        };
-
-        exec_engine.add_global_mapping(&func_val, req_func as usize);
     }
 }

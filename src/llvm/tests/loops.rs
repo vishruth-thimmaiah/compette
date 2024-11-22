@@ -2,7 +2,6 @@
 mod tests {
     use crate::llvm::tests::generate_result;
 
-
     #[test]
     fn test_loop() {
         let content = r#"

@@ -6,13 +6,11 @@ use inkwell::{
 use crate::{
     errors,
     lexer::types::DATATYPE,
+    llvm::stdlib_defs::get_stdlib_function,
     parser::nodes::{ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ReturnNode},
 };
 
-use super::{
-    codegen::{CodeGen, FunctionStore},
-    stdlib_defs::STDLIB_MODULES,
-};
+use super::codegen::{CodeGen, FunctionStore};
 
 impl<'ctx> CodeGen<'ctx> {
     pub fn add_function(&self, node: &FunctionParserNode) {
@@ -68,24 +66,22 @@ impl<'ctx> CodeGen<'ctx> {
 
         let import_path = import_path.unwrap();
 
-        // TODO: Add support for nested modules
-        let func = if import_path.first().unwrap() == "std" {
-            let req_module = STDLIB_MODULES
-                .iter()
-                .find(|x| x.name == import_path.last().unwrap())
-                .expect("Module not found");
+        let internal_func_name = format!("__{}__{}", import_path.join("__"), func_name);
 
-            let req_func = req_module
-                .funcs
-                .iter()
-                .find(|x| x.name == func_name)
-                .expect("Function not found");
-            req_func
+        let func_def = if import_path.first().unwrap() == "std" {
+            if let Some(func) = get_stdlib_function(&internal_func_name) {
+                func
+            } else {
+                errors::compiler_error(&format!(
+                    "Function '{}' not found in stdlib",
+                    func_name
+                ));
+            }
         } else {
             todo!("user defined functions are not supported yet");
         };
         let params = self.def_func_args(
-            &func
+            &func_def
                 .args
                 .to_vec()
                 .iter()
@@ -93,17 +89,22 @@ impl<'ctx> CodeGen<'ctx> {
                 .collect::<Vec<_>>(),
         );
 
-        let fn_type = if let Some(expr) = self.def_expr(&func.return_type) {
+        let fn_type = if let Some(expr) = self.def_expr(&func_def.return_type) {
             expr.fn_type(&params, false)
         } else {
             self.context.void_type().fn_type(&params, false)
         };
 
-        let func =
-            self.module
-                .add_function(func_name, fn_type, Some(inkwell::module::Linkage::External));
+        let func = self.module.add_function(
+            &internal_func_name,
+            fn_type,
+            Some(inkwell::module::Linkage::External),
+        );
 
-        self.add_stdlib_import(func_name, func);
+        if let Some(exec_engine) = self.execution_engine.as_ref() {
+            exec_engine.add_global_mapping(&func, func_def.ptr);
+        }
+
         func
     }
 

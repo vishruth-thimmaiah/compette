@@ -18,4 +18,3 @@ pub fn generate_result(contents: &str) -> Option<i32> {
     let codegen = CodeGen::new(&context, parser, true);
     codegen.compile(false, false)
 }
-

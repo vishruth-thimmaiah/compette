@@ -4,14 +4,14 @@ use std::{
 };
 
 #[no_mangle]
-pub extern "C" fn print(s: *const c_char) {
+pub extern "C" fn __std__io__print(s: *const c_char) {
     let string = unsafe { CStr::from_ptr(s) };
     std::io::stdout().write_all(string.to_bytes()).unwrap();
     std::io::stdout().flush().unwrap();
 }
 
 #[no_mangle]
-pub extern "C" fn println(s: *const c_char) {
+pub extern "C" fn __std__io__println(s: *const c_char) {
     let string = unsafe { CStr::from_ptr(s) };
     std::io::stdout().write_all(string.to_bytes()).unwrap();
     std::io::stdout().write(b"\n").unwrap();
@@ -19,10 +19,11 @@ pub extern "C" fn println(s: *const c_char) {
 
 // Temporary funtion until format print is implemented
 #[no_mangle]
-pub extern "C" fn printint(s: i32) {
+pub extern "C" fn __std__io__printint(s: i32) {
     println!("{}", s);
 }
 #[no_mangle]
-pub extern "C" fn printfl(s: f32) {
+pub extern "C" fn __std__io__printflt(s: f32) -> i32 {
     println!("{}", s);
+    return 0;
 }

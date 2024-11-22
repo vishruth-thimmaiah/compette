@@ -1,4 +1,8 @@
-use std::{fs, path::PathBuf, process::Command};
+use std::{
+    fs,
+    path::PathBuf,
+    process::{exit, Command},
+};
 
 use inkwell::module::Module;
 
@@ -34,10 +38,12 @@ pub fn build_ir(module: &Module, run: bool) {
         if output.status.success() {
             println!("> Binary built.\n")
         } else {
-            panic!(
-                "> Error while building the binary: {}",
+            eprintln!(
+                "> Error [{}] while building the binary:\n{}",
+                output.status,
                 std::str::from_utf8(&output.stderr).unwrap()
-            )
+            );
+            exit(output.status.code().unwrap());
         }
     } else {
         panic!("> Error running clang to build the binary.")

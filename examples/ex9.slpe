@@ -5,9 +5,9 @@ func main() u32 {
 	let u32 b = a -> u32
 	let f32 c = b -> f32
 	
-	io:printfl(a)
+	io:printflt(a)
 	io:printint(b)
-	io:printfl(c)
+	io:printflt(c)
 	
 	return 0
 }

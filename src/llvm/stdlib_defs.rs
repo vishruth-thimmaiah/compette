@@ -1,42 +1,36 @@
 use crate::lexer::types::DATATYPE;
 
 #[allow(dead_code)]
-pub struct StdLibModule {
-    pub name: &'static str,
-    pub funcs: &'static [StdLibFunc],
-    pub sub_modules: &'static [StdLibModule],
-}
-
 pub struct StdLibFunc {
-    pub name: &'static str,
     pub args: &'static [(&'static str, &'static DATATYPE)],
     pub return_type: &'static DATATYPE,
+    pub ptr: usize,
 }
 
-pub const STDLIB_MODULES: &[StdLibModule] = &[StdLibModule {
-    name: "io",
-    funcs: &[
-        StdLibFunc {
-            name: "print",
+pub fn get_stdlib_function(name: &str) -> Option<StdLibFunc> {
+    let func = match name {
+        "__std__io__print" => StdLibFunc {
             args: &[("s", &DATATYPE::STRING(0))],
             return_type: &DATATYPE::NONE,
+            ptr: stdlib::io::__std__io__print as usize,
         },
-        StdLibFunc {
-            name: "println",
+        "__std__io__println" => StdLibFunc {
             args: &[("s", &DATATYPE::STRING(0))],
             return_type: &DATATYPE::NONE,
+            ptr: stdlib::io::__std__io__println as usize,
         },
         // Temporary funtion until format print is implemented
-        StdLibFunc {
-            name: "printint",
+        "__std__io__printint" => StdLibFunc {
             args: &[("s", &DATATYPE::I32)],
             return_type: &DATATYPE::NONE,
+            ptr: stdlib::io::__std__io__printint as usize,
         },
-        StdLibFunc {
-            name: "printfl",
+        "__std__io__printflt" => StdLibFunc {
             args: &[("s", &DATATYPE::F32)],
             return_type: &DATATYPE::NONE,
+            ptr: stdlib::io::__std__io__printflt as usize,
         },
-    ],
-    sub_modules: &[],
-}];
+        _ => return None,
+    };
+    Some(func)
+}
