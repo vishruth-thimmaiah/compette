@@ -30,6 +30,11 @@ pub fn get_stdlib_function(name: &str) -> Option<StdLibFunc> {
             return_type: &DATATYPE::NONE,
             ptr: stdlib::io::__std__io__printflt as usize,
         },
+        "__std__builtin__len" => StdLibFunc {
+            args: &[("arr", &DATATYPE::U32)],
+            ptr: stdlib::builtin::arrays::len as usize,
+            return_type: &DATATYPE::U64,
+        },
         _ => return None,
     };
     Some(func)

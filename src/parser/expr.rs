@@ -81,6 +81,11 @@ impl Parser {
                         }));
                     }
                 }
+                Types::IMPORT_CALL => {
+                    self.set_next_position();
+                    operands.push(self.parse_import_call());
+                    self.position -= 1;
+                }
                 Types::IDENTIFIER_FUNC => {
                     self.set_next_position();
                     operands.push(self.parse_function_call(None));
