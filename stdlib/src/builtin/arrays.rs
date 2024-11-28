@@ -5,7 +5,7 @@ pub struct Array {
 }
 
 #[no_mangle]
-pub extern "C" fn len(arr: Array) -> u64 {
+pub extern "C" fn __std__builtin__len(arr: Array) -> u64 {
     let len = unsafe { &*(arr.len as *const u64) };
     return *len;
 }

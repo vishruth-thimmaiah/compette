@@ -32,7 +32,7 @@ pub fn get_stdlib_function(name: &str) -> Option<StdLibFunc> {
         },
         "__std__builtin__len" => StdLibFunc {
             args: &[("arr", &DATATYPE::U32)],
-            ptr: stdlib::builtin::arrays::len as usize,
+            ptr: stdlib::builtin::arrays::__std__builtin__len as usize,
             return_type: &DATATYPE::U64,
         },
         _ => return None,
