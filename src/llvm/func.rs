@@ -10,7 +10,10 @@ use crate::{
     parser::nodes::{ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ReturnNode},
 };
 
-use super::codegen::{CodeGen, FunctionStore};
+use super::{
+    codegen::{CodeGen, FunctionStore},
+    stdlib_defs::get_builtin_function,
+};
 
 impl<'ctx> CodeGen<'ctx> {
     pub fn add_function(&self, node: &FunctionParserNode) {
@@ -72,10 +75,7 @@ impl<'ctx> CodeGen<'ctx> {
             if let Some(func) = get_stdlib_function(&internal_func_name) {
                 func
             } else {
-                errors::compiler_error(&format!(
-                    "Function '{}' not found in stdlib",
-                    func_name
-                ));
+                errors::compiler_error(&format!("Function '{}' not found in stdlib", func_name));
             }
         } else {
             todo!("user defined functions are not supported yet");
@@ -108,6 +108,47 @@ impl<'ctx> CodeGen<'ctx> {
         func
     }
 
+    pub fn def_builtin(&self, func_name: &str) -> Option<FunctionValue<'ctx>> {
+        if let Some(func) = self.module.get_function(func_name) {
+            if func.get_linkage() == inkwell::module::Linkage::External {
+                return Some(func);
+            }
+        }
+        let internal_func_name = format!("__builtin__{}", func_name);
+
+        let func_def = if let Some(func_def) = get_builtin_function(&internal_func_name) {
+            func_def
+        } else {
+            return None;
+        };
+        let params = self.def_func_args(
+            &func_def
+                .args
+                .to_vec()
+                .iter()
+                .map(|p| (p.0.to_string(), p.1.clone()))
+                .collect::<Vec<_>>(),
+        );
+
+        let fn_type = if let Some(expr) = self.def_expr(&func_def.return_type) {
+            expr.fn_type(&params, false)
+        } else {
+            self.context.void_type().fn_type(&params, false)
+        };
+
+        let func = self.module.add_function(
+            &internal_func_name,
+            fn_type,
+            Some(inkwell::module::Linkage::External),
+        );
+
+        if let Some(exec_engine) = self.execution_engine.as_ref() {
+            exec_engine.add_global_mapping(&func, func_def.ptr);
+        }
+
+        Some(func)
+    }
+
     pub fn add_func_call(
         &self,
         func_node: &FunctionCallParserNode,
@@ -115,8 +156,12 @@ impl<'ctx> CodeGen<'ctx> {
     ) -> BasicValueEnum<'ctx> {
         let function = if let Some(imported) = &func_node.imported {
             self.def_extern(&func_node.func_name, imported)
+        } else if let Some(func) = self.module.get_function(&func_node.func_name) {
+            func
+        } else if let Some(func) = self.def_builtin(&func_node.func_name) {
+            func
         } else {
-            self.module.get_function(&func_node.func_name).unwrap()
+            panic!("Function {} not found", func_node.func_name)
         };
         let mut args = Vec::new();
         let params = function.get_params();

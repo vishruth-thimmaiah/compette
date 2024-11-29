@@ -1,7 +1,7 @@
 import std:builtin
 
 func main() u32 {
-	let u32[] a = [1, 2, 3]
-	let u32 b = builtin:len(a)
+	let u32[] a = [1, 2, 3, 2]
+	let u32 b = len(a)
 	return b
 }

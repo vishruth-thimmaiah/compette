@@ -30,9 +30,16 @@ pub fn get_stdlib_function(name: &str) -> Option<StdLibFunc> {
             return_type: &DATATYPE::NONE,
             ptr: stdlib::io::__std__io__printflt as usize,
         },
-        "__std__builtin__len" => StdLibFunc {
+        _ => return None,
+    };
+    Some(func)
+}
+
+pub fn get_builtin_function(name: &str) -> Option<StdLibFunc> {
+    let func = match name {
+        "__builtin__len" => StdLibFunc {
             args: &[("arr", &DATATYPE::U32)],
-            ptr: stdlib::builtin::arrays::__std__builtin__len as usize,
+            ptr: stdlib::builtin::arrays::__builtin__len as usize,
             return_type: &DATATYPE::U64,
         },
         _ => return None,
