@@ -1,19 +1,26 @@
-use std::{
-    ffi::{c_char, CStr},
-    io::Write,
-};
+use core::slice;
+use std::io::Write;
+
+#[derive(Debug)]
+#[repr(C)]
+pub struct Str {
+    pub len: u64,
+    pub str: *const u8,
+}
 
 #[no_mangle]
-pub extern "C" fn __std__io__print(s: *const c_char) {
-    let string = unsafe { CStr::from_ptr(s) };
-    std::io::stdout().write_all(string.to_bytes()).unwrap();
+pub extern "C" fn __std__io__print(s: *const Str) {
+    let str_struct = unsafe { &*s };
+    let string = unsafe { slice::from_raw_parts(str_struct.str, str_struct.len as usize) };
+    std::io::stdout().write_all(string).unwrap();
     std::io::stdout().flush().unwrap();
 }
 
 #[no_mangle]
-pub extern "C" fn __std__io__println(s: *const c_char) {
-    let string = unsafe { CStr::from_ptr(s) };
-    std::io::stdout().write_all(string.to_bytes()).unwrap();
+pub extern "C" fn __std__io__println(s: *const Str) {
+    let str_struct = unsafe { &*s };
+    let string = unsafe { slice::from_raw_parts(str_struct.str, str_struct.len as usize) };
+    std::io::stdout().write_all(string).unwrap();
     std::io::stdout().write(b"\n").unwrap();
 }
 

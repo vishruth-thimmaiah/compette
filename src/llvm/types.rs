@@ -1,6 +1,7 @@
 use inkwell::{
     types::{BasicType, BasicTypeEnum},
     values::BasicValueEnum,
+    AddressSpace,
 };
 
 use crate::lexer::types::{ArrayDetails, Types, DATATYPE};
@@ -37,10 +38,49 @@ impl<'ctx> CodeGen<'ctx> {
                 }
             }
         } else if let Types::DATATYPE(DATATYPE::STRING(_)) = val_type {
-            let value = self.context.const_string(value.as_bytes(), true);
-            let ptr = self.builder.build_alloca(value.get_type(), "").unwrap();
-            self.builder.build_store(ptr, value).unwrap();
-            ptr.into()
+            let string = self.context.const_string(value.as_bytes(), false);
+            let string_ptr = self.builder.build_alloca(string.get_type(), "").unwrap();
+            self.builder.build_store(string_ptr, string).unwrap();
+
+            let struct_ty = self.context.struct_type(
+                &[
+                    self.context.i64_type().into(),
+                    self.context.ptr_type(AddressSpace::default()).into(),
+                ],
+                false,
+            );
+
+            let struct_val = struct_ty.const_named_struct(&[
+                self.context
+                    .i64_type()
+                    .const_int(value.len() as u64, false)
+                    .into(),
+                self.context
+                    .ptr_type(AddressSpace::default())
+                    .const_null()
+                    .into(),
+            ]);
+
+            let struct_ptr = self.builder.build_alloca(struct_ty, "").unwrap();
+            self.builder.build_store(struct_ptr, struct_val).unwrap();
+
+            let gep = unsafe {
+                self.builder
+                    .build_in_bounds_gep(
+                        struct_ty,
+                        struct_ptr,
+                        &[
+                            self.context.i32_type().const_zero().into(),
+                            self.context.i32_type().const_int(1, false).into(),
+                        ],
+                        "",
+                    )
+                    .unwrap()
+            };
+
+            self.builder.build_store(gep, string_ptr).unwrap();
+
+            struct_ptr.into()
         } else {
             unreachable!()
         }

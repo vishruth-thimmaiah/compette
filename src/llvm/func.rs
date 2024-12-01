@@ -161,7 +161,7 @@ impl<'ctx> CodeGen<'ctx> {
         } else if let Some(func) = self.def_builtin(&func_node.func_name) {
             func
         } else {
-            panic!("Function {} not found", func_node.func_name)
+            errors::compiler_error(&format!("Function {} not found", func_node.func_name));
         };
         let mut args = Vec::new();
         let params = function.get_params();
