@@ -23,21 +23,22 @@ impl<'ctx> CodeGen<'ctx> {
         req_type: &DATATYPE,
     ) -> BasicValueEnum<'ctx> {
         if node.operator.is_some() && node.operator.as_ref().unwrap() == &OPERATOR::DOT {
-            let struct_name = &node
+            let obj_name = node
                 .left
                 .any()
                 .downcast_ref::<ValueParserNode>()
-                .unwrap()
-                .value;
-            let field_name = &node
-                .right
-                .as_ref()
-                .unwrap()
-                .any()
-                .downcast_ref::<ValueParserNode>()
-                .unwrap()
-                .value;
-            return self.index_struct(&struct_name, &field_name, func_name);
+                .unwrap();
+            let right = node.right.as_ref().unwrap();
+            if right.get_type() == ParserTypes::VALUE {
+                let field_name = &right.any().downcast_ref::<ValueParserNode>().unwrap().value;
+                return self.index_struct(&obj_name.value, &field_name, func_name);
+            } else if right.get_type() == ParserTypes::FUNCTION_CALL {
+                let func_call = right
+                    .any()
+                    .downcast_ref::<FunctionCallParserNode>()
+                    .unwrap();
+                return self.add_method_call(obj_name, func_call, func_name);
+            }
         }
 
         let left_expr = self.add_expr_hand(&node.left, func_name, req_type);

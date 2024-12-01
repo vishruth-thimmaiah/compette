@@ -7,7 +7,10 @@ use crate::{
     errors,
     lexer::types::DATATYPE,
     llvm::stdlib_defs::get_stdlib_function,
-    parser::nodes::{ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ReturnNode},
+    parser::nodes::{
+        ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ReturnNode,
+        ValueParserNode,
+    },
 };
 
 use super::{
@@ -108,12 +111,7 @@ impl<'ctx> CodeGen<'ctx> {
         func
     }
 
-    pub fn def_builtin(&self, func_name: &str) -> Option<FunctionValue<'ctx>> {
-        if let Some(func) = self.module.get_function(func_name) {
-            if func.get_linkage() == inkwell::module::Linkage::External {
-                return Some(func);
-            }
-        }
+    pub fn def_builtin(&self, func_name: &str) -> Option<(FunctionValue<'ctx>, &DATATYPE)> {
         let internal_func_name = format!("__builtin__{}", func_name);
 
         let func_def = if let Some(func_def) = get_builtin_function(&internal_func_name) {
@@ -121,6 +119,12 @@ impl<'ctx> CodeGen<'ctx> {
         } else {
             return None;
         };
+
+        if let Some(func) = self.module.get_function(func_name) {
+            if func.get_linkage() == inkwell::module::Linkage::External {
+                return Some((func, &func_def.args[0].1));
+            }
+        }
         let params = self.def_func_args(
             &func_def
                 .args
@@ -146,7 +150,7 @@ impl<'ctx> CodeGen<'ctx> {
             exec_engine.add_global_mapping(&func, func_def.ptr);
         }
 
-        Some(func)
+        Some((func, &func_def.args[0].1))
     }
 
     pub fn add_func_call(
@@ -159,7 +163,7 @@ impl<'ctx> CodeGen<'ctx> {
         } else if let Some(func) = self.module.get_function(&func_node.func_name) {
             func
         } else if let Some(func) = self.def_builtin(&func_node.func_name) {
-            func
+            func.0
         } else {
             errors::compiler_error(&format!("Function {} not found", func_node.func_name));
         };
@@ -173,6 +177,38 @@ impl<'ctx> CodeGen<'ctx> {
 
         self.builder
             .build_call(function, &args, "")
+            .unwrap()
+            .try_as_basic_value()
+            .left()
+            // FIXME: Temporary fix for functions that return nothing
+            .unwrap_or(self.context.i32_type().const_zero().into())
+    }
+
+    pub fn add_method_call(
+        &self,
+        obj_name: &ValueParserNode,
+        func_node: &FunctionCallParserNode,
+        func_name: &str,
+    ) -> BasicValueEnum<'ctx> {
+        let function = if let Some(func) = self.def_builtin(&func_node.func_name) {
+            func
+        } else {
+            errors::compiler_error(&format!("Function {} not found", func_node.func_name));
+        };
+
+        let obj = self.add_value(obj_name, func_name, function.1);
+
+        let mut args = Vec::new();
+        args.push(obj.into());
+        let params = function.0.get_params();
+        for (index, arg) in func_node.args.iter().enumerate() {
+            let req_type = &self.get_datatype(params[index].get_type());
+            let arg_val = self.add_expression(arg, func_name, req_type).into();
+            args.push(arg_val);
+        }
+
+        self.builder
+            .build_call(function.0, &args, "")
             .unwrap()
             .try_as_basic_value()
             .left()
