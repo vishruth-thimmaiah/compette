@@ -91,7 +91,7 @@ mod tests {
     }
 
     #[test]
-    fn check_explicit_struct() {
+    fn check_explicit_cast() {
         let contents = r#"
         func main() u32 {
             let f32 a = 34.1
@@ -101,5 +101,32 @@ mod tests {
         }
         "#;
         assert_eq!(34, generate_result(contents).unwrap());
+    }
+
+    #[test]
+    fn check_implicit_cast() {
+        let contents = r#"
+        func main() u32 {
+            let u64 a = 5
+            let u16 b = 2
+            
+            return a + b
+        }
+        "#;
+        assert_eq!(7, generate_result(contents).unwrap());
+    }
+
+
+    #[test]
+    fn check_stdlib_builtin() {
+        let contents = r#"
+        func main() u32 {
+            let f32[] a = [10, 30, 50, 60]
+            let u32 b = a.len()
+            
+            return b
+        }
+        "#;
+        assert_eq!(4, generate_result(contents).unwrap());
     }
 }
