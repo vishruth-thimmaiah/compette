@@ -9,3 +9,9 @@ edition = "2021"
 [dependencies]
 inkwell = { version = "0.5.0", features = ["llvm18-0-prefer-dynamic"] }
 stdlib = { path = "./stdlib" }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = 'abort'
+strip = true

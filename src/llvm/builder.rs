@@ -6,6 +6,19 @@ use std::{
 
 use inkwell::module::Module;
 
+#[cfg(debug_assertions)]
+fn copy_stdlib() {
+    let bytes = fs::read("target/debug/libstdlib.a").unwrap();
+    let build_path = PathBuf::from(".build/stdlib.a");
+    fs::write(build_path, bytes).unwrap();
+}
+#[cfg(not(debug_assertions))]
+fn copy_stdlib() {
+    let bytes = include_bytes!("../../target/release/libstdlib.a");
+    let build_path = PathBuf::from(".build/stdlib.a");
+    fs::write(build_path, bytes).unwrap();
+}
+
 fn run_binary() {
     let path = PathBuf::from(".build/output");
     let run_cmd = Command::new(path).status();
@@ -19,7 +32,11 @@ fn run_binary() {
 
 pub fn build_ir(module: &Module, run: bool) {
     let path = PathBuf::from(".build/llvm-ir/");
-    let _ = fs::create_dir_all(&path);
+    fs::create_dir_all(&path).unwrap();
+
+    if !path.join(".build/stdlib.a").exists() {
+        copy_stdlib();
+    }
 
     let mod_name = module.get_name().to_str().unwrap();
     let path = &path
