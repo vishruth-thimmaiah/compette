@@ -19,16 +19,28 @@ pacman -S llvm
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-## Usage
+### Build the stdlib:
 
-### Build a binary:
 ```bash
-cargo build
+cargo build --release -p stdlib
 ```
+
+### Build the compiler:
+```bash
+cargo build --release
+```
+The compiler executable will be located at `target/release/sloppee`.
+
+## Usage
 
 ### Run the compiler:
 ```bash
 sloppee [COMMAND] <file> [OPTIONS]
+```
+
+### List Commands:
+```bash
+sloppee --help
 ```
 
 ### Run tests:
