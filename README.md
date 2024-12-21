@@ -5,6 +5,9 @@
 > [!WARNING]
 > This Project is only tested on linux.
 
+![Tests Workflow](https://github.com/vishruth-thimmaiah/sloppee/actions/workflows/rust_test.yml/badge.svg)
+
+
 ## Installation
 
 ### 1.  Install LLVM
