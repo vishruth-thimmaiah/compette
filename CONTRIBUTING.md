@@ -1,4 +1,4 @@
-# Contributing to converse
+# Contributing to Sloppee
 
 First off, thanks for taking the time to contribute! ❤️
 
