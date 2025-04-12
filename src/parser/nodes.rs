@@ -1,6 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
-use crate::lexer::types::{Types, Datatype, Operator};
+use crate::lexer::types::{Datatype, Operator, Types};
 
 use super::types::ParserTypes;
 

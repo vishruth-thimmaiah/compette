@@ -5,7 +5,7 @@ use inkwell::{
 
 use crate::{
     errors,
-    lexer::types::{Types, Datatype},
+    lexer::types::{Datatype, Types},
     parser::{
         nodes::{
             AssignmentParserNode, ExpressionParserNode, StructParserNode, ValueIterCallParserNode,

@@ -2,7 +2,7 @@ use crate::{
     errors,
     lexer::{
         lexer::Token,
-        types::{Types, Delimiter, Keyword},
+        types::{Delimiter, Keyword, Types},
     },
 };
 

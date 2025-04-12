@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use inkwell::values::BasicValueEnum;
 
 use crate::{
-    lexer::types::{Types, Datatype, Operator},
+    lexer::types::{Datatype, Operator, Types},
     parser::{
         nodes::{
             ExpressionParserNode, FunctionCallParserNode, ParserType, ValueIterCallParserNode,
@@ -23,11 +23,7 @@ impl<'ctx> CodeGen<'ctx> {
         req_type: &Datatype,
     ) -> BasicValueEnum<'ctx> {
         if node.operator.is_some() && node.operator.as_ref().unwrap() == &Operator::DOT {
-            let obj_name = node
-                .left
-                .any()
-                .downcast_ref::<ValueParserNode>()
-                .unwrap();
+            let obj_name = node.left.any().downcast_ref::<ValueParserNode>().unwrap();
             let right = node.right.as_ref().unwrap();
             if right.get_type() == ParserTypes::VALUE {
                 let field_name = &right.any().downcast_ref::<ValueParserNode>().unwrap().value;

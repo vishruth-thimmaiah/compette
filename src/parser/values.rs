@@ -1,6 +1,6 @@
 use crate::{
     errors,
-    lexer::types::{ArrayDetails, Types, Datatype, Delimiter, Operator},
+    lexer::types::{ArrayDetails, Datatype, Delimiter, Operator, Types},
 };
 
 use super::{

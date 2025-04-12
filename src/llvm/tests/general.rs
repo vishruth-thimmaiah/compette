@@ -116,7 +116,6 @@ mod tests {
         assert_eq!(7, generate_result(contents).unwrap());
     }
 
-
     #[test]
     fn check_stdlib_builtin() {
         let contents = r#"

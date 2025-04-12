@@ -4,7 +4,7 @@ use inkwell::{
     AddressSpace,
 };
 
-use crate::lexer::types::{ArrayDetails, Types, Datatype};
+use crate::lexer::types::{ArrayDetails, Datatype, Types};
 
 use super::codegen::CodeGen;
 

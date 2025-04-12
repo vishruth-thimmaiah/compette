@@ -2,7 +2,7 @@ use core::str;
 
 use crate::errors;
 
-use super::types::{Types, Datatype, Delimiter, Keyword, Operator};
+use super::types::{Datatype, Delimiter, Keyword, Operator, Types};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Token {

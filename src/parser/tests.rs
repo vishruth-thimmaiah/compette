@@ -3,7 +3,7 @@ mod tests {
     use crate::{
         lexer::{
             lexer::Lexer,
-            types::{Types::*, Datatype, Operator},
+            types::{Datatype, Operator, Types::*},
         },
         parser::Parser,
     };
