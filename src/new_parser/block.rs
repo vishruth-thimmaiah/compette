@@ -1,4 +1,4 @@
-use crate::lexer::types::{Types, Datatype, Delimiter, Keyword};
+use crate::lexer::types::{Datatype, Delimiter, Keyword, Types};
 
 use super::{
     nodes::{ASTNodes, Block},

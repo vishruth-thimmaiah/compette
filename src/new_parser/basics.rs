@@ -1,4 +1,4 @@
-use crate::lexer::types::{Types, Datatype};
+use crate::lexer::types::{Datatype, Types};
 
 use super::{Parser, ParserError, Result};
 

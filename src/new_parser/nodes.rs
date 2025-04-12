@@ -1,16 +1,19 @@
-use crate::lexer::types::Datatype;
+use crate::lexer::types::{Datatype, Operator, Types};
 
 #[derive(Debug, PartialEq)]
 pub enum ASTNodes {
-    Function(Function),
     Block(Block),
+    Expression(Expression),
+    Function(Function),
+    Literal(Literal),
+    Token(Types),
     Return(Return),
+    Variable(Variable),
 }
-
 
 #[derive(Debug, PartialEq)]
 pub struct Function {
-    pub name:  String,
+    pub name: String,
     pub args: Vec<(String, Datatype)>,
     pub return_type: Datatype,
     pub body: Block,
@@ -24,4 +27,22 @@ pub struct Block {
 #[derive(Debug, PartialEq)]
 pub struct Return {
     pub value: Option<()>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Expression {
+    pub left: Box<ASTNodes>,
+    pub right: Option<Box<ASTNodes>>,
+    pub operator: Option<Operator>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Literal {
+    pub value: String,
+    pub r#type: Types,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Variable {
+    pub name: String,
 }

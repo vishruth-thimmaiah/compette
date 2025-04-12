@@ -7,10 +7,11 @@ use crate::lexer::{lexer::Token, types::Types};
 
 mod basics;
 mod block;
+mod expr;
 mod func;
 
-mod nodes;
 mod errors;
+mod nodes;
 mod test;
 
 pub struct Parser {

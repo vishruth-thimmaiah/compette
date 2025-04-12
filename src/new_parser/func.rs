@@ -1,4 +1,4 @@
-use crate::lexer::types::{Types, Datatype, Delimiter};
+use crate::lexer::types::{Datatype, Delimiter, Types};
 
 use super::{
     errors::ParserError,
