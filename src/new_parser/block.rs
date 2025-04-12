@@ -1,18 +1,18 @@
 use crate::lexer::types::{Types, KEYWORD};
 
-use super::{nodes::ASTNodes, Parser, ParserError};
+use super::{nodes::ASTNodes, Parser, ParserError, Result};
 
 impl Parser {
-    pub fn parse_source(&mut self) -> Result<Vec<ASTNodes>, ParserError> {
+    pub fn parse_source(&mut self) -> Result<Vec<ASTNodes>> {
 
         let mut ast = Vec::new();
 
-        let token = self.next().ok_or(ParserError)?;
+        let token = self.next().ok_or(ParserError::default())?;
 
         let object = match token.r#type {
             Types::NL => todo!(),
             Types::KEYWORD(KEYWORD::FUNCTION) => ASTNodes::Function(self.parse_function_def()?),
-            _ => return Err(ParserError),
+            _ => return Err(ParserError::default()),
         };
         ast.push(object);
 

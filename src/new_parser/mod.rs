@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use errors::{ParserError, Result};
 use nodes::ASTNodes;
 
 use crate::lexer::{lexer::Token, types::Types};
@@ -9,16 +10,13 @@ mod block;
 mod func;
 
 mod nodes;
-
+mod errors;
 mod test;
 
 pub struct Parser {
     tokens: Vec<Token>,
     index: usize,
 }
-
-#[derive(Debug)]
-pub struct ParserError;
 
 impl Iterator for Parser {
     type Item = Token;
@@ -48,23 +46,23 @@ impl Parser {
         self.tokens.get(self.index).cloned()
     }
 
-    pub fn next_with_type(&mut self, token_type: Types) -> Result<Token, ParserError> {
+    pub fn next_with_type(&mut self, token_type: Types) -> Result<Token> {
         let token = self.next().unwrap();
         if token.r#type != token_type {
-            return Err(ParserError);
+            return Err(ParserError::expected_token_err(token, token_type));
         }
         Ok(token)
     }
 
-    pub fn peek_with_type(&self, token_type: Types) -> Result<Token, ParserError> {
+    pub fn peek_with_type(&self, token_type: Types) -> Result<Token> {
         let token = self.peek().unwrap();
         if token.r#type != token_type {
-            return Err(ParserError);
+            return Err(ParserError::expected_token_err(token, token_type));
         }
         Ok(token)
     }
 
-    pub fn parse(&mut self) -> Result<Vec<ASTNodes>, ParserError> {
+    pub fn parse(&mut self) -> Result<Vec<ASTNodes>> {
         self.parse_source()
     }
 }

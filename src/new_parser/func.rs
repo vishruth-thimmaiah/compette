@@ -2,11 +2,11 @@ use crate::lexer::types::{Types, DATATYPE, DELIMITER};
 
 use super::{
     nodes::{Block, Function},
-    Parser, ParserError,
+    Parser, Result,
 };
 
 impl Parser {
-    pub fn parse_function_def(&mut self) -> Result<Function, ParserError> {
+    pub fn parse_function_def(&mut self) -> Result<Function> {
         let name = self.next_with_type(Types::IDENTIFIER_FUNC)?;
         self.next_with_type(Types::DELIMITER(DELIMITER::LPAREN))?;
         let mut args: Vec<(String, DATATYPE)> = vec![];
