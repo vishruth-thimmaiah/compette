@@ -1,4 +1,12 @@
+#![allow(dead_code)]
+
+use nodes::ASTNodes;
+
 use crate::lexer::{lexer::Token, types::Types};
+
+mod basics;
+mod block;
+mod func;
 
 mod nodes;
 
@@ -9,6 +17,7 @@ pub struct Parser {
     index: usize,
 }
 
+#[derive(Debug)]
 pub struct ParserError;
 
 impl Iterator for Parser {
@@ -53,5 +62,9 @@ impl Parser {
             return Err(ParserError);
         }
         Ok(token)
+    }
+
+    pub fn parse(&mut self) -> Result<Vec<ASTNodes>, ParserError> {
+        self.parse_source()
     }
 }
