@@ -4,6 +4,7 @@ use crate::lexer::types::DATATYPE;
 pub enum ASTNodes {
     Function(Function),
     Block(Block),
+    Return(Return),
 }
 
 
@@ -18,4 +19,9 @@ pub struct Function {
 #[derive(Debug, PartialEq)]
 pub struct Block {
     pub body: Vec<ASTNodes>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Return {
+    pub value: Option<()>,
 }
