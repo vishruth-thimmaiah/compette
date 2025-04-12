@@ -22,6 +22,7 @@ impl Parser {
     }
 
     pub fn parse_function_block(&mut self) -> Result<Block> {
+        self.next_with_type(Types::DELIMITER(DELIMITER::LBRACE))?;
         let mut body: Vec<ASTNodes> = vec![];
 
         while let Some(token) = self.next() {

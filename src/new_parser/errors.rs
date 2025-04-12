@@ -34,6 +34,10 @@ impl ParserError {
         Self::new(&format!("Expected token {:?}, got {:?}", expected, token.r#type), token)
     }
 
+    pub fn unexpected_token_err(token: Token) -> Self {
+        Self::new(&format!("Unexpected token {:?}", token.r#type), token)
+    }
+
     pub fn unexpected_eof(token: Token) -> Self {
         Self::new(&format!("Expected token {:?}, got eof", token.r#type), token)
     }

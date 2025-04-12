@@ -1,6 +1,7 @@
 use crate::lexer::types::{Types, DATATYPE, DELIMITER};
 
 use super::{
+    errors::ParserError,
     nodes::{Function, Return},
     Parser, Result,
 };
@@ -8,11 +9,8 @@ use super::{
 impl Parser {
     pub fn parse_function_def(&mut self) -> Result<Function> {
         let name = self.next_with_type(Types::IDENTIFIER_FUNC)?;
-        self.next_with_type(Types::DELIMITER(DELIMITER::LPAREN))?;
-        let mut args: Vec<(String, DATATYPE)> = vec![];
-        self.next_with_type(Types::DELIMITER(DELIMITER::RPAREN))?;
+        let args = self.parse_function_args()?;
         let return_type = self.parse_datatype()?;
-        self.next_with_type(Types::DELIMITER(DELIMITER::LBRACE))?;
         let body = self.parse_function_block()?;
 
         Ok(Function {
@@ -21,6 +19,34 @@ impl Parser {
             return_type,
             body,
         })
+    }
+
+    fn parse_function_args(&mut self) -> Result<Vec<(String, DATATYPE)>> {
+        let mut args: Vec<(String, DATATYPE)> = vec![];
+        self.next_with_type(Types::DELIMITER(DELIMITER::LPAREN))?;
+
+        match self.peek().ok_or(ParserError::default())?.r#type {
+            Types::DELIMITER(DELIMITER::RPAREN) => {
+                self.next();
+                return Ok(args);
+            }
+            _ => (),
+        }
+
+        loop {
+            let var_name = self.next_with_type(Types::IDENTIFIER)?;
+            let var_type = self.parse_datatype()?;
+
+            args.push((var_name.value.unwrap(), var_type));
+
+            match self.next().ok_or(ParserError::default())?.r#type {
+                Types::DELIMITER(DELIMITER::RPAREN) => break,
+                Types::DELIMITER(DELIMITER::COMMA) => (),
+                _ => return Err(ParserError::default()),
+            }
+        }
+
+        Ok(args)
     }
 
     pub fn parse_return(&mut self) -> Result<Return> {
@@ -68,6 +94,25 @@ mod tests {
                     body: vec![ASTNodes::Return(Return { value: None })]
                 },
             }),]
+        );
+    }
+
+    #[test]
+    fn test_parse_function_def_with_args() {
+        let mut lexer = Lexer::new("func main(a u32, b u32) u32 {}");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse().unwrap();
+        assert_eq!(
+            ast,
+            vec![ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![
+                    ("a".to_string(), DATATYPE::U32),
+                    ("b".to_string(), DATATYPE::U32)
+                ],
+                return_type: DATATYPE::U32,
+                body: Block { body: vec![] },
+            })]
         );
     }
 }
