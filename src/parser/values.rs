@@ -1,6 +1,6 @@
 use crate::{
     errors,
-    lexer::types::{ArrayDetails, Types, DATATYPE, DELIMITER, OPERATOR},
+    lexer::types::{ArrayDetails, Types, Datatype, Delimiter, Operator},
 };
 
 use super::{
@@ -19,14 +19,14 @@ impl Parser {
 
         let mut var_type = match self.get_next_token().r#type {
             Types::DATATYPE(dt) => dt,
-            Types::IDENTIFIER => DATATYPE::CUSTOM(self.get_next_token().value.unwrap()),
+            Types::IDENTIFIER => Datatype::CUSTOM(self.get_next_token().value.unwrap()),
             _ => errors::parser_error(self, "invalid token"),
         };
         self.set_next_position();
 
-        let is_array = if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACKET) {
+        let is_array = if self.get_next_token().r#type == Types::DELIMITER(Delimiter::LBRACKET) {
             self.set_next_position();
-            if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACKET) {
+            if self.get_next_token().r#type != Types::DELIMITER(Delimiter::RBRACKET) {
                 errors::parser_error(self, "Invalid array declaration");
             }
             self.set_next_position();
@@ -36,7 +36,7 @@ impl Parser {
         };
 
         let is_mutable = match self.get_next_token().r#type {
-            Types::OPERATOR(OPERATOR::NOT) => {
+            Types::OPERATOR(Operator::NOT) => {
                 self.set_next_position();
                 true
             }
@@ -46,17 +46,17 @@ impl Parser {
         let var_name = self.get_next_token().value.unwrap();
         self.set_next_position();
 
-        if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
+        if self.get_next_token().r#type != Types::OPERATOR(Operator::ASSIGN) {
             errors::parser_error(self, "invalid token")
         }
         self.set_next_position();
 
         let value = self.parse_expression();
 
-        if let DATATYPE::STRING(_) = var_type {
+        if let Datatype::STRING(_) = var_type {
             let down_cast = value.left.any().downcast_ref::<ValueParserNode>().unwrap();
-            if let Types::DATATYPE(DATATYPE::STRING(len)) = down_cast.r#type {
-                var_type = DATATYPE::STRING(len);
+            if let Types::DATATYPE(Datatype::STRING(len)) = down_cast.r#type {
+                var_type = Datatype::STRING(len);
             }
         }
 
@@ -69,7 +69,7 @@ impl Parser {
 
             let length = try_downcast.unwrap().value.len() as u32;
 
-            var_type = DATATYPE::ARRAY(Box::new(ArrayDetails {
+            var_type = Datatype::ARRAY(Box::new(ArrayDetails {
                 datatype: var_type,
                 length,
             }));
@@ -87,11 +87,11 @@ impl Parser {
 
     pub fn parse_array(&mut self) -> Box<ValueIterParserNode> {
         let mut array_contents = vec![];
-        while self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACKET) {
+        while self.get_next_token().r#type != Types::DELIMITER(Delimiter::RBRACKET) {
             array_contents.push(*self.parse_expression());
-            if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::RBRACKET) {
+            if self.get_next_token().r#type == Types::DELIMITER(Delimiter::RBRACKET) {
                 break;
-            } else if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::COMMA) {
+            } else if self.get_next_token().r#type != Types::DELIMITER(Delimiter::COMMA) {
                 errors::parser_error(self, "Expected comma after array element");
             }
             self.set_next_position();
@@ -106,7 +106,7 @@ impl Parser {
 
     pub fn parse_identifier_call(&mut self) -> Box<VariableCallParserNode> {
         let var_name: Box<dyn ParserType> =
-            if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACKET) {
+            if self.get_next_token().r#type == Types::DELIMITER(Delimiter::LBRACKET) {
                 let name = self.get_current_token().value.unwrap();
                 self.set_next_position();
                 let val = Box::new(ValueIterCallParserNode {
@@ -122,7 +122,7 @@ impl Parser {
                 })
             };
 
-        if self.get_next_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
+        if self.get_next_token().r#type != Types::OPERATOR(Operator::ASSIGN) {
             errors::parser_error(self, "invalid token");
         }
         self.set_next_position();
@@ -137,17 +137,17 @@ impl Parser {
 
         self.set_next_position();
 
-        if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
+        if self.get_next_token().r#type != Types::DELIMITER(Delimiter::LBRACE) {
             errors::parser_error(self, "invalid token")
         }
 
         self.set_next_position();
 
-        let mut fields: Vec<(String, DATATYPE)> = vec![];
+        let mut fields: Vec<(String, Datatype)> = vec![];
 
-        while self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACE) {
+        while self.get_next_token().r#type != Types::DELIMITER(Delimiter::RBRACE) {
             if self.get_next_token().r#type == Types::NL
-                || self.get_next_token().r#type == Types::DELIMITER(DELIMITER::COMMA)
+                || self.get_next_token().r#type == Types::DELIMITER(Delimiter::COMMA)
             {
                 self.set_next_position();
                 continue;
@@ -181,9 +181,9 @@ impl Parser {
     pub fn parse_struct(&mut self) -> Box<StructParserNode> {
         let mut fields = vec![];
 
-        while self.get_next_token().r#type != Types::DELIMITER(DELIMITER::RBRACE) {
+        while self.get_next_token().r#type != Types::DELIMITER(Delimiter::RBRACE) {
             if self.get_next_token().r#type == Types::NL
-                || self.get_next_token().r#type == Types::DELIMITER(DELIMITER::COMMA)
+                || self.get_next_token().r#type == Types::DELIMITER(Delimiter::COMMA)
             {
                 self.set_next_position();
                 continue;

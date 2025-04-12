@@ -1,6 +1,6 @@
 use crate::{
     errors,
-    lexer::types::{Types, DELIMITER, KEYWORD, OPERATOR},
+    lexer::types::{Types, Delimiter, Keyword, Operator},
 };
 
 use super::{
@@ -35,13 +35,13 @@ impl Parser {
 
         loop {
             let token = self.get_next_token();
-            if token.r#type != Types::KEYWORD(KEYWORD::ELSE) {
+            if token.r#type != Types::KEYWORD(Keyword::ELSE) {
                 break;
             }
             self.set_next_position();
 
             let token = self.get_next_token();
-            if token.r#type != Types::KEYWORD(KEYWORD::IF) {
+            if token.r#type != Types::KEYWORD(Keyword::IF) {
                 break;
             }
             self.set_next_position();
@@ -58,11 +58,11 @@ impl Parser {
     }
 
     fn parse_conditional_else(&mut self) -> Option<ConditionalElseParserNode> {
-        if self.get_current_token().r#type != Types::KEYWORD(KEYWORD::ELSE) {
+        if self.get_current_token().r#type != Types::KEYWORD(Keyword::ELSE) {
             return None;
         }
 
-        if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
+        if self.get_next_token().r#type != Types::DELIMITER(Delimiter::LBRACE) {
             errors::parser_error(self, "invalid token")
         }
         self.set_next_position();
@@ -78,7 +78,7 @@ impl Parser {
         let iterator = self.parse_expression();
 
         self.set_next_position();
-        if self.get_current_token().r#type != Types::OPERATOR(OPERATOR::ASSIGN) {
+        if self.get_current_token().r#type != Types::OPERATOR(Operator::ASSIGN) {
             errors::parser_error(self, "invalid token")
         }
         self.set_next_position();
@@ -86,7 +86,7 @@ impl Parser {
         let incr_value = self.get_current_token().value.unwrap();
         self.set_next_position();
 
-        if self.get_current_token().r#type != Types::DELIMITER(DELIMITER::COMMA) {
+        if self.get_current_token().r#type != Types::DELIMITER(Delimiter::COMMA) {
             errors::parser_error(self, "invalid token")
         }
 
@@ -108,11 +108,11 @@ impl Parser {
             errors::parser_error(self, "invalid token")
         }
 
-        if self.get_next_token().r#type == Types::KEYWORD(KEYWORD::RANGE) {
+        if self.get_next_token().r#type == Types::KEYWORD(Keyword::RANGE) {
             return self.parse_for_loop();
         }
 
-        let condition = if self.get_next_token().r#type == Types::DELIMITER(DELIMITER::LBRACE) {
+        let condition = if self.get_next_token().r#type == Types::DELIMITER(Delimiter::LBRACE) {
             Box::new(ExpressionParserNode {
                 left: Box::new(ValueParserNode {
                     value: "1".to_string(),

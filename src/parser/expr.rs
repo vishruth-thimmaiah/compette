@@ -2,7 +2,7 @@ use crate::{
     errors,
     lexer::{
         lexer::Token,
-        types::{Types, DATATYPE, DELIMITER, OPERATOR},
+        types::{Types, Datatype, Delimiter, Operator},
     },
 };
 
@@ -19,7 +19,7 @@ impl Parser {
 
         // Values that cannot have operations performed on them.
         match self.get_next_token().r#type {
-            Types::DELIMITER(DELIMITER::LBRACKET) => {
+            Types::DELIMITER(Delimiter::LBRACKET) => {
                 self.set_next_position();
                 return Box::new(ExpressionParserNode {
                     left: self.parse_array(),
@@ -27,7 +27,7 @@ impl Parser {
                     operator: None,
                 });
             }
-            Types::DELIMITER(DELIMITER::LBRACE) => {
+            Types::DELIMITER(Delimiter::LBRACE) => {
                 self.set_next_position();
                 return Box::new(ExpressionParserNode {
                     left: self.parse_struct(),
@@ -35,11 +35,11 @@ impl Parser {
                     operator: None,
                 });
             }
-            Types::DATATYPE(DATATYPE::STRING(str)) => {
+            Types::DATATYPE(Datatype::STRING(str)) => {
                 self.set_next_position();
                 return Box::new(ExpressionParserNode {
                     left: Box::new(ValueParserNode {
-                        r#type: Types::DATATYPE(DATATYPE::STRING(str)),
+                        r#type: Types::DATATYPE(Datatype::STRING(str)),
                         value: self.get_current_token().value.unwrap(),
                     }),
                     right: None,
@@ -57,7 +57,7 @@ impl Parser {
                     value: token.value.unwrap(),
                 })),
                 Types::IDENTIFIER => {
-                    if self.tree[self.position + 2].r#type == Types::DELIMITER(DELIMITER::LBRACKET)
+                    if self.tree[self.position + 2].r#type == Types::DELIMITER(Delimiter::LBRACKET)
                     {
                         self.set_next_position();
                         self.set_next_position();
@@ -74,7 +74,7 @@ impl Parser {
                     }
                 }
                 Types::DATATYPE(dt) => {
-                    if self.get_current_token().r#type == Types::OPERATOR(OPERATOR::CAST) {
+                    if self.get_current_token().r#type == Types::OPERATOR(Operator::CAST) {
                         operands.push(Box::new(ValueParserNode {
                             r#type: Types::DATATYPE(dt),
                             value: "".to_string(),
@@ -104,13 +104,13 @@ impl Parser {
                     }
                     operators.push(token);
                 }
-                Types::DELIMITER(DELIMITER::LPAREN) => {
+                Types::DELIMITER(Delimiter::LPAREN) => {
                     operators.push(token);
                 }
-                Types::DELIMITER(DELIMITER::RPAREN) => loop {
+                Types::DELIMITER(Delimiter::RPAREN) => loop {
                     let pop_op = &operators.pop();
                     if let Some(op) = pop_op {
-                        if op.r#type == Types::DELIMITER(DELIMITER::LPAREN) {
+                        if op.r#type == Types::DELIMITER(Delimiter::LPAREN) {
                             break;
                         }
                         operands.push(Box::new(ValueParserNode {
@@ -128,7 +128,7 @@ impl Parser {
         }
         while !operators.is_empty() {
             let value = operators.pop().unwrap();
-            if value.r#type == Types::DELIMITER(DELIMITER::LPAREN) {
+            if value.r#type == Types::DELIMITER(Delimiter::LPAREN) {
                 errors::parser_error(self, "Parenthesis not closed.")
             }
             operands.push(Box::new(ValueParserNode {
@@ -204,15 +204,15 @@ impl Parser {
 
     fn get_precedence(&self, operator: &Types) -> usize {
         match operator {
-            Types::OPERATOR(OPERATOR::PLUS) | Types::OPERATOR(OPERATOR::MINUS) => 1,
-            Types::OPERATOR(OPERATOR::MULTIPLY) | Types::OPERATOR(OPERATOR::DIVIDE) => 2,
-            Types::DELIMITER(DELIMITER::LPAREN) => 0,
-            Types::OPERATOR(OPERATOR::CAST) => 0,
+            Types::OPERATOR(Operator::PLUS) | Types::OPERATOR(Operator::MINUS) => 1,
+            Types::OPERATOR(Operator::MULTIPLY) | Types::OPERATOR(Operator::DIVIDE) => 2,
+            Types::DELIMITER(Delimiter::LPAREN) => 0,
+            Types::OPERATOR(Operator::CAST) => 0,
             _ => unreachable!(),
         }
     }
 
-    fn value_to_operator(&self, value: &ValueParserNode) -> Option<OPERATOR> {
+    fn value_to_operator(&self, value: &ValueParserNode) -> Option<Operator> {
         if let Types::OPERATOR(op) = &value.r#type {
             return Some(op.clone());
         }

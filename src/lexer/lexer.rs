@@ -2,7 +2,7 @@ use core::str;
 
 use crate::errors;
 
-use super::types::{Types, DATATYPE, DELIMITER, KEYWORD, OPERATOR};
+use super::types::{Types, Datatype, Delimiter, Keyword, Operator};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Token {
@@ -94,18 +94,18 @@ impl Lexer {
 
         return Some(Token::new(
             match char {
-                b'+' => Types::OPERATOR(OPERATOR::PLUS),
-                b'*' => Types::OPERATOR(OPERATOR::MULTIPLY),
-                b',' => Types::DELIMITER(DELIMITER::COMMA),
-                b';' => Types::DELIMITER(DELIMITER::SEMICOLON),
-                b'(' => Types::DELIMITER(DELIMITER::LPAREN),
-                b')' => Types::DELIMITER(DELIMITER::RPAREN),
-                b'{' => Types::DELIMITER(DELIMITER::LBRACE),
-                b'}' => Types::DELIMITER(DELIMITER::RBRACE),
-                b'[' => Types::DELIMITER(DELIMITER::LBRACKET),
-                b']' => Types::DELIMITER(DELIMITER::RBRACKET),
-                b'.' => Types::OPERATOR(OPERATOR::DOT),
-                b':' => Types::OPERATOR(OPERATOR::COLON),
+                b'+' => Types::OPERATOR(Operator::PLUS),
+                b'*' => Types::OPERATOR(Operator::MULTIPLY),
+                b',' => Types::DELIMITER(Delimiter::COMMA),
+                b';' => Types::DELIMITER(Delimiter::SEMICOLON),
+                b'(' => Types::DELIMITER(Delimiter::LPAREN),
+                b')' => Types::DELIMITER(Delimiter::RPAREN),
+                b'{' => Types::DELIMITER(Delimiter::LBRACE),
+                b'}' => Types::DELIMITER(Delimiter::RBRACE),
+                b'[' => Types::DELIMITER(Delimiter::LBRACKET),
+                b']' => Types::DELIMITER(Delimiter::RBRACKET),
+                b'.' => Types::OPERATOR(Operator::DOT),
+                b':' => Types::OPERATOR(Operator::COLON),
                 b'/' => return self.skip_comment(),
                 b'\n' => {
                     self.line += 1;
@@ -133,7 +133,7 @@ impl Lexer {
         }
 
         return Some(Token::new(
-            Types::OPERATOR(OPERATOR::DIVIDE),
+            Types::OPERATOR(Operator::DIVIDE),
             None,
             self.line,
             self.column,
@@ -147,20 +147,20 @@ impl Lexer {
         self.index += 2;
 
         match (first_char, second_char) {
-            (b'=', b'=') => return Types::OPERATOR(OPERATOR::EQUAL),
-            (b'!', b'=') => return Types::OPERATOR(OPERATOR::NOT_EQUAL),
-            (b'<', b'=') => return Types::OPERATOR(OPERATOR::LESSER_EQUAL),
-            (b'>', b'=') => return Types::OPERATOR(OPERATOR::GREATER_EQUAL),
-            (b'-', b'>') => return Types::OPERATOR(OPERATOR::CAST),
+            (b'=', b'=') => return Types::OPERATOR(Operator::EQUAL),
+            (b'!', b'=') => return Types::OPERATOR(Operator::NOT_EQUAL),
+            (b'<', b'=') => return Types::OPERATOR(Operator::LESSER_EQUAL),
+            (b'>', b'=') => return Types::OPERATOR(Operator::GREATER_EQUAL),
+            (b'-', b'>') => return Types::OPERATOR(Operator::CAST),
             _ => self.index -= 1,
         };
 
         match first_char {
-            b'!' => Types::OPERATOR(OPERATOR::NOT),
-            b'=' => Types::OPERATOR(OPERATOR::ASSIGN),
-            b'<' => Types::OPERATOR(OPERATOR::LESSER),
-            b'>' => Types::OPERATOR(OPERATOR::GREATER),
-            b'-' => Types::OPERATOR(OPERATOR::MINUS),
+            b'!' => Types::OPERATOR(Operator::NOT),
+            b'=' => Types::OPERATOR(Operator::ASSIGN),
+            b'<' => Types::OPERATOR(Operator::LESSER),
+            b'>' => Types::OPERATOR(Operator::GREATER),
+            b'-' => Types::OPERATOR(Operator::MINUS),
             _ => errors::lexer_error(first_char, "invalid token", self.line, self.column),
         }
     }
@@ -185,30 +185,30 @@ impl Lexer {
         self.index = end - 1;
 
         let (token_type, token_value) = match result.as_str() {
-            "struct" => (Types::KEYWORD(KEYWORD::STRUCT), None),
-            "func" => (Types::KEYWORD(KEYWORD::FUNCTION), None),
-            "import" => (Types::KEYWORD(KEYWORD::IMPORT), None),
-            "let" => (Types::KEYWORD(KEYWORD::LET), None),
-            "return" => (Types::KEYWORD(KEYWORD::RETURN), None),
-            "if" => (Types::KEYWORD(KEYWORD::IF), None),
-            "else" => (Types::KEYWORD(KEYWORD::ELSE), None),
-            "loop" => (Types::KEYWORD(KEYWORD::LOOP), None),
-            "range" => (Types::KEYWORD(KEYWORD::RANGE), None),
-            "break" => (Types::KEYWORD(KEYWORD::BREAK), None),
-            "u8" => (Types::DATATYPE(DATATYPE::U8), None),
-            "u16" => (Types::DATATYPE(DATATYPE::U16), None),
-            "u32" => (Types::DATATYPE(DATATYPE::U32), None),
-            "u64" => (Types::DATATYPE(DATATYPE::U64), None),
-            "i8" => (Types::DATATYPE(DATATYPE::I8), None),
-            "i16" => (Types::DATATYPE(DATATYPE::I16), None),
-            "i32" => (Types::DATATYPE(DATATYPE::I32), None),
-            "i64" => (Types::DATATYPE(DATATYPE::I64), None),
-            "f32" => (Types::DATATYPE(DATATYPE::F32), None),
-            "f64" => (Types::DATATYPE(DATATYPE::F64), None),
-            "bool" => (Types::DATATYPE(DATATYPE::BOOL), None),
+            "struct" => (Types::KEYWORD(Keyword::STRUCT), None),
+            "func" => (Types::KEYWORD(Keyword::FUNCTION), None),
+            "import" => (Types::KEYWORD(Keyword::IMPORT), None),
+            "let" => (Types::KEYWORD(Keyword::LET), None),
+            "return" => (Types::KEYWORD(Keyword::RETURN), None),
+            "if" => (Types::KEYWORD(Keyword::IF), None),
+            "else" => (Types::KEYWORD(Keyword::ELSE), None),
+            "loop" => (Types::KEYWORD(Keyword::LOOP), None),
+            "range" => (Types::KEYWORD(Keyword::RANGE), None),
+            "break" => (Types::KEYWORD(Keyword::BREAK), None),
+            "u8" => (Types::DATATYPE(Datatype::U8), None),
+            "u16" => (Types::DATATYPE(Datatype::U16), None),
+            "u32" => (Types::DATATYPE(Datatype::U32), None),
+            "u64" => (Types::DATATYPE(Datatype::U64), None),
+            "i8" => (Types::DATATYPE(Datatype::I8), None),
+            "i16" => (Types::DATATYPE(Datatype::I16), None),
+            "i32" => (Types::DATATYPE(Datatype::I32), None),
+            "i64" => (Types::DATATYPE(Datatype::I64), None),
+            "f32" => (Types::DATATYPE(Datatype::F32), None),
+            "f64" => (Types::DATATYPE(Datatype::F64), None),
+            "bool" => (Types::DATATYPE(Datatype::BOOL), None),
             "true" => (Types::BOOL, Some("1".to_string())),
             "false" => (Types::BOOL, Some("0".to_string())),
-            "string" => (Types::DATATYPE(DATATYPE::STRING(0)), None),
+            "string" => (Types::DATATYPE(Datatype::STRING(0)), None),
             _ => {
                 if self.content.as_bytes()[self.index + 1] == b':' {
                     self.index += 1;
@@ -258,7 +258,7 @@ impl Lexer {
         self.index = end;
 
         return Token::new(
-            Types::DATATYPE(DATATYPE::STRING(result.len())),
+            Types::DATATYPE(Datatype::STRING(result.len())),
             Some(result),
             self.line,
             self.column,

@@ -10,7 +10,7 @@ use inkwell::OptimizationLevel;
 
 extern crate stdlib;
 
-use crate::lexer::types::DATATYPE;
+use crate::lexer::types::Datatype;
 use crate::llvm::builder;
 use crate::parser::nodes::{
     AssignmentParserNode, ConditionalIfParserNode, ForLoopParserNode, FunctionCallParserNode,
@@ -38,7 +38,7 @@ impl FunctionStore<'_> {
 pub struct VariableStore<'ctx> {
     pub ptr: PointerValue<'ctx>,
     pub is_mutable: bool,
-    pub datatype: DATATYPE,
+    pub datatype: Datatype,
 }
 
 pub struct StructStore {
@@ -118,7 +118,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         body: &Vec<Box<dyn ParserType>>,
         func_name: &str,
-        ret_type: &DATATYPE,
+        ret_type: &Datatype,
     ) {
         for node in body {
             match node.get_type() {

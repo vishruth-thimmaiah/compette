@@ -1,6 +1,6 @@
 use inkwell::values::{BasicValueEnum, IntValue};
 
-use crate::lexer::types::{DATATYPE, OPERATOR};
+use crate::lexer::types::{Datatype, Operator};
 
 use super::codegen::CodeGen;
 
@@ -95,7 +95,7 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn comp_binary_operation(
         &self,
-        op: OPERATOR,
+        op: Operator,
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
     ) -> BasicValueEnum<'ctx> {
@@ -125,7 +125,7 @@ impl<'ctx> CodeGen<'ctx> {
                 .unwrap()
                 .const_zero()
                 .into_int_value();
-            if datatype == DATATYPE::BOOL {
+            if datatype == Datatype::BOOL {
                 return expr.into_int_value();
             }
             self.builder
@@ -149,14 +149,14 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    fn get_predicate(&self, op: OPERATOR) -> (inkwell::IntPredicate, inkwell::FloatPredicate) {
+    fn get_predicate(&self, op: Operator) -> (inkwell::IntPredicate, inkwell::FloatPredicate) {
         match op {
-            OPERATOR::EQUAL => (inkwell::IntPredicate::EQ, inkwell::FloatPredicate::OEQ),
-            OPERATOR::NOT_EQUAL => (inkwell::IntPredicate::NE, inkwell::FloatPredicate::ONE),
-            OPERATOR::GREATER => (inkwell::IntPredicate::SGT, inkwell::FloatPredicate::OGT),
-            OPERATOR::LESSER => (inkwell::IntPredicate::SLT, inkwell::FloatPredicate::OLT),
-            OPERATOR::GREATER_EQUAL => (inkwell::IntPredicate::SGE, inkwell::FloatPredicate::OGE),
-            OPERATOR::LESSER_EQUAL => (inkwell::IntPredicate::SLE, inkwell::FloatPredicate::UEQ),
+            Operator::EQUAL => (inkwell::IntPredicate::EQ, inkwell::FloatPredicate::OEQ),
+            Operator::NOT_EQUAL => (inkwell::IntPredicate::NE, inkwell::FloatPredicate::ONE),
+            Operator::GREATER => (inkwell::IntPredicate::SGT, inkwell::FloatPredicate::OGT),
+            Operator::LESSER => (inkwell::IntPredicate::SLT, inkwell::FloatPredicate::OLT),
+            Operator::GREATER_EQUAL => (inkwell::IntPredicate::SGE, inkwell::FloatPredicate::OGE),
+            Operator::LESSER_EQUAL => (inkwell::IntPredicate::SLE, inkwell::FloatPredicate::UEQ),
             _ => todo!(),
         }
     }

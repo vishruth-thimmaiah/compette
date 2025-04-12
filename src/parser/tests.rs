@@ -3,7 +3,7 @@ mod tests {
     use crate::{
         lexer::{
             lexer::Lexer,
-            types::{Types::*, DATATYPE, OPERATOR},
+            types::{Types::*, Datatype, Operator},
         },
         parser::Parser,
     };
@@ -28,7 +28,7 @@ mod tests {
             Box::new(FunctionParserNode {
                 func_name: "num".to_string(),
                 args: vec![],
-                return_type: DATATYPE::U32,
+                return_type: Datatype::U32,
                 body: vec![Box::new(ReturnNode {
                     return_value: Box::new(ExpressionParserNode {
                         left: Box::new(ValueParserNode {
@@ -43,11 +43,11 @@ mod tests {
             Box::new(FunctionParserNode {
                 func_name: "main".to_string(),
                 args: vec![],
-                return_type: DATATYPE::U32,
+                return_type: Datatype::U32,
                 body: vec![
                     Box::new(AssignmentParserNode {
                         var_name: "a".to_string(),
-                        var_type: DATATYPE::U32,
+                        var_type: Datatype::U32,
                         is_mutable: false,
                         value: Box::new(ExpressionParserNode {
                             left: Box::new(ValueParserNode {
@@ -60,7 +60,7 @@ mod tests {
                     }),
                     Box::new(AssignmentParserNode {
                         var_name: "b".to_string(),
-                        var_type: DATATYPE::U32,
+                        var_type: Datatype::U32,
                         is_mutable: false,
                         value: Box::new(FunctionCallParserNode {
                             func_name: "num".to_string(),
@@ -82,7 +82,7 @@ mod tests {
                                 right: None,
                                 operator: None,
                             })),
-                            operator: Some(OPERATOR::MULTIPLY),
+                            operator: Some(Operator::MULTIPLY),
                         }),
                     }),
                 ],

@@ -1,4 +1,4 @@
-use crate::lexer::types::{Types, DATATYPE, DELIMITER};
+use crate::lexer::types::{Types, Datatype, Delimiter};
 
 use super::{
     errors::ParserError,
@@ -21,12 +21,12 @@ impl Parser {
         })
     }
 
-    fn parse_function_args(&mut self) -> Result<Vec<(String, DATATYPE)>> {
-        let mut args: Vec<(String, DATATYPE)> = vec![];
-        self.next_with_type(Types::DELIMITER(DELIMITER::LPAREN))?;
+    fn parse_function_args(&mut self) -> Result<Vec<(String, Datatype)>> {
+        let mut args: Vec<(String, Datatype)> = vec![];
+        self.next_with_type(Types::DELIMITER(Delimiter::LPAREN))?;
 
         match self.peek().ok_or(ParserError::default())?.r#type {
-            Types::DELIMITER(DELIMITER::RPAREN) => {
+            Types::DELIMITER(Delimiter::RPAREN) => {
                 self.next();
                 return Ok(args);
             }
@@ -40,8 +40,8 @@ impl Parser {
             args.push((var_name.value.unwrap(), var_type));
 
             match self.next().ok_or(ParserError::default())?.r#type {
-                Types::DELIMITER(DELIMITER::RPAREN) => break,
-                Types::DELIMITER(DELIMITER::COMMA) => (),
+                Types::DELIMITER(Delimiter::RPAREN) => break,
+                Types::DELIMITER(Delimiter::COMMA) => (),
                 _ => return Err(ParserError::default()),
             }
         }
@@ -73,7 +73,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: DATATYPE::U32,
+                return_type: Datatype::U32,
                 body: Block { body: vec![] },
             })]
         );
@@ -89,7 +89,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: DATATYPE::U32,
+                return_type: Datatype::U32,
                 body: Block {
                     body: vec![ASTNodes::Return(Return { value: None })]
                 },
@@ -107,10 +107,10 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![
-                    ("a".to_string(), DATATYPE::U32),
-                    ("b".to_string(), DATATYPE::U32)
+                    ("a".to_string(), Datatype::U32),
+                    ("b".to_string(), Datatype::U32)
                 ],
-                return_type: DATATYPE::U32,
+                return_type: Datatype::U32,
                 body: Block { body: vec![] },
             })]
         );

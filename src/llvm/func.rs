@@ -5,7 +5,7 @@ use inkwell::{
 
 use crate::{
     errors,
-    lexer::types::DATATYPE,
+    lexer::types::Datatype,
     llvm::stdlib_defs::get_stdlib_function,
     parser::nodes::{
         ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ReturnNode,
@@ -45,13 +45,13 @@ impl<'ctx> CodeGen<'ctx> {
         self.nested_codegen(&node.body, &node.func_name, &node.return_type);
     }
 
-    pub fn add_return(&self, node: &ReturnNode, func_name: &str, ret_type: &DATATYPE) {
+    pub fn add_return(&self, node: &ReturnNode, func_name: &str, ret_type: &Datatype) {
         let ret_expr = node
             .return_value
             .any()
             .downcast_ref::<ExpressionParserNode>()
             .unwrap();
-        if ret_type == &DATATYPE::NONE {
+        if ret_type == &Datatype::NONE {
             self.builder.build_return(None).unwrap();
         } else {
             let ret_val = self.add_expression(ret_expr, func_name, ret_type);
@@ -111,7 +111,7 @@ impl<'ctx> CodeGen<'ctx> {
         func
     }
 
-    pub fn def_builtin(&self, func_name: &str) -> Option<(FunctionValue<'ctx>, &DATATYPE)> {
+    pub fn def_builtin(&self, func_name: &str) -> Option<(FunctionValue<'ctx>, &Datatype)> {
         let internal_func_name = format!("__builtin__{}", func_name);
 
         let func_def = if let Some(func_def) = get_builtin_function(&internal_func_name) {
@@ -218,7 +218,7 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn def_func_args(
         &self,
-        args: &Vec<(String, DATATYPE)>,
+        args: &Vec<(String, Datatype)>,
     ) -> Vec<BasicMetadataTypeEnum<'ctx>> {
         let mut result_arr: Vec<BasicMetadataTypeEnum<'ctx>> = Vec::new();
 

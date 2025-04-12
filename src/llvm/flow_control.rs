@@ -1,7 +1,7 @@
 use inkwell::IntPredicate;
 
 use crate::{
-    lexer::types::DATATYPE,
+    lexer::types::Datatype,
     parser::nodes::{ConditionalIfParserNode, ForLoopParserNode, LoopParserNode},
 };
 
@@ -12,7 +12,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         func_name: &str,
         node: &ConditionalIfParserNode,
-        ret_type: &DATATYPE,
+        ret_type: &Datatype,
     ) {
         let function = self.module.get_function(func_name).unwrap();
         let if_block = self.context.append_basic_block(function, "if");
@@ -27,7 +27,7 @@ impl<'ctx> CodeGen<'ctx> {
             let b_name = &("else_if_".to_string() + &index.to_string());
             let cond_eval_block = self.context.append_basic_block(function, c_name);
 
-            let expr = self.add_expression(prev_block.1, func_name, &DATATYPE::U32);
+            let expr = self.add_expression(prev_block.1, func_name, &Datatype::U32);
 
             self.builder
                 .build_conditional_branch(self.to_bool(&expr), prev_block.0, cond_eval_block)
@@ -63,7 +63,7 @@ impl<'ctx> CodeGen<'ctx> {
 
         self.builder.position_at_end(cont_eval_block);
 
-        let expr = self.add_expression(prev_block.1, func_name, &DATATYPE::U32);
+        let expr = self.add_expression(prev_block.1, func_name, &Datatype::U32);
 
         self.builder
             .build_conditional_branch(self.to_bool(&expr), prev_block.0, last_block)
@@ -95,11 +95,11 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.build_unconditional_branch(move_to).unwrap();
     }
 
-    pub fn add_for_loop(&self, func_name: &str, node: &ForLoopParserNode, ret_type: &DATATYPE) {
+    pub fn add_for_loop(&self, func_name: &str, node: &ForLoopParserNode, ret_type: &Datatype) {
         let function = self.module.get_function(func_name).unwrap();
 
         let index = self.context.i32_type().const_zero();
-        let index_ptr = self.store_new_var(func_name, &node.index, &DATATYPE::U32, true);
+        let index_ptr = self.store_new_var(func_name, &node.index, &Datatype::U32, true);
 
         self.builder.build_store(index_ptr, index).unwrap();
 
@@ -166,13 +166,13 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.position_at_end(cont);
     }
 
-    pub fn add_loop(&self, func_name: &str, node: &LoopParserNode, ret_type: &DATATYPE) {
+    pub fn add_loop(&self, func_name: &str, node: &LoopParserNode, ret_type: &Datatype) {
         let function = self.module.get_function(func_name).unwrap();
 
         let loop_block = self.context.append_basic_block(function, "loop");
         let cont = self.context.append_basic_block(function, "loop_cont");
 
-        let expr = self.add_expression(&node.condition, func_name, &DATATYPE::U32);
+        let expr = self.add_expression(&node.condition, func_name, &Datatype::U32);
 
         self.builder
             .build_conditional_branch(self.to_bool(&expr), loop_block, cont)
@@ -181,7 +181,7 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.position_at_end(loop_block);
         self.nested_codegen(&node.body, func_name, ret_type);
 
-        let expr = self.add_expression(&node.condition, func_name, &DATATYPE::U32);
+        let expr = self.add_expression(&node.condition, func_name, &Datatype::U32);
         self.builder
             .build_conditional_branch(self.to_bool(&expr), loop_block, cont)
             .unwrap();

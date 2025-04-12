@@ -5,7 +5,7 @@ use inkwell::{
 
 use crate::{
     errors,
-    lexer::types::{Types, DATATYPE},
+    lexer::types::{Types, Datatype},
     parser::{
         nodes::{
             AssignmentParserNode, ExpressionParserNode, StructParserNode, ValueIterCallParserNode,
@@ -33,7 +33,7 @@ impl<'ctx> CodeGen<'ctx> {
             self.add_vec(possible_iter_node.unwrap(), func_name, &node.var_type)
         } else if is_iter {
             self.add_array(possible_iter_node.unwrap(), func_name, &node.var_type)
-        } else if let DATATYPE::CUSTOM(name) = &node.var_type {
+        } else if let Datatype::CUSTOM(name) = &node.var_type {
             let struct_node = value.left.any().downcast_ref::<StructParserNode>().unwrap();
             self.create_struct(name, struct_node).into()
         } else {
@@ -105,9 +105,9 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         node: &ValueIterParserNode,
         func_name: &str,
-        req_type: &DATATYPE,
+        req_type: &Datatype,
     ) -> BasicValueEnum<'ctx> {
-        let array_type = if let DATATYPE::ARRAY(array_type) = req_type {
+        let array_type = if let Datatype::ARRAY(array_type) = req_type {
             array_type
         } else {
             errors::compiler_error("Expected array type")
@@ -148,9 +148,9 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         node: &ValueIterParserNode,
         func_name: &str,
-        req_type: &DATATYPE,
+        req_type: &Datatype,
     ) -> BasicValueEnum<'ctx> {
-        let vec_type = if let DATATYPE::ARRAY(array_type) = req_type {
+        let vec_type = if let Datatype::ARRAY(array_type) = req_type {
             array_type
         } else {
             errors::compiler_error("Expected vec type")
@@ -170,7 +170,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         node: &ValueIterCallParserNode,
         func_name: &str,
-    ) -> (PointerValue<'ctx>, DATATYPE) {
+    ) -> (PointerValue<'ctx>, Datatype) {
         let vars = self.variables.borrow();
         let array = vars
             .iter()
@@ -180,14 +180,14 @@ impl<'ctx> CodeGen<'ctx> {
             .get(&node.value)
             .unwrap();
 
-        let array_details = if let DATATYPE::ARRAY(array_details) = &array.datatype {
+        let array_details = if let Datatype::ARRAY(array_details) = &array.datatype {
             array_details
         } else {
             unreachable!()
         };
 
         let array_index = self
-            .add_expression(&node.index, func_name, &DATATYPE::U64)
+            .add_expression(&node.index, func_name, &Datatype::U64)
             .into_int_value();
 
         let array_type = self.def_expr(&array_details.datatype);
@@ -247,10 +247,10 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         node: &ValueParserNode,
         func_name: &str,
-        req_type: &DATATYPE,
+        req_type: &Datatype,
     ) -> BasicValueEnum<'ctx> {
         match node.r#type {
-            Types::NUMBER | Types::BOOL | Types::DATATYPE(DATATYPE::STRING(_)) => {
+            Types::NUMBER | Types::BOOL | Types::DATATYPE(Datatype::STRING(_)) => {
                 self.string_to_value(&node.value, &node.r#type, req_type)
             }
             Types::IDENTIFIER => {
@@ -258,9 +258,9 @@ impl<'ctx> CodeGen<'ctx> {
                 let var = vars.iter().find(|x| x.name == func_name).unwrap();
                 let res = {
                     if let Some(var_name) = var.vars.get(node.value.as_str()) {
-                        if let DATATYPE::ARRAY(_) = &var_name.datatype {
+                        if let Datatype::ARRAY(_) = &var_name.datatype {
                             var_name.ptr.as_basic_value_enum()
-                        } else if let DATATYPE::STRING(_) = var_name.datatype {
+                        } else if let Datatype::STRING(_) = var_name.datatype {
                             var_name.ptr.as_basic_value_enum()
                         } else {
                             self.builder

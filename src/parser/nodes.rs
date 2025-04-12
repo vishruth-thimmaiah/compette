@@ -1,6 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
-use crate::lexer::types::{Types, DATATYPE, OPERATOR};
+use crate::lexer::types::{Types, Datatype, Operator};
 
 use super::types::ParserTypes;
 
@@ -25,7 +25,7 @@ impl ParserType for ImportParserNode {
 #[derive(Debug)]
 pub struct AssignmentParserNode {
     pub var_name: String,
-    pub var_type: DATATYPE,
+    pub var_type: Datatype,
     pub is_mutable: bool,
     pub value: Box<dyn ParserType>,
 }
@@ -42,7 +42,7 @@ impl ParserType for AssignmentParserNode {
 pub struct ExpressionParserNode {
     pub left: Box<dyn ParserType>,
     pub right: Option<Box<dyn ParserType>>,
-    pub operator: Option<OPERATOR>,
+    pub operator: Option<Operator>,
 }
 impl ParserType for ExpressionParserNode {
     fn get_type(&self) -> ParserTypes {
@@ -56,8 +56,8 @@ impl ParserType for ExpressionParserNode {
 #[derive(Debug)]
 pub struct FunctionParserNode {
     pub func_name: String,
-    pub args: Vec<(String, DATATYPE)>,
-    pub return_type: DATATYPE,
+    pub args: Vec<(String, Datatype)>,
+    pub return_type: Datatype,
     pub body: Vec<Box<dyn ParserType>>,
 }
 impl ParserType for FunctionParserNode {
@@ -240,7 +240,7 @@ impl ParserType for ForLoopParserNode {
 #[derive(Debug)]
 pub struct StructDefParserNode {
     pub struct_name: String,
-    pub fields: Vec<(String, DATATYPE)>,
+    pub fields: Vec<(String, Datatype)>,
 }
 impl ParserType for StructDefParserNode {
     fn get_type(&self) -> ParserTypes {

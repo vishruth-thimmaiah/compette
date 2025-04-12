@@ -1,6 +1,6 @@
 use inkwell::values::PointerValue;
 
-use crate::lexer::types::DATATYPE;
+use crate::lexer::types::Datatype;
 
 use super::codegen::{CodeGen, VariableStore};
 
@@ -9,7 +9,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         fn_name: &str,
         var_name: &str,
-        dt: &DATATYPE,
+        dt: &Datatype,
         is_mut: bool,
     ) -> PointerValue<'ctx> {
         let mut vars = self.variables.borrow_mut();
@@ -38,7 +38,7 @@ impl<'ctx> CodeGen<'ctx> {
         fn_name: &str,
         var_name: &str,
         is_mut: bool,
-        dt: &DATATYPE,
+        dt: &Datatype,
         ptr: PointerValue<'ctx>,
     ) {
         let mut vars = self.variables.borrow_mut();

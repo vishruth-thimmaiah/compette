@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use inkwell::values::BasicValueEnum;
 
 use crate::{
-    lexer::types::{Types, DATATYPE, OPERATOR},
+    lexer::types::{Types, Datatype, Operator},
     parser::{
         nodes::{
             ExpressionParserNode, FunctionCallParserNode, ParserType, ValueIterCallParserNode,
@@ -20,9 +20,9 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         node: &ExpressionParserNode,
         func_name: &str,
-        req_type: &DATATYPE,
+        req_type: &Datatype,
     ) -> BasicValueEnum<'ctx> {
-        if node.operator.is_some() && node.operator.as_ref().unwrap() == &OPERATOR::DOT {
+        if node.operator.is_some() && node.operator.as_ref().unwrap() == &Operator::DOT {
             let obj_name = node
                 .left
                 .any()
@@ -47,7 +47,7 @@ impl<'ctx> CodeGen<'ctx> {
             return left_expr;
         };
 
-        if node.operator.as_ref().unwrap() == &OPERATOR::CAST {
+        if node.operator.as_ref().unwrap() == &Operator::CAST {
             return self.cast_expr(
                 &left_expr,
                 &node
@@ -65,16 +65,16 @@ impl<'ctx> CodeGen<'ctx> {
         let (left_expr, right_expr) = self.impl_cast_expr(left_expr, right_expr);
 
         let expr = match node.operator.as_ref().unwrap() {
-            OPERATOR::PLUS => self.add_binary_operation(&left_expr, &right_expr),
-            OPERATOR::MINUS => self.sub_binary_operation(&left_expr, &right_expr),
-            OPERATOR::MULTIPLY => self.mul_binary_operation(&left_expr, &right_expr),
-            OPERATOR::DIVIDE => self.div_binary_operation(&left_expr, &right_expr),
-            OPERATOR::EQUAL
-            | OPERATOR::NOT_EQUAL
-            | OPERATOR::GREATER
-            | OPERATOR::GREATER_EQUAL
-            | OPERATOR::LESSER
-            | OPERATOR::LESSER_EQUAL => self.comp_binary_operation(
+            Operator::PLUS => self.add_binary_operation(&left_expr, &right_expr),
+            Operator::MINUS => self.sub_binary_operation(&left_expr, &right_expr),
+            Operator::MULTIPLY => self.mul_binary_operation(&left_expr, &right_expr),
+            Operator::DIVIDE => self.div_binary_operation(&left_expr, &right_expr),
+            Operator::EQUAL
+            | Operator::NOT_EQUAL
+            | Operator::GREATER
+            | Operator::GREATER_EQUAL
+            | Operator::LESSER
+            | Operator::LESSER_EQUAL => self.comp_binary_operation(
                 node.operator.as_ref().unwrap().clone(),
                 &left_expr,
                 &right_expr,
@@ -88,7 +88,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         node: &Box<dyn ParserType>,
         func_name: &str,
-        req_type: &DATATYPE,
+        req_type: &Datatype,
     ) -> BasicValueEnum<'ctx> {
         let expr = match node.get_type() {
             ParserTypes::EXPRESSION => self.add_expression(
@@ -178,7 +178,7 @@ impl<'ctx> CodeGen<'ctx> {
         };
 
         let cast_to_type = self.def_expr(&cast_to).unwrap();
-        if left_type.is_int_type() && cast_to == DATATYPE::F64 || cast_to == DATATYPE::F32 {
+        if left_type.is_int_type() && cast_to == Datatype::F64 || cast_to == Datatype::F32 {
             self.builder
                 .build_cast(
                     inkwell::values::InstructionOpcode::SIToFP,

@@ -3,20 +3,20 @@
 pub enum Types {
     NL,
     EOF,
-    OPERATOR(OPERATOR),
-    DELIMITER(DELIMITER),
-    KEYWORD(KEYWORD),
+    OPERATOR(Operator),
+    DELIMITER(Delimiter),
+    KEYWORD(Keyword),
     IDENTIFIER,
     IDENTIFIER_FUNC,
     IMPORT_CALL,
     NUMBER,
     BOOL,
-    DATATYPE(DATATYPE),
+    DATATYPE(Datatype),
 }
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, PartialEq, Clone)]
-pub enum OPERATOR {
+pub enum Operator {
     ASSIGN,
     NOT,
     DOT,
@@ -35,7 +35,7 @@ pub enum OPERATOR {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum DELIMITER {
+pub enum Delimiter {
     COMMA,
     SEMICOLON,
     LPAREN,
@@ -47,7 +47,7 @@ pub enum DELIMITER {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum KEYWORD {
+pub enum Keyword {
     IMPORT,
     STRUCT,
     FUNCTION,
@@ -61,7 +61,7 @@ pub enum KEYWORD {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum DATATYPE {
+pub enum Datatype {
     U8,
     U16,
     U32,
@@ -81,6 +81,6 @@ pub enum DATATYPE {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ArrayDetails {
-    pub datatype: DATATYPE,
+    pub datatype: Datatype,
     pub length: u32,
 }

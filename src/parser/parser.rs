@@ -2,7 +2,7 @@ use crate::{
     errors,
     lexer::{
         lexer::Token,
-        types::{Types, DELIMITER, KEYWORD},
+        types::{Types, Delimiter, Keyword},
     },
 };
 
@@ -47,24 +47,24 @@ impl Parser {
             match token_type {
                 Types::NL => (),
                 Types::EOF => break,
-                Types::KEYWORD(KEYWORD::STRUCT) => tokens.push(self.parse_def_struct()),
-                Types::KEYWORD(KEYWORD::IMPORT) => tokens.push(self.parse_import()),
-                Types::KEYWORD(KEYWORD::LET) => tokens.push(self.parse_assignment()),
-                Types::KEYWORD(KEYWORD::IF) => tokens.push(self.parse_conditional_if()),
-                Types::KEYWORD(KEYWORD::FUNCTION) => tokens.push(self.parse_function()),
-                Types::KEYWORD(KEYWORD::BREAK) => tokens.push(self.parse_break()),
+                Types::KEYWORD(Keyword::STRUCT) => tokens.push(self.parse_def_struct()),
+                Types::KEYWORD(Keyword::IMPORT) => tokens.push(self.parse_import()),
+                Types::KEYWORD(Keyword::LET) => tokens.push(self.parse_assignment()),
+                Types::KEYWORD(Keyword::IF) => tokens.push(self.parse_conditional_if()),
+                Types::KEYWORD(Keyword::FUNCTION) => tokens.push(self.parse_function()),
+                Types::KEYWORD(Keyword::BREAK) => tokens.push(self.parse_break()),
                 Types::IDENTIFIER => tokens.push(self.parse_identifier_call()),
                 Types::IDENTIFIER_FUNC => tokens.push(self.parse_function_call(None)),
                 Types::IMPORT_CALL => tokens.push(self.parse_import_call()),
-                Types::KEYWORD(KEYWORD::LOOP) => tokens.push(self.parse_loop()),
-                Types::DELIMITER(DELIMITER::LBRACE) => nested = true,
+                Types::KEYWORD(Keyword::LOOP) => tokens.push(self.parse_loop()),
+                Types::DELIMITER(Delimiter::LBRACE) => nested = true,
                 // TODO: better function detecting
-                Types::KEYWORD(KEYWORD::RETURN) => {
+                Types::KEYWORD(Keyword::RETURN) => {
                     if nested {
                         tokens.push(self.parse_return())
                     }
                 }
-                Types::DELIMITER(DELIMITER::RBRACE) => {
+                Types::DELIMITER(Delimiter::RBRACE) => {
                     if !nested {
                         errors::parser_error(self, "Invalid close brace");
                     }

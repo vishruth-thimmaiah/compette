@@ -2,7 +2,7 @@ use inkwell::values::{BasicValueEnum, PointerValue};
 
 use crate::{
     errors,
-    lexer::types::DATATYPE,
+    lexer::types::Datatype,
     parser::nodes::{StructDefParserNode, StructParserNode},
 };
 
@@ -66,7 +66,7 @@ impl<'ctx> CodeGen<'ctx> {
         let function = binding.iter().find(|x| x.name == func_name).unwrap();
         let var = function.vars.iter().find(|x| x.0 == struct_name).unwrap().1;
 
-        let nm = if let DATATYPE::CUSTOM(nm) = &var.datatype {
+        let nm = if let Datatype::CUSTOM(nm) = &var.datatype {
             nm
         } else {
             unreachable!()

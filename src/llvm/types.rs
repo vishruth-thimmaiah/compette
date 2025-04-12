@@ -4,7 +4,7 @@ use inkwell::{
     AddressSpace,
 };
 
-use crate::lexer::types::{ArrayDetails, Types, DATATYPE};
+use crate::lexer::types::{ArrayDetails, Types, Datatype};
 
 use super::codegen::CodeGen;
 
@@ -13,7 +13,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         value: &str,
         val_type: &Types,
-        req_type: &DATATYPE,
+        req_type: &Datatype,
     ) -> BasicValueEnum<'ctx> {
         if val_type == &Types::BOOL {
             self.context
@@ -37,7 +37,7 @@ impl<'ctx> CodeGen<'ctx> {
                     self.context.i64_type().const_int(i64_value, false).into()
                 }
             }
-        } else if let Types::DATATYPE(DATATYPE::STRING(_)) = val_type {
+        } else if let Types::DATATYPE(Datatype::STRING(_)) = val_type {
             let string = self.context.const_string(value.as_bytes(), false);
             let string_ptr = self.builder.build_alloca(string.get_type(), "").unwrap();
             self.builder.build_store(string_ptr, string).unwrap();
@@ -86,19 +86,19 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    pub fn get_datatype(&self, bt: BasicTypeEnum<'ctx>) -> DATATYPE {
+    pub fn get_datatype(&self, bt: BasicTypeEnum<'ctx>) -> Datatype {
         match bt {
             BasicTypeEnum::IntType(it) => match it.get_bit_width() {
-                1 => DATATYPE::BOOL,
-                8 => DATATYPE::U8,
-                16 => DATATYPE::U16,
+                1 => Datatype::BOOL,
+                8 => Datatype::U8,
+                16 => Datatype::U16,
 
-                32 => DATATYPE::U32,
-                64 => DATATYPE::U64,
+                32 => Datatype::U32,
+                64 => Datatype::U64,
                 _ => todo!(),
             },
-            BasicTypeEnum::FloatType(_) => DATATYPE::F32,
-            BasicTypeEnum::ArrayType(arr) => DATATYPE::ARRAY(Box::new(ArrayDetails {
+            BasicTypeEnum::FloatType(_) => Datatype::F32,
+            BasicTypeEnum::ArrayType(arr) => Datatype::ARRAY(Box::new(ArrayDetails {
                 datatype: self.get_datatype(arr.get_element_type()).clone(),
                 length: arr.len(),
             })),
@@ -107,36 +107,36 @@ impl<'ctx> CodeGen<'ctx> {
     }
 
     // TODO: Make U.. unsigned
-    pub fn def_expr(&self, req_type: &DATATYPE) -> Option<BasicTypeEnum<'ctx>> {
+    pub fn def_expr(&self, req_type: &Datatype) -> Option<BasicTypeEnum<'ctx>> {
         match req_type {
-            DATATYPE::U8 => Some(self.context.i8_type().into()),
-            DATATYPE::U16 => Some(self.context.i16_type().into()),
-            DATATYPE::U32 => Some(self.context.i32_type().into()),
-            DATATYPE::U64 => Some(self.context.i64_type().into()),
-            DATATYPE::I8 => Some(self.context.i8_type().into()),
-            DATATYPE::I16 => Some(self.context.i16_type().into()),
-            DATATYPE::I32 => Some(self.context.i32_type().into()),
-            DATATYPE::I64 => Some(self.context.i64_type().into()),
-            DATATYPE::BOOL => Some(self.context.bool_type().into()),
-            DATATYPE::F32 => Some(self.context.f32_type().into()),
-            DATATYPE::F64 => Some(self.context.f64_type().into()),
+            Datatype::U8 => Some(self.context.i8_type().into()),
+            Datatype::U16 => Some(self.context.i16_type().into()),
+            Datatype::U32 => Some(self.context.i32_type().into()),
+            Datatype::U64 => Some(self.context.i64_type().into()),
+            Datatype::I8 => Some(self.context.i8_type().into()),
+            Datatype::I16 => Some(self.context.i16_type().into()),
+            Datatype::I32 => Some(self.context.i32_type().into()),
+            Datatype::I64 => Some(self.context.i64_type().into()),
+            Datatype::BOOL => Some(self.context.bool_type().into()),
+            Datatype::F32 => Some(self.context.f32_type().into()),
+            Datatype::F64 => Some(self.context.f64_type().into()),
 
-            DATATYPE::STRING(len) => Some(
+            Datatype::STRING(len) => Some(
                 self.context
                     .const_string(&vec![0; *len], true)
                     .get_type()
                     .into(),
             ),
-            DATATYPE::ARRAY(inner) => Some(
+            Datatype::ARRAY(inner) => Some(
                 self.def_expr(&inner.datatype)
                     .unwrap()
                     .array_type(inner.length)
                     .into(),
             ),
 
-            DATATYPE::NONE => None,
+            Datatype::NONE => None,
 
-            DATATYPE::CUSTOM(_) => todo!(),
+            Datatype::CUSTOM(_) => todo!(),
         }
     }
 }

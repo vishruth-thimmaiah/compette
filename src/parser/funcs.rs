@@ -1,6 +1,6 @@
 use crate::{
     errors,
-    lexer::types::{Types, DATATYPE, DELIMITER},
+    lexer::types::{Types, Datatype, Delimiter},
 };
 
 use super::{
@@ -20,15 +20,15 @@ impl Parser {
         let func_name = self.get_next_token().value.unwrap();
         self.set_next_position();
 
-        if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LPAREN) {
+        if self.get_next_token().r#type != Types::DELIMITER(Delimiter::LPAREN) {
             errors::parser_error(self, "invalid token")
         }
         self.set_next_position();
 
-        let mut args: Vec<(String, DATATYPE)> = vec![];
+        let mut args: Vec<(String, Datatype)> = vec![];
         loop {
             let var_name = match self.get_next_token().r#type {
-                Types::DELIMITER(DELIMITER::RPAREN) => break,
+                Types::DELIMITER(Delimiter::RPAREN) => break,
                 Types::IDENTIFIER => self.get_next_token().value.unwrap(),
                 _ => errors::parser_error(self, "invalid token"),
             };
@@ -43,8 +43,8 @@ impl Parser {
             args.push((var_name, var_type));
 
             match self.get_next_token().r#type {
-                Types::DELIMITER(DELIMITER::RPAREN) => break,
-                Types::DELIMITER(DELIMITER::COMMA) => (),
+                Types::DELIMITER(Delimiter::RPAREN) => break,
+                Types::DELIMITER(Delimiter::COMMA) => (),
                 _ => errors::parser_error(self, "invalid token"),
             }
             self.set_next_position();
@@ -56,10 +56,10 @@ impl Parser {
                 self.set_next_position();
                 dt
             }
-            _ => DATATYPE::NONE,
+            _ => Datatype::NONE,
         };
 
-        if self.get_next_token().r#type != Types::DELIMITER(DELIMITER::LBRACE) {
+        if self.get_next_token().r#type != Types::DELIMITER(Delimiter::LBRACE) {
             errors::parser_error(self, "invalid token")
         }
         self.set_next_position();
@@ -86,7 +86,7 @@ impl Parser {
             Box::new(ExpressionParserNode {
                 left: Box::new(ValueParserNode {
                     value: "".to_string(),
-                    r#type: Types::DATATYPE(DATATYPE::NONE),
+                    r#type: Types::DATATYPE(Datatype::NONE),
                 }),
                 right: None,
                 operator: None,
@@ -117,9 +117,9 @@ impl Parser {
         self.set_next_position();
         loop {
             let token = self.get_next_token();
-            if token.r#type == Types::DELIMITER(DELIMITER::RPAREN) {
+            if token.r#type == Types::DELIMITER(Delimiter::RPAREN) {
                 break;
-            } else if token.r#type == Types::DELIMITER(DELIMITER::COMMA) {
+            } else if token.r#type == Types::DELIMITER(Delimiter::COMMA) {
                 self.set_next_position();
             }
             args.push(*self.parse_expression());
