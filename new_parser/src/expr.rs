@@ -12,7 +12,7 @@ impl Parser {
         let mut operators: Vec<Types> = Vec::new();
 
         'outer: loop {
-            let token = self.next().ok_or(ParserError::default())?;
+            let token = self.peek().ok_or(ParserError::default())?;
             match token.r#type {
                 Types::NUMBER | Types::BOOL => operands.push(ASTNodes::Literal(Literal {
                     value: token.value.unwrap(),
@@ -46,8 +46,11 @@ impl Parser {
                         break 'outer;
                     }
                 },
-                _ => break,
+                _ => {
+                    break
+                }
             }
+            self.next();
         }
         while !operators.is_empty() {
             let value = operators.pop().unwrap();

@@ -151,7 +151,6 @@ dependencies = [
  "inkwell",
  "lexer",
  "llvm",
- "new_parser",
  "parser",
 ]
 

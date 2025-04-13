@@ -8,6 +8,7 @@ use lexer::{lexer::Token, types::Types};
 mod basics;
 mod block;
 mod expr;
+mod stmt;
 mod func;
 
 mod errors;
@@ -53,6 +54,15 @@ impl Parser {
             return Err(ParserError::expected_token_err(token, token_type));
         }
         Ok(token)
+    }
+    
+    pub(crate) fn next_if_type(&mut self, token_type: Types) -> Option<Token> {
+        let token = self.peek().unwrap();
+        if token.r#type == token_type {
+            self.next();
+            return Some(token);
+        }
+        None
     }
 
     pub(crate) fn peek_with_type(&self, token_type: Types) -> Result<Token> {

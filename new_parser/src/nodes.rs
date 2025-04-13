@@ -9,6 +9,7 @@ pub enum ASTNodes {
     Token(Types),
     Return(Return),
     Variable(Variable),
+    LetStmt(LetStmt),
 }
 
 #[derive(Debug, PartialEq)]
@@ -45,4 +46,12 @@ pub struct Literal {
 #[derive(Debug, PartialEq)]
 pub struct Variable {
     pub name: String,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct LetStmt {
+    pub name: String,
+    pub value: Expression,
+    pub datatype: Datatype,
+    pub mutable: bool,
 }

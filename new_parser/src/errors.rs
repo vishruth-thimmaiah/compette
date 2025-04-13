@@ -47,6 +47,10 @@ impl ParserError {
             token,
         )
     }
+
+    pub(crate) fn unimplemented(token: Token) -> Self {
+        Self::new(&format!("Unimplemented token {:?}", token.r#type), token)
+    }
 }
 
 impl Display for ParserError {

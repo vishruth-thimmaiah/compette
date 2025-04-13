@@ -1,8 +1,8 @@
 use lexer::types::{Delimiter, Keyword, Types};
 
 use super::{
-    nodes::{ASTNodes, Block},
     Parser, ParserError, Result,
+    nodes::{ASTNodes, Block},
 };
 
 impl Parser {
@@ -14,7 +14,7 @@ impl Parser {
         let object = match token.r#type {
             Types::NL => todo!(),
             Types::KEYWORD(Keyword::FUNCTION) => ASTNodes::Function(self.parse_function_def()?),
-            _ => return Err(ParserError::default()),
+            _ => return Err(ParserError::unimplemented(token)),
         };
         ast.push(object);
 
@@ -29,8 +29,9 @@ impl Parser {
             let object = match token.r#type {
                 Types::NL => todo!(),
                 Types::KEYWORD(Keyword::RETURN) => ASTNodes::Return(self.parse_return()?),
+                Types::KEYWORD(Keyword::LET) => ASTNodes::LetStmt(self.parse_statement()?),
                 Types::DELIMITER(Delimiter::RBRACE) => break,
-                _ => return Err(ParserError::default()),
+                _ => return Err(ParserError::unimplemented(token)),
             };
             body.push(object);
         }
