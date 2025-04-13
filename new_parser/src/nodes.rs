@@ -12,6 +12,7 @@ pub enum ASTNodes {
     Return(Return),
     Variable(Variable),
     LetStmt(LetStmt),
+    AssignStmt(AssignStmt),
     StructDef(StructDef),
 }
 
@@ -90,4 +91,10 @@ pub struct StructDef {
 #[derive(Debug, PartialEq)]
 pub struct ImportCall {
     pub path: Vec<String>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct AssignStmt {
+    pub name: String,
+    pub value: Expression,
 }
