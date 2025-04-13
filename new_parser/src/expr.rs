@@ -71,6 +71,10 @@ impl Parser {
             operands.push(ASTNodes::Token(value));
         }
 
+        if operands.is_empty() {
+            return Ok(Expression::None);
+        }
+
         self.postfix_to_tree(&mut operands)
     }
 

@@ -27,7 +27,7 @@ pub struct Block {
 
 #[derive(Debug, PartialEq)]
 pub struct Return {
-    pub value: Option<()>,
+    pub value: Option<Expression>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -40,6 +40,7 @@ pub enum Expression {
     Array(Vec<Expression>),
     String(String),
     Struct(Vec<(String, Expression)>),
+    None,
 }
 
 #[derive(Debug, PartialEq)]

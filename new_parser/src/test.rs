@@ -57,7 +57,7 @@ fn test_parse_full_1() {
     );
 }
 
-#[ignore = "impl return types, function calls"]
+#[ignore = "impl function calls"]
 #[test]
 fn test_parse_full_2() {
     let mut lexer = Lexer::new(
@@ -78,7 +78,7 @@ fn test_parse_full_2() {
     todo!();
 }
 
-#[ignore = "impl return types, conditionals"]
+#[ignore = "impl conditionals"]
 #[test]
 fn test_parse_full_3() {
     let mut lexer = Lexer::new(
@@ -100,7 +100,7 @@ fn test_parse_full_3() {
     todo!();
 }
 
-#[ignore = "impl return types, loops"]
+#[ignore = "impl loops"]
 #[test]
 fn test_parse_full_4() {
     let mut lexer = Lexer::new(
@@ -119,7 +119,7 @@ fn test_parse_full_4() {
     todo!();
 }
 
-#[ignore = "impl return types, array datatypes, method calls"]
+#[ignore = "impl array datatypes, method calls"]
 #[test]
 fn test_parse_full_5() {
     let mut lexer = Lexer::new(
@@ -136,7 +136,7 @@ fn test_parse_full_5() {
     todo!();
 }
 
-#[ignore = "impl return types, imports, function calls"]
+#[ignore = "impl imports, function calls"]
 #[test]
 fn test_parse_full_6() {
     let mut lexer = Lexer::new(
@@ -154,7 +154,7 @@ fn test_parse_full_6() {
     todo!();
 }
 
-#[ignore = "impl return types, structs"]
+#[ignore = "impl structs"]
 #[test]
 fn test_parse_full_7() {
     let mut lexer = Lexer::new(
@@ -178,7 +178,7 @@ fn test_parse_full_7() {
     todo!();
 }
 
-#[ignore = "impl return types, c_asts, imports, function calls"]
+#[ignore = "impl casts, imports, function calls"]
 #[test]
 fn test_parse_full_8() {
     let mut lexer = Lexer::new(

@@ -1,5 +1,7 @@
 use lexer::types::{Datatype, Delimiter, Types};
 
+use crate::nodes::Expression;
+
 use super::{
     Parser, Result,
     errors::ParserError,
@@ -50,12 +52,18 @@ impl Parser {
     }
 
     pub(crate) fn parse_return(&mut self) -> Result<Return> {
-        return Ok(Return { value: None });
+        let val = self.parse_expression(vec![Types::DELIMITER(Delimiter::RBRACE), Types::NL])?;
+        if val == Expression::None {
+            return Ok(Return { value: None });
+        }
+        return Ok(Return { value: Some(val) });
     }
 }
 
 #[cfg(test)]
 mod tests {
+
+    use crate::nodes::{Expression, Literal};
 
     use super::{
         super::nodes::{ASTNodes, Block},
@@ -93,6 +101,33 @@ mod tests {
                 return_type: Datatype::U32,
                 body: Block {
                     body: vec![ASTNodes::Return(Return { value: None })]
+                },
+            }),]
+        );
+    }
+
+    #[test]
+    fn test_parse_function_def_with_return_val() {
+        let mut lexer = Lexer::new("func main() u32 { return 5 }");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse().unwrap();
+        assert_eq!(
+            ast,
+            vec![ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Datatype::U32,
+                body: Block {
+                    body: vec![ASTNodes::Return(Return {
+                        value: Some(Expression::Simple {
+                            left: Box::new(ASTNodes::Literal(Literal {
+                                value: "5".to_string(),
+                                r#type: Types::NUMBER
+                            })),
+                            right: None,
+                            operator: None
+                        })
+                    })]
                 },
             }),]
         );
