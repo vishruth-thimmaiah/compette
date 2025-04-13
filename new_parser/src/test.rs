@@ -5,7 +5,10 @@ use lexer::{
 
 use crate::{
     Parser,
-    nodes::{ASTNodes, Block, Expression, Function, LetStmt, Literal, Return, StructDef, Variable},
+    nodes::{
+        ASTNodes, Block, Conditional, Expression, Function, LetStmt, Literal, Return, StructDef,
+        Variable,
+    },
 };
 
 #[test]
@@ -60,7 +63,6 @@ fn test_parse_full_1() {
     );
 }
 
-// #[ignore = "impl function calls"]
 #[test]
 fn test_parse_full_2() {
     let mut lexer = Lexer::new(
@@ -171,7 +173,6 @@ fn test_parse_full_2() {
     )
 }
 
-#[ignore = "impl conditionals"]
 #[test]
 fn test_parse_full_3() {
     let mut lexer = Lexer::new(
@@ -189,8 +190,79 @@ fn test_parse_full_3() {
     );
 
     let mut parser = Parser::new(lexer.tokenize());
-    let _ast = parser.parse().unwrap();
-    todo!();
+    let ast = parser.parse().unwrap();
+    assert_eq!(
+        ast,
+        vec![ASTNodes::Function(Function {
+            name: "main".to_string(),
+            args: vec![],
+            return_type: Datatype::U32,
+            body: Block {
+                body: vec![
+                    ASTNodes::Conditional(Conditional {
+                        condition: Expression::Simple {
+                            left: Box::new(ASTNodes::Literal(Literal {
+                                value: "0".to_string(),
+                                r#type: lexer::types::Types::BOOL
+                            })),
+                            right: None,
+                            operator: None
+                        },
+                        body: Block {
+                            body: vec![ASTNodes::Return(Return {
+                                value: Some(Expression::Simple {
+                                    left: Box::new(ASTNodes::Literal(Literal {
+                                        value: "1".to_string(),
+                                        r#type: lexer::types::Types::NUMBER
+                                    })),
+                                    right: None,
+                                    operator: None
+                                })
+                            })]
+                        },
+                        else_if_condition: vec![],
+                        else_if_body: vec![],
+                        else_body: None,
+                    }),
+                    ASTNodes::Conditional(Conditional {
+                        condition: Expression::Simple {
+                            left: Box::new(ASTNodes::Literal(Literal {
+                                value: "1".to_string(),
+                                r#type: lexer::types::Types::BOOL
+                            })),
+                            right: None,
+                            operator: None
+                        },
+                        body: Block {
+                            body: vec![ASTNodes::Return(Return {
+                                value: Some(Expression::Simple {
+                                    left: Box::new(ASTNodes::Literal(Literal {
+                                        value: "2".to_string(),
+                                        r#type: lexer::types::Types::NUMBER
+                                    })),
+                                    right: None,
+                                    operator: None
+                                })
+                            })]
+                        },
+                        else_if_condition: vec![],
+                        else_if_body: vec![],
+                        else_body: None,
+                    }),
+                    ASTNodes::Return(Return {
+                        value: Some(Expression::Simple {
+                            left: Box::new(ASTNodes::Literal(Literal {
+                                value: "0".to_string(),
+                                r#type: lexer::types::Types::NUMBER
+                            })),
+                            right: None,
+                            operator: None
+                        })
+                    })
+                ]
+            },
+        })]
+    );
 }
 
 #[ignore = "impl loops"]

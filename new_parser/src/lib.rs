@@ -10,6 +10,7 @@ use lexer::{
 
 mod basics;
 mod block;
+mod cond;
 mod expr;
 mod func;
 mod imports;

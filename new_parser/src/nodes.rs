@@ -14,6 +14,7 @@ pub enum ASTNodes {
     LetStmt(LetStmt),
     AssignStmt(AssignStmt),
     StructDef(StructDef),
+    Conditional(Conditional),
 }
 
 #[derive(Debug, PartialEq)]
@@ -97,4 +98,19 @@ pub struct ImportCall {
 pub struct AssignStmt {
     pub name: String,
     pub value: Expression,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Conditional {
+    pub condition: Expression,
+    pub body: Block,
+    pub else_if_condition: Vec<Expression>,
+    pub else_if_body: Vec<Block>,
+    pub else_body: Option<Block>,
+}
+
+impl Conditional {
+    pub fn get_else_if_for(&self, index: usize) -> Option<(&Expression, &Block)> {
+        Some((self.else_if_condition.get(index)?, self.else_if_body.get(index)?))
+    }
 }

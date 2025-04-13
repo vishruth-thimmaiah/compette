@@ -13,7 +13,7 @@ impl Parser {
         let name = self.next_with_type(Types::IDENTIFIER_FUNC)?;
         let args = self.parse_function_args()?;
         let return_type = self.parse_datatype()?;
-        let body = self.parse_function_block()?;
+        let body = self.parse_scoped_block()?;
 
         Ok(Function {
             name: name.value.unwrap(),

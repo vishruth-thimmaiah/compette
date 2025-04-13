@@ -24,7 +24,7 @@ impl Parser {
         Ok(ast)
     }
 
-    pub(crate) fn parse_function_block(&mut self) -> Result<Block> {
+    pub(crate) fn parse_scoped_block(&mut self) -> Result<Block> {
         self.next_with_type(Types::DELIMITER(Delimiter::LBRACE))?;
         let mut body: Vec<ASTNodes> = vec![];
 
@@ -33,6 +33,7 @@ impl Parser {
                 Types::NL => continue,
                 Types::KEYWORD(Keyword::RETURN) => ASTNodes::Return(self.parse_return()?),
                 Types::KEYWORD(Keyword::LET) => ASTNodes::LetStmt(self.parse_statement()?),
+                Types::KEYWORD(Keyword::IF) => ASTNodes::Conditional(self.parse_if()?),
                 Types::IDENTIFIER_FUNC => ASTNodes::FunctionCall(self.parse_function_call()?),
                 Types::IDENTIFIER => ASTNodes::AssignStmt(self.parse_assign_stmt()?),
                 Types::DELIMITER(Delimiter::RBRACE) => break,
