@@ -1,6 +1,9 @@
 use lexer::types::{Delimiter, Operator, Types};
 
-use crate::{Parser, Result, nodes::LetStmt};
+use crate::{
+    Parser, Result,
+    nodes::{LetStmt, StructDef},
+};
 
 impl Parser {
     pub(crate) fn parse_statement(&mut self) -> Result<LetStmt> {
@@ -16,6 +19,32 @@ impl Parser {
             datatype,
             mutable,
         })
+    }
+
+    pub(crate) fn parse_struct_def(&mut self) -> Result<StructDef> {
+        let name = self.next_with_type(Types::IDENTIFIER)?;
+
+        self.next_with_type(Types::DELIMITER(Delimiter::LBRACE))?;
+        let mut args = vec![];
+        loop {
+            let name = self.next_with_type(Types::IDENTIFIER)?;
+            let dt = self.parse_datatype()?;
+            args.push((name.value.unwrap(), dt));
+
+            println!("{:?}", self.peek());
+            if self
+                .next_if_type(Types::DELIMITER(Delimiter::RBRACE))
+                .is_some()
+            {
+                break;
+            }
+            self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
+        }
+
+        return Ok(StructDef {
+            name: name.value.unwrap(),
+            fields: args,
+        });
     }
 }
 
@@ -84,6 +113,24 @@ mod tests {
                         mutable: true
                     })]
                 },
+            })]
+        );
+    }
+
+    #[test]
+    fn test_parse_struct_def() {
+        let mut lexer = Lexer::new("struct Test { a u32, b u32 }");
+
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse().unwrap();
+        assert_eq!(
+            ast,
+            vec![ASTNodes::StructDef(StructDef {
+                name: "Test".to_string(),
+                fields: vec![
+                    ("a".to_string(), Datatype::U32),
+                    ("b".to_string(), Datatype::U32)
+                ]
             })]
         );
     }

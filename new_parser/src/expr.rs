@@ -142,6 +142,7 @@ impl Parser {
         None
     }
 
+    // FIXME: Support trailing commas
     pub(crate) fn parse_array(&mut self) -> Result<Expression> {
         let mut array = Vec::new();
         loop {
@@ -160,6 +161,7 @@ impl Parser {
         return Ok(Expression::Array(array));
     }
 
+    // FIXME: Support trailing commas
     pub(crate) fn parse_struct(&mut self) -> Result<Expression> {
         let mut fields = vec![];
 

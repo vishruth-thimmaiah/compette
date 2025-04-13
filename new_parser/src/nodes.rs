@@ -11,6 +11,7 @@ pub enum ASTNodes {
     Return(Return),
     Variable(Variable),
     LetStmt(LetStmt),
+    StructDef(StructDef),
 }
 
 #[derive(Debug, PartialEq)]
@@ -77,4 +78,10 @@ pub struct FunctionCall {
     pub name: String,
     pub args: Vec<Expression>,
     // pub imported: Option<Vec<String>>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct StructDef {
+    pub name: String,
+    pub fields: Vec<(String, Datatype)>,
 }

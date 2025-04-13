@@ -5,7 +5,7 @@ use lexer::{
 
 use crate::{
     Parser,
-    nodes::{ASTNodes, Block, Expression, Function, LetStmt, Literal, Return, Variable},
+    nodes::{ASTNodes, Block, Expression, Function, LetStmt, Literal, Return, StructDef, Variable},
 };
 
 #[test]
@@ -247,28 +247,85 @@ fn test_parse_full_6() {
     todo!();
 }
 
-#[ignore = "impl structs"]
 #[test]
 fn test_parse_full_7() {
     let mut lexer = Lexer::new(
         r#"
     struct Test {
         a u32,
-        b u32,
+        b u32
     }
 
     func main() u32 {
         let Test t = {
             b 28,
-            a 1,
+            a 1
         }
-        return t.b
+        return t
     }"#,
     );
 
     let mut parser = Parser::new(lexer.tokenize());
-    let _ast = parser.parse().unwrap();
-    todo!();
+    let ast = parser.parse().unwrap();
+    assert_eq!(
+        ast,
+        vec![
+            ASTNodes::StructDef(StructDef {
+                name: "Test".to_string(),
+                fields: vec![
+                    ("a".to_string(), Datatype::U32),
+                    ("b".to_string(), Datatype::U32),
+                ]
+            }),
+            ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Datatype::U32,
+                body: Block {
+                    body: vec![
+                        ASTNodes::LetStmt(LetStmt {
+                            name: "t".to_string(),
+                            value: Expression::Struct(vec![
+                                (
+                                    "b".to_string(),
+                                    Expression::Simple {
+                                        left: Box::new(ASTNodes::Literal(Literal {
+                                            value: "28".to_string(),
+                                            r#type: lexer::types::Types::NUMBER
+                                        })),
+                                        right: None,
+                                        operator: None
+                                    }
+                                ),
+                                (
+                                    "a".to_string(),
+                                    Expression::Simple {
+                                        left: Box::new(ASTNodes::Literal(Literal {
+                                            value: "1".to_string(),
+                                            r#type: lexer::types::Types::NUMBER
+                                        })),
+                                        right: None,
+                                        operator: None
+                                    }
+                                )
+                            ]),
+                            datatype: Datatype::CUSTOM("Test".to_string()),
+                            mutable: false
+                        }),
+                        ASTNodes::Return(Return {
+                            value: Some(Expression::Simple {
+                                left: Box::new(ASTNodes::Variable(Variable {
+                                    name: "t".to_string(),
+                                })),
+                                right: None,
+                                operator: None
+                            })
+                        })
+                    ]
+                }
+            })
+        ]
+    )
 }
 
 #[ignore = "impl casts, imports, function calls"]

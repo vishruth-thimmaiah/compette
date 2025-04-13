@@ -13,6 +13,7 @@ impl Parser {
             let object = match token.r#type {
                 Types::NL => continue,
                 Types::KEYWORD(Keyword::FUNCTION) => ASTNodes::Function(self.parse_function_def()?),
+                Types::KEYWORD(Keyword::STRUCT) => ASTNodes::StructDef(self.parse_struct_def()?),
                 Types::EOF => break,
                 _ => return Err(ParserError::unimplemented(token)),
             };
