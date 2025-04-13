@@ -13,6 +13,7 @@ mod func;
 
 mod errors;
 mod nodes;
+#[cfg(test)]
 mod test;
 
 pub struct Parser {

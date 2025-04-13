@@ -9,14 +9,15 @@ impl Parser {
     pub(crate) fn parse_source(&mut self) -> Result<Vec<ASTNodes>> {
         let mut ast = Vec::new();
 
-        let token = self.next().ok_or(ParserError::default())?;
-
-        let object = match token.r#type {
-            Types::NL => todo!(),
-            Types::KEYWORD(Keyword::FUNCTION) => ASTNodes::Function(self.parse_function_def()?),
-            _ => return Err(ParserError::unimplemented(token)),
-        };
-        ast.push(object);
+        while let Some(token) = self.next() {
+            let object = match token.r#type {
+                Types::NL => continue,
+                Types::KEYWORD(Keyword::FUNCTION) => ASTNodes::Function(self.parse_function_def()?),
+                Types::EOF => break,
+                _ => return Err(ParserError::unimplemented(token)),
+            };
+            ast.push(object);
+        }
 
         Ok(ast)
     }
@@ -27,7 +28,7 @@ impl Parser {
 
         while let Some(token) = self.next() {
             let object = match token.r#type {
-                Types::NL => todo!(),
+                Types::NL => continue,
                 Types::KEYWORD(Keyword::RETURN) => ASTNodes::Return(self.parse_return()?),
                 Types::KEYWORD(Keyword::LET) => ASTNodes::LetStmt(self.parse_statement()?),
                 Types::DELIMITER(Delimiter::RBRACE) => break,
