@@ -7,7 +7,7 @@ use super::{
 };
 
 impl Parser {
-    pub fn parse_expression(&mut self) -> Result<Expression> {
+    pub(crate) fn parse_expression(&mut self) -> Result<Expression> {
         let mut operands: Vec<ASTNodes> = Vec::new();
         let mut operators: Vec<Types> = Vec::new();
 

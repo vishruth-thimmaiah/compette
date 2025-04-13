@@ -7,7 +7,7 @@ use super::{
 };
 
 impl Parser {
-    pub fn parse_function_def(&mut self) -> Result<Function> {
+    pub(crate) fn parse_function_def(&mut self) -> Result<Function> {
         let name = self.next_with_type(Types::IDENTIFIER_FUNC)?;
         let args = self.parse_function_args()?;
         let return_type = self.parse_datatype()?;
@@ -49,7 +49,7 @@ impl Parser {
         Ok(args)
     }
 
-    pub fn parse_return(&mut self) -> Result<Return> {
+    pub(crate) fn parse_return(&mut self) -> Result<Return> {
         return Ok(Return { value: None });
     }
 }

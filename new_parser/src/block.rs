@@ -6,7 +6,7 @@ use super::{
 };
 
 impl Parser {
-    pub fn parse_source(&mut self) -> Result<Vec<ASTNodes>> {
+    pub(crate) fn parse_source(&mut self) -> Result<Vec<ASTNodes>> {
         let mut ast = Vec::new();
 
         let token = self.next().ok_or(ParserError::default())?;
@@ -21,7 +21,7 @@ impl Parser {
         Ok(ast)
     }
 
-    pub fn parse_function_block(&mut self) -> Result<Block> {
+    pub(crate) fn parse_function_block(&mut self) -> Result<Block> {
         self.next_with_type(Types::DELIMITER(Delimiter::LBRACE))?;
         let mut body: Vec<ASTNodes> = vec![];
 

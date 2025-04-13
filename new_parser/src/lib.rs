@@ -43,11 +43,11 @@ impl Parser {
         }
     }
 
-    pub fn peek(&self) -> Option<Token> {
+    pub(crate) fn peek(&self) -> Option<Token> {
         self.tokens.get(self.index).cloned()
     }
 
-    pub fn next_with_type(&mut self, token_type: Types) -> Result<Token> {
+    pub(crate) fn next_with_type(&mut self, token_type: Types) -> Result<Token> {
         let token = self.next().unwrap();
         if token.r#type != token_type {
             return Err(ParserError::expected_token_err(token, token_type));
@@ -55,7 +55,7 @@ impl Parser {
         Ok(token)
     }
 
-    pub fn peek_with_type(&self, token_type: Types) -> Result<Token> {
+    pub(crate) fn peek_with_type(&self, token_type: Types) -> Result<Token> {
         let token = self.peek().unwrap();
         if token.r#type != token_type {
             return Err(ParserError::expected_token_err(token, token_type));
