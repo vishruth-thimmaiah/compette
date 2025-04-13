@@ -39,6 +39,7 @@ pub enum Expression {
     },
     Array(Vec<Expression>),
     String(String),
+    Struct(Vec<(String, Expression)>),
 }
 
 #[derive(Debug, PartialEq)]

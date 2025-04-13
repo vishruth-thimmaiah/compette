@@ -15,6 +15,11 @@ impl Parser {
             return self.parse_array();
         } else if let Types::DATATYPE(Datatype::STRING(_)) = self.peek().unwrap().r#type {
             return Ok(Expression::String(self.next().unwrap().value.unwrap()));
+        } else if self
+            .next_if_type(Types::DELIMITER(Delimiter::LBRACE))
+            .is_some()
+        {
+            return self.parse_struct();
         }
 
         let mut operands: Vec<ASTNodes> = Vec::new();
@@ -144,6 +149,29 @@ impl Parser {
         }
         return Ok(Expression::Array(array));
     }
+
+    pub(crate) fn parse_struct(&mut self) -> Result<Expression> {
+        let mut fields = vec![];
+
+        loop {
+            let name = self.next_with_type(Types::IDENTIFIER)?;
+            let expr = self.parse_expression(vec![
+                Types::DELIMITER(Delimiter::COMMA),
+                Types::DELIMITER(Delimiter::RBRACE),
+            ])?;
+            fields.push((name.value.unwrap(), expr));
+
+            if self
+                .next_if_type(Types::DELIMITER(Delimiter::RBRACE))
+                .is_some()
+            {
+                break;
+            }
+            self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
+        }
+
+        return Ok(Expression::Struct(fields));
+    }
 }
 
 #[cfg(test)]
@@ -198,7 +226,6 @@ mod tests {
         let mut lexer = Lexer::new("[1, 2, 3, 4, 5]");
         let mut parser = Parser::new(lexer.tokenize());
         let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
-        println!("{:#?}", ast);
         assert_eq!(
             ast,
             Expression::Array(vec![
@@ -251,9 +278,40 @@ mod tests {
         let mut lexer = Lexer::new("\"Hello World\"");
         let mut parser = Parser::new(lexer.tokenize());
         let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
+        assert_eq!(ast, Expression::String("Hello World".to_string()));
+    }
+
+    #[test]
+    fn test_parse_struct() {
+        let mut lexer = Lexer::new(" { a 4, b 7 }");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
         assert_eq!(
             ast,
-            Expression::String("Hello World".to_string())
+            Expression::Struct(vec![
+                (
+                    "a".to_string(),
+                    Expression::Simple {
+                        left: Box::new(ASTNodes::Literal(Literal {
+                            value: "4".to_string(),
+                            r#type: Types::NUMBER
+                        })),
+                        right: None,
+                        operator: None
+                    }
+                ),
+                (
+                    "b".to_string(),
+                    Expression::Simple {
+                        left: Box::new(ASTNodes::Literal(Literal {
+                            value: "7".to_string(),
+                            r#type: Types::NUMBER
+                        })),
+                        right: None,
+                        operator: None
+                    }
+                )
+            ])
         );
     }
 }
