@@ -6,6 +6,7 @@ pub enum ASTNodes {
     Expression(Expression),
     Function(Function),
     FunctionCall(FunctionCall),
+    ImportCall(ImportCall),
     Literal(Literal),
     Token(Types),
     Return(Return),
@@ -84,4 +85,9 @@ pub struct FunctionCall {
 pub struct StructDef {
     pub name: String,
     pub fields: Vec<(String, Datatype)>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ImportCall {
+    pub path: Vec<String>,
 }

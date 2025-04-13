@@ -105,14 +105,13 @@ impl Lexer {
                 b'[' => Types::DELIMITER(Delimiter::LBRACKET),
                 b']' => Types::DELIMITER(Delimiter::RBRACKET),
                 b'.' => Types::OPERATOR(Operator::DOT),
-                b':' => Types::OPERATOR(Operator::COLON),
                 b'/' => return self.skip_comment(),
                 b'\n' => {
                     self.line += 1;
                     self.column = 0;
                     Types::NL
                 }
-                b'=' | b'<' | b'>' | b'!' | b'-' => self.check_multi_char_type(),
+                b'=' | b'<' | b'>' | b'!' | b'-' | b':' => self.check_multi_char_type(),
                 _ => lexer_error(char, "invalid character", self.line, self.column),
             },
             None,
@@ -144,7 +143,7 @@ impl Lexer {
         let first_char = self.content.as_bytes()[self.index];
         let second_char = self.content.as_bytes()[self.index + 1];
 
-        self.index += 2;
+        self.index += 1;
 
         match (first_char, second_char) {
             (b'=', b'=') => return Types::OPERATOR(Operator::EQUAL),
@@ -152,6 +151,7 @@ impl Lexer {
             (b'<', b'=') => return Types::OPERATOR(Operator::LESSER_EQUAL),
             (b'>', b'=') => return Types::OPERATOR(Operator::GREATER_EQUAL),
             (b'-', b'>') => return Types::OPERATOR(Operator::CAST),
+            (b':', b':') => return Types::OPERATOR(Operator::PATH),
             _ => self.index -= 1,
         };
 
@@ -161,6 +161,7 @@ impl Lexer {
             b'<' => Types::OPERATOR(Operator::LESSER),
             b'>' => Types::OPERATOR(Operator::GREATER),
             b'-' => Types::OPERATOR(Operator::MINUS),
+            b':' => Types::OPERATOR(Operator::COLON),
             _ => lexer_error(first_char, "invalid token", self.line, self.column),
         }
     }
@@ -210,10 +211,7 @@ impl Lexer {
             "false" => (Types::BOOL, Some("0".to_string())),
             "string" => (Types::DATATYPE(Datatype::STRING(0)), None),
             _ => {
-                if self.content.as_bytes()[self.index + 1] == b':' {
-                    self.index += 1;
-                    (Types::IMPORT_CALL, Some(result))
-                } else if self.content.as_bytes()[self.index + 1] == b'(' {
+                if self.content.as_bytes()[self.index + 1] == b'(' {
                     (Types::IDENTIFIER_FUNC, Some(result))
                 } else {
                     (Types::IDENTIFIER, Some(result))

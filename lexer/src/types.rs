@@ -8,10 +8,11 @@ pub enum Types {
     KEYWORD(Keyword),
     IDENTIFIER,
     IDENTIFIER_FUNC,
-    IMPORT_CALL,
     NUMBER,
     BOOL,
     DATATYPE(Datatype),
+    //TODO: remove after porting to new parser
+    IMPORT_CALL,
 }
 
 #[allow(non_camel_case_types)]
@@ -32,6 +33,7 @@ pub enum Operator {
     NOT_EQUAL,
     COLON,
     CAST, // ->
+    PATH, // ::
 }
 
 #[derive(Debug, PartialEq, Clone)]

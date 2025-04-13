@@ -31,7 +31,6 @@ impl Parser {
             let dt = self.parse_datatype()?;
             args.push((name.value.unwrap(), dt));
 
-            println!("{:?}", self.peek());
             if self
                 .next_if_type(Types::DELIMITER(Delimiter::RBRACE))
                 .is_some()

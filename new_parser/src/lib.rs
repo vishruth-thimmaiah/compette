@@ -12,6 +12,7 @@ mod basics;
 mod block;
 mod expr;
 mod func;
+mod imports;
 mod stmt;
 
 mod errors;

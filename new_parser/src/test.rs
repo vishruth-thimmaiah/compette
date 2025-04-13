@@ -234,7 +234,7 @@ fn test_parse_full_5() {
 fn test_parse_full_6() {
     let mut lexer = Lexer::new(
         r#"
-    import std:io
+    import std::io
 
     func main() i32 {
         io:println("Hello World")
@@ -333,7 +333,7 @@ fn test_parse_full_7() {
 fn test_parse_full_8() {
     let mut lexer = Lexer::new(
         r#"
-    import std:io
+    import std::io
 
     func main() u32 {
         let f32 a = 34.1
