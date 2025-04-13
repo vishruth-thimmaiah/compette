@@ -1,4 +1,4 @@
-use lexer::types::{Operator, Types};
+use lexer::types::{Delimiter, Operator, Types};
 
 use crate::{Parser, Result, nodes::LetStmt};
 
@@ -8,7 +8,7 @@ impl Parser {
         let mutable = self.next_if_type(Types::OPERATOR(Operator::NOT)).is_some();
         let name = self.next_with_type(Types::IDENTIFIER)?;
         self.next_with_type(Types::OPERATOR(Operator::ASSIGN))?;
-        let value = self.parse_expression()?;
+        let value = self.parse_expression(vec![Types::NL, Types::DELIMITER(Delimiter::RBRACE)])?;
 
         Ok(LetStmt {
             name: name.value.unwrap(),
@@ -42,7 +42,7 @@ mod tests {
                 body: Block {
                     body: vec![ASTNodes::LetStmt(LetStmt {
                         name: "a".to_string(),
-                        value: Expression {
+                        value: Expression::Simple {
                             left: Box::new(ASTNodes::Literal(Literal {
                                 value: "1".to_string(),
                                 r#type: lexer::types::Types::NUMBER
@@ -73,7 +73,7 @@ mod tests {
                 body: Block {
                     body: vec![ASTNodes::LetStmt(LetStmt {
                         name: "b".to_string(),
-                        value: Expression {
+                        value: Expression::Simple {
                             left: Box::new(ASTNodes::Variable(Variable {
                                 name: "a".to_string(),
                             })),

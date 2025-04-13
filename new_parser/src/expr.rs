@@ -1,4 +1,4 @@
-use lexer::types::{Delimiter, Operator, Types};
+use lexer::types::{Datatype, Delimiter, Operator, Types};
 
 use super::{
     Parser, Result,
@@ -7,7 +7,16 @@ use super::{
 };
 
 impl Parser {
-    pub(crate) fn parse_expression(&mut self) -> Result<Expression> {
+    pub(crate) fn parse_expression(&mut self, delim: Vec<Types>) -> Result<Expression> {
+        if self
+            .next_if_type(Types::DELIMITER(Delimiter::LBRACKET))
+            .is_some()
+        {
+            return self.parse_array();
+        } else if let Types::DATATYPE(Datatype::STRING(_)) = self.peek().unwrap().r#type {
+            return Ok(Expression::String(self.next().unwrap().value.unwrap()));
+        }
+
         let mut operands: Vec<ASTNodes> = Vec::new();
         let mut operators: Vec<Types> = Vec::new();
 
@@ -46,9 +55,8 @@ impl Parser {
                         break 'outer;
                     }
                 },
-                _ => {
-                    break
-                }
+                ty if delim.contains(&ty) => break,
+                _ => return Err(ParserError::default()),
             }
             self.next();
         }
@@ -70,7 +78,7 @@ impl Parser {
             // errors::parser_error(self, "Invalid postfix expression");
         } else {
             let token = operands.pop().unwrap();
-            return Ok(Expression {
+            return Ok(Expression::Simple {
                 left: Box::new(token),
                 right: None,
                 operator: None,
@@ -95,7 +103,7 @@ impl Parser {
             }
         };
 
-        Ok(Expression {
+        Ok(Expression::Simple {
             left: Box::new(left),
             right: Some(Box::new(right)),
             operator: Some(op),
@@ -118,28 +126,45 @@ impl Parser {
         }
         None
     }
+
+    pub(crate) fn parse_array(&mut self) -> Result<Expression> {
+        let mut array = Vec::new();
+        loop {
+            array.push(self.parse_expression(vec![
+                Types::DELIMITER(Delimiter::COMMA),
+                Types::DELIMITER(Delimiter::RBRACKET),
+            ])?);
+            if self
+                .next_if_type(Types::DELIMITER(Delimiter::RBRACKET))
+                .is_some()
+            {
+                break;
+            }
+            self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
+        }
+        return Ok(Expression::Array(array));
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use lexer::lexer::Lexer;
     use super::*;
+    use lexer::lexer::Lexer;
 
     #[test]
     fn test_parse_expression() {
         let mut lexer = Lexer::new("1 + 2 * 3 - 4 / 5 ");
         let mut parser = Parser::new(lexer.tokenize());
-        let ast = parser.parse_expression().unwrap();
-        println!("{:#?}", ast);
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
         assert_eq!(
             ast,
-            Expression {
-                left: Box::new(ASTNodes::Expression(Expression {
+            Expression::Simple {
+                left: Box::new(ASTNodes::Expression(Expression::Simple {
                     left: Box::new(ASTNodes::Literal(Literal {
                         value: "1".to_string(),
                         r#type: Types::NUMBER
                     })),
-                    right: Some(Box::new(ASTNodes::Expression(Expression {
+                    right: Some(Box::new(ASTNodes::Expression(Expression::Simple {
                         left: Box::new(ASTNodes::Literal(Literal {
                             value: "2".to_string(),
                             r#type: Types::NUMBER
@@ -152,7 +177,7 @@ mod tests {
                     }))),
                     operator: Some(Operator::PLUS)
                 })),
-                right: Some(Box::new(ASTNodes::Expression(Expression {
+                right: Some(Box::new(ASTNodes::Expression(Expression::Simple {
                     left: Box::new(ASTNodes::Literal(Literal {
                         value: "4".to_string(),
                         r#type: Types::NUMBER
@@ -165,6 +190,70 @@ mod tests {
                 }))),
                 operator: Some(Operator::MINUS)
             }
+        );
+    }
+
+    #[test]
+    fn test_parse_array() {
+        let mut lexer = Lexer::new("[1, 2, 3, 4, 5]");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
+        println!("{:#?}", ast);
+        assert_eq!(
+            ast,
+            Expression::Array(vec![
+                Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "1".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                },
+                Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "2".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                },
+                Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "3".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                },
+                Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "4".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                },
+                Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "5".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                }
+            ])
+        );
+    }
+
+    #[test]
+    fn test_parse_string() {
+        let mut lexer = Lexer::new("\"Hello World\"");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
+        assert_eq!(
+            ast,
+            Expression::String("Hello World".to_string())
         );
     }
 }

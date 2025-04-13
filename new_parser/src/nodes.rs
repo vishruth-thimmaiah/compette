@@ -31,10 +31,14 @@ pub struct Return {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Expression {
-    pub left: Box<ASTNodes>,
-    pub right: Option<Box<ASTNodes>>,
-    pub operator: Option<Operator>,
+pub enum Expression {
+    Simple {
+        left: Box<ASTNodes>,
+        right: Option<Box<ASTNodes>>,
+        operator: Option<Operator>,
+    },
+    Array(Vec<Expression>),
+    String(String),
 }
 
 #[derive(Debug, PartialEq)]
