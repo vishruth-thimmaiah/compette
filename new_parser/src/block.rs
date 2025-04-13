@@ -31,6 +31,7 @@ impl Parser {
                 Types::NL => continue,
                 Types::KEYWORD(Keyword::RETURN) => ASTNodes::Return(self.parse_return()?),
                 Types::KEYWORD(Keyword::LET) => ASTNodes::LetStmt(self.parse_statement()?),
+                Types::IDENTIFIER_FUNC => ASTNodes::FunctionCall(self.parse_function_call()?),
                 Types::DELIMITER(Delimiter::RBRACE) => break,
                 _ => return Err(ParserError::unimplemented(token)),
             };

@@ -49,8 +49,25 @@ impl Parser {
         self.tokens.get(self.index).cloned()
     }
 
+    pub(crate) fn current(&self) -> Option<Token> {
+        self.tokens.get(self.index - 1).cloned()
+    }
+
+    pub(crate) fn prev(&mut self) -> Option<Token> {
+        self.index -= 1;
+        self.current()
+    }
+
     pub(crate) fn next_with_type(&mut self, token_type: Types) -> Result<Token> {
         let token = self.next().unwrap();
+        if token.r#type != token_type {
+            return Err(ParserError::expected_token_err(token, token_type));
+        }
+        Ok(token)
+    }
+
+    pub(crate) fn current_with_type(&mut self, token_type: Types) -> Result<Token> {
+        let token = self.current().unwrap();
         if token.r#type != token_type {
             return Err(ParserError::expected_token_err(token, token_type));
         }

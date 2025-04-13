@@ -5,6 +5,7 @@ pub enum ASTNodes {
     Block(Block),
     Expression(Expression),
     Function(Function),
+    FunctionCall(FunctionCall),
     Literal(Literal),
     Token(Types),
     Return(Return),
@@ -43,6 +44,15 @@ pub enum Expression {
     None,
 }
 
+impl Expression {
+    pub fn is_none(&self) -> bool {
+        if let Expression::None = self {
+            return true;
+        }
+        false
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Literal {
     pub value: String,
@@ -60,4 +70,11 @@ pub struct LetStmt {
     pub value: Expression,
     pub datatype: Datatype,
     pub mutable: bool,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct FunctionCall {
+    pub name: String,
+    pub args: Vec<Expression>,
+    // pub imported: Option<Vec<String>>,
 }

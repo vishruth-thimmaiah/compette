@@ -60,9 +60,15 @@ impl Parser {
                         break 'outer;
                     }
                 },
+                Types::IDENTIFIER_FUNC => {
+                    self.next();
+                    operands.push(ASTNodes::FunctionCall(self.parse_function_call()?));
+                    self.prev();
+                }
                 ty if delim.contains(&ty) => break,
                 _ => return Err(ParserError::default()),
             }
+            println!("{:?}", self.peek());
             self.next();
         }
         while !operators.is_empty() {

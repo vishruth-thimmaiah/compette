@@ -1,8 +1,11 @@
-use lexer::{lexer::Lexer, types::Datatype};
+use lexer::{
+    lexer::Lexer,
+    types::{Datatype, Operator},
+};
 
 use crate::{
     Parser,
-    nodes::{ASTNodes, Block, Expression, Function, LetStmt, Literal},
+    nodes::{ASTNodes, Block, Expression, Function, LetStmt, Literal, Return, Variable},
 };
 
 #[test]
@@ -57,7 +60,7 @@ fn test_parse_full_1() {
     );
 }
 
-#[ignore = "impl function calls"]
+// #[ignore = "impl function calls"]
 #[test]
 fn test_parse_full_2() {
     let mut lexer = Lexer::new(
@@ -74,8 +77,98 @@ fn test_parse_full_2() {
     );
 
     let mut parser = Parser::new(lexer.tokenize());
-    let _ast = parser.parse().unwrap();
-    todo!();
+    let ast = parser.parse().unwrap();
+    assert_eq!(
+        ast,
+        vec![
+            ASTNodes::Function(Function {
+                name: "num".to_string(),
+                args: vec![
+                    ("e".to_string(), Datatype::U32),
+                    ("f".to_string(), Datatype::U32)
+                ],
+                return_type: Datatype::U32,
+                body: Block {
+                    body: vec![ASTNodes::Return(Return {
+                        value: Some(Expression::Simple {
+                            left: Box::new(ASTNodes::Variable(Variable {
+                                name: "e".to_string(),
+                            })),
+                            right: Some(Box::new(ASTNodes::Variable(Variable {
+                                name: "f".to_string(),
+                            }))),
+                            operator: Some(Operator::PLUS)
+                        })
+                    })]
+                }
+            }),
+            ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Datatype::U32,
+                body: Block {
+                    body: vec![
+                        ASTNodes::LetStmt(LetStmt {
+                            name: "a".to_string(),
+                            value: Expression::Simple {
+                                left: Box::new(ASTNodes::Literal(Literal {
+                                    value: "6".to_string(),
+                                    r#type: lexer::types::Types::NUMBER
+                                })),
+                                right: None,
+                                operator: None
+                            },
+                            datatype: Datatype::U32,
+                            mutable: false
+                        }),
+                        ASTNodes::LetStmt(LetStmt {
+                            name: "b".to_string(),
+                            value: Expression::Simple {
+                                left: Box::new(ASTNodes::FunctionCall(
+                                    crate::nodes::FunctionCall {
+                                        name: "num".to_string(),
+                                        args: vec![
+                                            Expression::Simple {
+                                                left: Box::new(ASTNodes::Literal(Literal {
+                                                    value: "5".to_string(),
+                                                    r#type: lexer::types::Types::NUMBER
+                                                })),
+                                                right: None,
+                                                operator: None
+                                            },
+                                            Expression::Simple {
+                                                left: Box::new(ASTNodes::Literal(Literal {
+                                                    value: "4".to_string(),
+                                                    r#type: lexer::types::Types::NUMBER
+                                                })),
+                                                right: None,
+                                                operator: None
+                                            }
+                                        ]
+                                    }
+                                )),
+                                right: None,
+                                operator: None,
+                            },
+                            datatype: Datatype::U32,
+                            mutable: false
+                        }),
+                        ASTNodes::Return(Return {
+                            value: Some(Expression::Simple {
+                                left: Box::new(ASTNodes::Variable(Variable {
+                                    name: "a".to_string(),
+                                })),
+                                right: Some(Box::new(ASTNodes::Variable(Variable {
+                                    name: "b".to_string(),
+                                }))),
+                                operator: Some(Operator::MULTIPLY)
+                            })
+                        })
+                    ]
+                }
+            })
+        ]
+    )
 }
 
 #[ignore = "impl conditionals"]

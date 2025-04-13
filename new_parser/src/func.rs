@@ -1,6 +1,6 @@
 use lexer::types::{Datatype, Delimiter, Types};
 
-use crate::nodes::Expression;
+use crate::nodes::{Expression, FunctionCall};
 
 use super::{
     Parser, Result,
@@ -58,12 +58,48 @@ impl Parser {
         }
         return Ok(Return { value: Some(val) });
     }
+
+    pub(crate) fn parse_function_call(&mut self) -> Result<FunctionCall> {
+        let name = self.current_with_type(Types::IDENTIFIER_FUNC)?;
+
+        self.next_with_type(Types::DELIMITER(Delimiter::LPAREN))?;
+        if self
+            .next_if_type(Types::DELIMITER(Delimiter::RPAREN))
+            .is_some()
+        {
+            return Ok(FunctionCall {
+                name: name.value.unwrap(),
+                args: vec![],
+            });
+        }
+
+        let mut args = vec![];
+        loop {
+            let expr = self.parse_expression(vec![
+                Types::DELIMITER(Delimiter::COMMA),
+                Types::DELIMITER(Delimiter::RPAREN),
+            ])?;
+            args.push(expr);
+            if self
+                .next_if_type(Types::DELIMITER(Delimiter::RPAREN))
+                .is_some()
+            {
+                break;
+            }
+            self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
+        }
+
+        return Ok(FunctionCall {
+            name: name.value.unwrap(),
+            args,
+        });
+    }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use crate::nodes::{Expression, Literal};
+    use crate::nodes::{Expression, LetStmt, Literal};
 
     use super::{
         super::nodes::{ASTNodes, Block},
@@ -148,6 +184,64 @@ mod tests {
                 ],
                 return_type: Datatype::U32,
                 body: Block { body: vec![] },
+            })]
+        );
+    }
+
+    #[test]
+    fn test_parse_function_call() {
+        let mut lexer = Lexer::new("func main() u32 { call() }");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse().unwrap();
+        assert_eq!(
+            ast,
+            vec![ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Datatype::U32,
+                body: Block {
+                    body: vec![ASTNodes::FunctionCall(FunctionCall {
+                        name: "call".to_string(),
+                        args: vec![]
+                    })]
+                },
+            })]
+        );
+    }
+
+    #[test]
+    fn test_parse_function_call_2() {
+        let mut lexer = Lexer::new("func main() u32 { let u32 a = call(4) }");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse().unwrap();
+        assert_eq!(
+            ast,
+            vec![ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Datatype::U32,
+                body: Block {
+                    body: vec![ASTNodes::LetStmt(LetStmt {
+                        name: "a".to_string(),
+                        value: Expression::Simple {
+                            left: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                                name: "call".to_string(),
+                                args: vec![Expression::Simple {
+                                    left: Box::new(ASTNodes::Literal(Literal {
+                                        value: "4".to_string(),
+                                        r#type: Types::NUMBER
+                                    })),
+                                    right: None,
+                                    operator: None
+                                }]
+                            })),
+                            right: None,
+                            operator: None
+                        },
+                        datatype: Datatype::U32,
+                        mutable: false
+                    }),]
+                },
             })]
         );
     }
