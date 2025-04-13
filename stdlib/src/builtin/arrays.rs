@@ -4,7 +4,7 @@ pub struct Array {
     pub data: *const u32,
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn __builtin__len(arr: *const Array) -> u64 {
     let deref_arr = unsafe { &*(arr) };
     return deref_arr.len;

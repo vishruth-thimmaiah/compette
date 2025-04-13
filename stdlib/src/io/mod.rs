@@ -8,7 +8,7 @@ pub struct Str {
     pub str: *const u8,
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn __std__io__print(s: *const Str) {
     let str_struct = unsafe { &*s };
     let string = unsafe { slice::from_raw_parts(str_struct.str, str_struct.len as usize) };
@@ -16,7 +16,7 @@ pub extern "C" fn __std__io__print(s: *const Str) {
     std::io::stdout().flush().unwrap();
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn __std__io__println(s: *const Str) {
     let str_struct = unsafe { &*s };
     let string = unsafe { slice::from_raw_parts(str_struct.str, str_struct.len as usize) };
@@ -25,11 +25,11 @@ pub extern "C" fn __std__io__println(s: *const Str) {
 }
 
 // Temporary funtion until format print is implemented
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn __std__io__printint(s: i32) {
     println!("{}", s);
 }
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn __std__io__printflt(s: f32) -> i32 {
     println!("{}", s);
     return 0;

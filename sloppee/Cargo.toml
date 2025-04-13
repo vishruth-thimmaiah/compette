@@ -1,0 +1,10 @@
+[package]
+name = "sloppee"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+inkwell = { workspace = true }
+lexer = { workspace = true }
+parser = { workspace = true }
+llvm = { workspace = true }
