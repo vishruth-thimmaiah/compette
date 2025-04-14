@@ -96,6 +96,15 @@ impl Parser {
         Ok(token)
     }
 
+    pub(crate) fn current_if_type(&mut self, token_type: Types) -> Option<Token> {
+        let token = self.current().unwrap();
+        if token.r#type == token_type {
+            Some(token)
+        } else {
+            None
+        }
+    }
+
     pub(crate) fn next_if_type(&mut self, token_type: Types) -> Option<Token> {
         let token = self.peek().unwrap();
         if token.r#type == token_type {

@@ -17,6 +17,8 @@ pub enum ASTNodes {
     Conditional(Conditional),
     Loop(Loop),
     ForLoop(ForLoop),
+    Attr(Attr),
+    Method(Method),
 }
 
 #[derive(Debug, PartialEq)]
@@ -71,6 +73,18 @@ pub struct Variable {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct Attr {
+    pub name: Variable,
+    pub parent: Box<ASTNodes>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Method {
+    pub func: FunctionCall,
+    pub parent: Box<ASTNodes>,
+}
+
+#[derive(Debug, PartialEq)]
 pub struct LetStmt {
     pub name: String,
     pub value: Expression,
@@ -113,7 +127,10 @@ pub struct Conditional {
 
 impl Conditional {
     pub fn get_else_if_for(&self, index: usize) -> Option<(&Expression, &Block)> {
-        Some((self.else_if_condition.get(index)?, self.else_if_body.get(index)?))
+        Some((
+            self.else_if_condition.get(index)?,
+            self.else_if_body.get(index)?,
+        ))
     }
 }
 

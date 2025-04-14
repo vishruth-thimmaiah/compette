@@ -3,7 +3,7 @@ use lexer::types::{Datatype, Delimiter, Operator, Types};
 use super::{
     Parser, Result,
     errors::ParserError,
-    nodes::{ASTNodes, Expression, Literal, Variable},
+    nodes::{ASTNodes, Expression, Literal},
 };
 
 impl Parser {
@@ -32,9 +32,9 @@ impl Parser {
                     value: token.value.unwrap(),
                     r#type: token.r#type,
                 })),
-                Types::IDENTIFIER => operands.push(ASTNodes::Variable(Variable {
-                    name: token.value.unwrap(),
-                })),
+                Types::IDENTIFIER => {
+                    operands.push(self.parse_complex_variable()?);
+                }
                 Types::OPERATOR(ref op) => {
                     while !operators.is_empty() {
                         let pop_op = operators.last().unwrap();
@@ -72,7 +72,7 @@ impl Parser {
                     self.prev();
                     break;
                 }
-                _ => return Err(ParserError::default()),
+                _ => return Err(ParserError::new("Expected an expression", token)),
             }
         }
         while !operators.is_empty() {

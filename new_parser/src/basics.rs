@@ -1,6 +1,6 @@
-use lexer::types::{Datatype, Delimiter, Types};
+use lexer::types::{Datatype, Delimiter, Operator, Types};
 
-use crate::nodes::Variable;
+use crate::nodes::{ASTNodes, Attr, Method, Variable};
 
 use super::{Parser, ParserError, Result};
 
@@ -29,10 +29,40 @@ impl Parser {
         let name = ident.value.unwrap();
         Ok(Variable { name })
     }
+
+    /// Returns a variable, attribute or method call
+    pub(crate) fn parse_complex_variable(&mut self) -> Result<ASTNodes> {
+        let mut parent = if self.current_if_type(Types::IDENTIFIER_FUNC).is_some() {
+            ASTNodes::FunctionCall(self.parse_function_call()?)
+        } else {
+            ASTNodes::Variable(Variable {
+                name: self.current_with_type(Types::IDENTIFIER)?.value.unwrap(),
+            })
+        };
+
+        while self.next_if_type(Types::OPERATOR(Operator::DOT)).is_some() {
+            parent = if self.next_if_type(Types::IDENTIFIER_FUNC).is_some() {
+                let method = self.parse_function_call()?;
+                ASTNodes::Method(Method {
+                    func: method,
+                    parent: Box::new(parent),
+                })
+            } else {
+                ASTNodes::Attr(Attr {
+                    name: self.parse_variable()?,
+                    parent: Box::new(parent),
+                })
+            };
+        }
+
+        Ok(parent)
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::nodes::{Expression, FunctionCall, Literal};
+
     use super::*;
     use lexer::lexer::Lexer;
 
@@ -57,5 +87,192 @@ mod tests {
         let mut parser = Parser::new(lexer.tokenize());
         let ast = parser.parse_datatype().unwrap();
         assert_eq!(ast, Datatype::CUSTOM("Test".to_string()));
+    }
+
+    #[test]
+    fn test_parse_method_call() {
+        let mut lexer = Lexer::new("Test.test()");
+        let mut parser = Parser::new(lexer.tokenize());
+        parser.next();
+        let ast = parser.parse_complex_variable().unwrap();
+        assert_eq!(
+            ast,
+            ASTNodes::Method(Method {
+                func: FunctionCall {
+                    name: "test".to_string(),
+                    args: vec![]
+                },
+                parent: Box::new(ASTNodes::Variable(Variable {
+                    name: "Test".to_string()
+                }))
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_attr() {
+        let mut lexer = Lexer::new("Test.test ");
+        let mut parser = Parser::new(lexer.tokenize());
+        parser.next();
+        let ast = parser.parse_complex_variable().unwrap();
+        assert_eq!(
+            ast,
+            ASTNodes::Attr(Attr {
+                name: Variable {
+                    name: "test".to_string()
+                },
+                parent: Box::new(ASTNodes::Variable(Variable {
+                    name: "Test".to_string()
+                }))
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_nested_method_call() {
+        let mut lexer = Lexer::new("test().test2()");
+        let mut parser = Parser::new(lexer.tokenize());
+        parser.next();
+        let ast = parser.parse_complex_variable().unwrap();
+        assert_eq!(
+            ast,
+            ASTNodes::Method(Method {
+                func: FunctionCall {
+                    name: "test2".to_string(),
+                    args: vec![]
+                },
+                parent: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                    name: "test".to_string(),
+                    args: vec![]
+                }))
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_complex_call() {
+        let mut lexer = Lexer::new("Test.test().test2(5, 3).test3.test4.test5(4)");
+        let mut parser = Parser::new(lexer.tokenize());
+        parser.next();
+        let ast = parser.parse_complex_variable().unwrap();
+        assert_eq!(
+            ast,
+            ASTNodes::Method(Method {
+                func: FunctionCall {
+                    name: "test5".to_string(),
+                    args: vec![Expression::Simple {
+                        left: Box::new(ASTNodes::Literal(Literal {
+                            value: "4".to_string(),
+                            r#type: Types::NUMBER
+                        })),
+                        right: None,
+                        operator: None
+                    }]
+                },
+                parent: Box::new(ASTNodes::Attr(Attr {
+                    name: Variable {
+                        name: "test4".to_string()
+                    },
+                    parent: Box::new(ASTNodes::Attr(Attr {
+                        name: Variable {
+                            name: "test3".to_string()
+                        },
+                        parent: Box::new(ASTNodes::Method(Method {
+                            func: FunctionCall {
+                                name: "test2".to_string(),
+                                args: vec![
+                                    Expression::Simple {
+                                        left: Box::new(ASTNodes::Literal(Literal {
+                                            value: "5".to_string(),
+                                            r#type: Types::NUMBER
+                                        })),
+                                        right: None,
+                                        operator: None
+                                    },
+                                    Expression::Simple {
+                                        left: Box::new(ASTNodes::Literal(Literal {
+                                            value: "3".to_string(),
+                                            r#type: Types::NUMBER
+                                        })),
+                                        right: None,
+                                        operator: None
+                                    }
+                                ]
+                            },
+                            parent: Box::new(ASTNodes::Method(Method {
+                                func: FunctionCall {
+                                    name: "test".to_string(),
+                                    args: vec![]
+                                },
+                                parent: Box::new(ASTNodes::Variable(Variable {
+                                    name: "Test".to_string()
+                                })),
+                            })),
+                        })),
+                    })),
+                })),
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_complex_call_2() {
+        let mut lexer = Lexer::new("test().test2(5, 3).test3.test4.test5(4)");
+        let mut parser = Parser::new(lexer.tokenize());
+        parser.next();
+        let ast = parser.parse_complex_variable().unwrap();
+        assert_eq!(
+            ast,
+            ASTNodes::Method(Method {
+                func: FunctionCall {
+                    name: "test5".to_string(),
+                    args: vec![Expression::Simple {
+                        left: Box::new(ASTNodes::Literal(Literal {
+                            value: "4".to_string(),
+                            r#type: Types::NUMBER
+                        })),
+                        right: None,
+                        operator: None
+                    }]
+                },
+                parent: Box::new(ASTNodes::Attr(Attr {
+                    name: Variable {
+                        name: "test4".to_string()
+                    },
+                    parent: Box::new(ASTNodes::Attr(Attr {
+                        name: Variable {
+                            name: "test3".to_string()
+                        },
+                        parent: Box::new(ASTNodes::Method(Method {
+                            func: FunctionCall {
+                                name: "test2".to_string(),
+                                args: vec![
+                                    Expression::Simple {
+                                        left: Box::new(ASTNodes::Literal(Literal {
+                                            value: "5".to_string(),
+                                            r#type: Types::NUMBER
+                                        })),
+                                        right: None,
+                                        operator: None
+                                    },
+                                    Expression::Simple {
+                                        left: Box::new(ASTNodes::Literal(Literal {
+                                            value: "3".to_string(),
+                                            r#type: Types::NUMBER
+                                        })),
+                                        right: None,
+                                        operator: None
+                                    }
+                                ]
+                            },
+                            parent: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                                name: "test".to_string(),
+                                args: vec![]
+                            },)),
+                        })),
+                    })),
+                })),
+            })
+        );
     }
 }
