@@ -4,9 +4,11 @@ use lexer::{
 };
 
 use crate::{
+    Parser,
     nodes::{
-        ASTNodes, AssignStmt, Block, Conditional, Expression, ForLoop, Function, LetStmt, Literal, Loop, Return, StructDef, Variable
-    }, Parser
+        ASTNodes, AssignStmt, Block, Conditional, Expression, ForLoop, Function, LetStmt, Literal,
+        Loop, Return, StructDef, Variable,
+    },
 };
 
 #[test]
@@ -332,7 +334,7 @@ fn test_parse_full_4() {
     );
 }
 
-#[ignore = "impl array datatypes, method calls"]
+#[ignore = "impl method calls"]
 #[test]
 fn test_parse_full_5() {
     let mut lexer = Lexer::new(
@@ -478,6 +480,7 @@ fn test_parse_full_9() {
     let mut lexer = Lexer::new(
         r#"
     func main() u32 {
+        let u32[] array = [1, 2, 3, 4, 5]
         let u32! a = 0
         loop range v, i = array {
             a = i + 1
@@ -495,6 +498,53 @@ fn test_parse_full_9() {
             return_type: Datatype::U32,
             body: Block {
                 body: vec![
+                    ASTNodes::LetStmt(LetStmt {
+                        name: "array".to_string(),
+                        datatype: Datatype::NARRAY(Box::new(Datatype::U32)),
+                        mutable: false,
+                        value: Expression::Array(vec![
+                            Expression::Simple {
+                                left: Box::new(ASTNodes::Literal(Literal {
+                                    value: "1".to_string(),
+                                    r#type: lexer::types::Types::NUMBER
+                                })),
+                                right: None,
+                                operator: None
+                            },
+                            Expression::Simple {
+                                left: Box::new(ASTNodes::Literal(Literal {
+                                    value: "2".to_string(),
+                                    r#type: lexer::types::Types::NUMBER
+                                })),
+                                right: None,
+                                operator: None
+                            },
+                            Expression::Simple {
+                                left: Box::new(ASTNodes::Literal(Literal {
+                                    value: "3".to_string(),
+                                    r#type: lexer::types::Types::NUMBER
+                                })),
+                                right: None,
+                                operator: None
+                            },
+                            Expression::Simple {
+                                left: Box::new(ASTNodes::Literal(Literal {
+                                    value: "4".to_string(),
+                                    r#type: lexer::types::Types::NUMBER
+                                })),
+                                right: None,
+                                operator: None
+                            },
+                            Expression::Simple {
+                                left: Box::new(ASTNodes::Literal(Literal {
+                                    value: "5".to_string(),
+                                    r#type: lexer::types::Types::NUMBER
+                                })),
+                                right: None,
+                                operator: None
+                            }
+                        ])
+                    }),
                     ASTNodes::LetStmt(LetStmt {
                         name: "a".to_string(),
                         value: Expression::Simple {

@@ -76,7 +76,9 @@ pub enum Datatype {
     F64,
     BOOL,
     STRING(usize),
+    //TODO: remove after porting to new parser
     ARRAY(Box<ArrayDetails>),
+    NARRAY(Box<Datatype>),
     CUSTOM(String),
     NONE,
 }

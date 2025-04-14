@@ -1,4 +1,4 @@
-use lexer::types::{Datatype, Types};
+use lexer::types::{Datatype, Delimiter, Types};
 
 use crate::nodes::Variable;
 
@@ -14,6 +14,13 @@ impl Parser {
         } else {
             return Err(ParserError::default());
         };
+        if self
+            .next_if_type(Types::DELIMITER(Delimiter::LBRACKET))
+            .is_some()
+        {
+            self.next_with_type(Types::DELIMITER(Delimiter::RBRACKET))?;
+            return Ok(Datatype::NARRAY(Box::new(dt)));
+        }
         Ok(dt)
     }
 
@@ -35,6 +42,13 @@ mod tests {
         let mut parser = Parser::new(lexer.tokenize());
         let ast = parser.parse_datatype().unwrap();
         assert_eq!(ast, Datatype::U32);
+    }
+
+    fn test_parse_array_datatype() {
+        let mut lexer = Lexer::new("u32[]");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_datatype().unwrap();
+        assert_eq!(ast, Datatype::NARRAY(Box::new(Datatype::U32)));
     }
 
     #[test]
