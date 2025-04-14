@@ -14,6 +14,7 @@ mod cond;
 mod expr;
 mod func;
 mod imports;
+mod loops;
 mod stmt;
 
 mod errors;
@@ -110,6 +111,15 @@ impl Parser {
             return Err(ParserError::expected_token_err(token, token_type));
         }
         Ok(token)
+    }
+
+    pub(crate) fn peek_if_type(&mut self, token_type: Types) -> Option<Token> {
+        let token = self.peek().unwrap();
+        if token.r#type == token_type {
+            Some(token)
+        } else {
+            None
+        }
     }
 
     pub fn parse(&mut self) -> Result<Vec<ASTNodes>> {

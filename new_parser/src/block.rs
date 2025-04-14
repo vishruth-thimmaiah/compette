@@ -34,6 +34,7 @@ impl Parser {
                 Types::KEYWORD(Keyword::RETURN) => ASTNodes::Return(self.parse_return()?),
                 Types::KEYWORD(Keyword::LET) => ASTNodes::LetStmt(self.parse_statement()?),
                 Types::KEYWORD(Keyword::IF) => ASTNodes::Conditional(self.parse_if()?),
+                Types::KEYWORD(Keyword::LOOP) => self.parse_loop()?,
                 Types::IDENTIFIER_FUNC => ASTNodes::FunctionCall(self.parse_function_call()?),
                 Types::IDENTIFIER => ASTNodes::AssignStmt(self.parse_assign_stmt()?),
                 Types::DELIMITER(Delimiter::RBRACE) => break,

@@ -15,6 +15,8 @@ pub enum ASTNodes {
     AssignStmt(AssignStmt),
     StructDef(StructDef),
     Conditional(Conditional),
+    Loop(Loop),
+    ForLoop(ForLoop),
 }
 
 #[derive(Debug, PartialEq)]
@@ -113,4 +115,18 @@ impl Conditional {
     pub fn get_else_if_for(&self, index: usize) -> Option<(&Expression, &Block)> {
         Some((self.else_if_condition.get(index)?, self.else_if_body.get(index)?))
     }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Loop {
+    pub condition: Option<Expression>,
+    pub body: Block,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ForLoop {
+    pub value: Variable,
+    pub increment: Variable,
+    pub iterator: Expression,
+    pub body: Block,
 }

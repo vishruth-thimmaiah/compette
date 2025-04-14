@@ -4,11 +4,9 @@ use lexer::{
 };
 
 use crate::{
-    Parser,
     nodes::{
-        ASTNodes, Block, Conditional, Expression, Function, LetStmt, Literal, Return, StructDef,
-        Variable,
-    },
+        ASTNodes, AssignStmt, Block, Conditional, Expression, ForLoop, Function, LetStmt, Literal, Loop, Return, StructDef, Variable
+    }, Parser
 };
 
 #[test]
@@ -265,7 +263,6 @@ fn test_parse_full_3() {
     );
 }
 
-#[ignore = "impl loops"]
 #[test]
 fn test_parse_full_4() {
     let mut lexer = Lexer::new(
@@ -280,8 +277,59 @@ fn test_parse_full_4() {
     );
 
     let mut parser = Parser::new(lexer.tokenize());
-    let _ast = parser.parse().unwrap();
-    todo!();
+    let ast = parser.parse().unwrap();
+    assert_eq!(
+        ast,
+        vec![ASTNodes::Function(Function {
+            name: "main".to_string(),
+            args: vec![],
+            return_type: Datatype::U32,
+            body: Block {
+                body: vec![
+                    ASTNodes::LetStmt(LetStmt {
+                        name: "a".to_string(),
+                        value: Expression::Simple {
+                            left: Box::new(ASTNodes::Literal(Literal {
+                                value: "0".to_string(),
+                                r#type: lexer::types::Types::NUMBER
+                            })),
+                            right: None,
+                            operator: None
+                        },
+                        datatype: Datatype::U32,
+                        mutable: true,
+                    }),
+                    ASTNodes::Loop(Loop {
+                        condition: None,
+                        body: Block {
+                            body: vec![ASTNodes::AssignStmt(AssignStmt {
+                                name: "a".to_string(),
+                                value: Expression::Simple {
+                                    left: Box::new(ASTNodes::Variable(Variable {
+                                        name: "a".to_string(),
+                                    })),
+                                    right: Some(Box::new(ASTNodes::Literal(Literal {
+                                        value: "1".to_string(),
+                                        r#type: lexer::types::Types::NUMBER
+                                    }))),
+                                    operator: Some(Operator::PLUS)
+                                },
+                            })]
+                        },
+                    }),
+                    ASTNodes::Return(Return {
+                        value: Some(Expression::Simple {
+                            left: Box::new(ASTNodes::Variable(Variable {
+                                name: "a".to_string(),
+                            })),
+                            right: None,
+                            operator: None
+                        })
+                    })
+                ]
+            },
+        })]
+    );
 }
 
 #[ignore = "impl array datatypes, method calls"]
@@ -423,4 +471,84 @@ fn test_parse_full_8() {
     let mut parser = Parser::new(lexer.tokenize());
     let _ast = parser.parse().unwrap();
     todo!();
+}
+
+#[test]
+fn test_parse_full_9() {
+    let mut lexer = Lexer::new(
+        r#"
+    func main() u32 {
+        let u32! a = 0
+        loop range v, i = array {
+            a = i + 1
+        }
+        return a
+    }"#,
+    );
+    let mut parser = Parser::new(lexer.tokenize());
+    let ast = parser.parse().unwrap();
+    assert_eq!(
+        ast,
+        vec![ASTNodes::Function(Function {
+            name: "main".to_string(),
+            args: vec![],
+            return_type: Datatype::U32,
+            body: Block {
+                body: vec![
+                    ASTNodes::LetStmt(LetStmt {
+                        name: "a".to_string(),
+                        value: Expression::Simple {
+                            left: Box::new(ASTNodes::Literal(Literal {
+                                value: "0".to_string(),
+                                r#type: lexer::types::Types::NUMBER
+                            })),
+                            right: None,
+                            operator: None
+                        },
+                        datatype: Datatype::U32,
+                        mutable: true
+                    }),
+                    ASTNodes::ForLoop(ForLoop {
+                        value: Variable {
+                            name: "v".to_string(),
+                        },
+                        increment: Variable {
+                            name: "i".to_string(),
+                        },
+                        iterator: Expression::Simple {
+                            left: Box::new(ASTNodes::Variable(Variable {
+                                name: "array".to_string(),
+                            })),
+                            right: None,
+                            operator: None
+                        },
+                        body: Block {
+                            body: vec![ASTNodes::AssignStmt(AssignStmt {
+                                name: "a".to_string(),
+                                value: Expression::Simple {
+                                    left: Box::new(ASTNodes::Variable(Variable {
+                                        name: "i".to_string(),
+                                    })),
+                                    right: Some(Box::new(ASTNodes::Literal(Literal {
+                                        value: "1".to_string(),
+                                        r#type: lexer::types::Types::NUMBER
+                                    }))),
+                                    operator: Some(Operator::PLUS)
+                                },
+                            })]
+                        }
+                    }),
+                    ASTNodes::Return(Return {
+                        value: Some(Expression::Simple {
+                            left: Box::new(ASTNodes::Variable(Variable {
+                                name: "a".to_string(),
+                            })),
+                            right: None,
+                            operator: None
+                        })
+                    })
+                ]
+            },
+        })]
+    );
 }

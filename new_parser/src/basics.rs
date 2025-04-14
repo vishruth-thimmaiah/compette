@@ -1,5 +1,7 @@
 use lexer::types::{Datatype, Types};
 
+use crate::nodes::Variable;
+
 use super::{Parser, ParserError, Result};
 
 impl Parser {
@@ -13,6 +15,12 @@ impl Parser {
             return Err(ParserError::default());
         };
         Ok(dt)
+    }
+
+    pub(crate) fn parse_variable(&mut self) -> Result<Variable> {
+        let ident = self.next_with_type(Types::IDENTIFIER)?;
+        let name = ident.value.unwrap();
+        Ok(Variable { name })
     }
 }
 

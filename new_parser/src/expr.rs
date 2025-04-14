@@ -68,7 +68,6 @@ impl Parser {
                 ty if delim.contains(&ty) => break,
                 _ => return Err(ParserError::default()),
             }
-            println!("{:?}", self.peek());
             self.next();
         }
         while !operators.is_empty() {
