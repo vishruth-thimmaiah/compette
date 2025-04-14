@@ -41,11 +41,15 @@ impl ParserError {
         Self::new(&format!("Unexpected token {:?}", token.r#type), token)
     }
 
-    pub(crate) fn unexpected_eof(token: Token) -> Self {
-        Self::new(
-            &format!("Expected token {:?}, got eof", token.r#type),
-            token,
-        )
+    pub(crate) fn unexpected_eof(token: Option<Token>) -> Self {
+        if let Some(token) = token {
+            Self::new(
+                &format!("Expected token {:?}, got eof", token.r#type),
+                token,
+            )
+        } else {
+            Self::new("Expected token, got eof", Token::default())
+        }
     }
 
     pub(crate) fn unimplemented(token: Token) -> Self {

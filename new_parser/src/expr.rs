@@ -26,7 +26,7 @@ impl Parser {
         let mut operators: Vec<Types> = Vec::new();
 
         'outer: loop {
-            let token = self.peek().ok_or(ParserError::default())?;
+            let token = self.next().ok_or(ParserError::unexpected_eof(None))?;
             match token.r#type {
                 Types::NUMBER | Types::BOOL => operands.push(ASTNodes::Literal(Literal {
                     value: token.value.unwrap(),
@@ -57,18 +57,23 @@ impl Parser {
                         }
                         operands.push(ASTNodes::Token(op.clone()));
                     } else {
-                        break 'outer;
+                        if delim.contains(&Types::DELIMITER(Delimiter::RPAREN)) {
+                            self.prev();
+                            break 'outer;
+                        } else {
+                            return Err(ParserError::new("Unexpected LPAREN", token));
+                        }
                     }
                 },
                 Types::IDENTIFIER_FUNC => {
-                    self.next();
                     operands.push(ASTNodes::FunctionCall(self.parse_function_call()?));
-                    self.prev();
                 }
-                ty if delim.contains(&ty) => break,
+                ty if delim.contains(&ty) => {
+                    self.prev();
+                    break;
+                }
                 _ => return Err(ParserError::default()),
             }
-            self.next();
         }
         while !operators.is_empty() {
             let value = operators.pop().unwrap();
