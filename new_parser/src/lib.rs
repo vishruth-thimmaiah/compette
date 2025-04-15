@@ -18,7 +18,7 @@ mod loops;
 mod stmt;
 
 mod errors;
-mod nodes;
+pub mod nodes;
 #[cfg(test)]
 mod test;
 

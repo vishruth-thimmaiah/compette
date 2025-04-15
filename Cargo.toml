@@ -5,6 +5,7 @@ members = [
 	"parser",
 	"new_parser",
 	"llvm",
+	"backend_llvm",
 	"stdlib",
 	"tests",
 ]
@@ -24,6 +25,7 @@ lexer = { path = "./lexer" }
 parser = { path = "./parser" }
 new_parser = { path = "./new_parser" }
 llvm = { path = "./llvm" }
+backend_llvm = { path = "./backend_llvm" }
 
 tests = { path = "./tests" }
 

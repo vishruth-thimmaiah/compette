@@ -19,23 +19,35 @@ fn main() {
             println!("{:#?}", lexer);
         }
 
-        let parser = Parser::new(lexer.clone()).parse();
-        if parsed_args.print_ast_output {
-            println!("{:#?}", parser);
-        }
-
-        if parsed_args.dry_run {
-            return;
-        }
-
         let context = Context::create();
-        let codegen = CodeGen::new(&context, parser, parsed_args.jit);
 
-        if parsed_args.jit {
-            let output = codegen.compile(false, false);
-            println!("Exit Code: {}", output.unwrap());
+        if parsed_args.new_impl {
+            let parser = new_parser::Parser::new(lexer.clone()).parse().unwrap();
+
+            if parsed_args.print_ast_output {
+                println!("{:#?}", parser);
+            }
+
+            let codegen = backend_llvm::CodeGen::new(&context, parser);
+            codegen.codegen().unwrap();
         } else {
-            codegen.compile(true, parsed_args.run);
+            let parser = Parser::new(lexer.clone()).parse();
+            if parsed_args.print_ast_output {
+                println!("{:#?}", parser);
+            }
+
+            if parsed_args.dry_run {
+                return;
+            }
+
+            let codegen = CodeGen::new(&context, parser, parsed_args.jit);
+
+            if parsed_args.jit {
+                let output = codegen.compile(false, false);
+                println!("Exit Code: {}", output.unwrap());
+            } else {
+                codegen.compile(true, parsed_args.run);
+            }
         }
     }
 }

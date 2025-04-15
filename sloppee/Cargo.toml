@@ -7,4 +7,6 @@ edition = "2024"
 inkwell = { workspace = true }
 lexer = { workspace = true }
 parser = { workspace = true }
+new_parser = { workspace = true }
 llvm = { workspace = true }
+backend_llvm = { workspace = true }

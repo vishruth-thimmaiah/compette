@@ -9,6 +9,7 @@ pub struct Args {
     pub run: bool,
     pub path: Option<String>,
     pub dry_run: bool,
+    pub new_impl: bool,
 }
 
 impl Default for Args {
@@ -21,6 +22,7 @@ impl Default for Args {
             run: false,
             path: None,
             dry_run: false,
+            new_impl: true,
         }
     }
 }

@@ -9,6 +9,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 
 [[package]]
+name = "backend_llvm"
+version = "0.1.0"
+dependencies = [
+ "inkwell",
+ "lexer",
+ "new_parser",
+ "stdlib",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -70,7 +80,6 @@ version = "0.1.0"
 dependencies = [
  "inkwell",
  "lexer",
- "new_parser",
  "parser",
  "stdlib",
 ]
@@ -149,9 +158,11 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 name = "sloppee"
 version = "0.1.0"
 dependencies = [
+ "backend_llvm",
  "inkwell",
  "lexer",
  "llvm",
+ "new_parser",
  "parser",
 ]
 
