@@ -1,13 +1,13 @@
 use lexer::{
     lexer::Lexer,
-    types::{Datatype, Operator},
+    types::{Datatype, Operator, Types},
 };
 
 use crate::{
     Parser,
     nodes::{
         ASTNodes, AssignStmt, Block, Conditional, Expression, ForLoop, Function, FunctionCall,
-        LetStmt, Literal, Loop, Method, Return, StructDef, Variable,
+        ImportCall, ImportDef, LetStmt, Literal, Loop, Method, Return, StructDef, Variable,
     },
 };
 
@@ -419,7 +419,6 @@ fn test_parse_full_5() {
     );
 }
 
-#[ignore = "impl imports, function calls"]
 #[test]
 fn test_parse_full_6() {
     let mut lexer = Lexer::new(
@@ -427,14 +426,57 @@ fn test_parse_full_6() {
     import std::io
 
     func main() i32 {
-        io:println("Hello World")
+        let void _ = io::println("Hello World")
         return 0
     }"#,
     );
 
     let mut parser = Parser::new(lexer.tokenize());
-    let _ast = parser.parse().unwrap();
-    todo!();
+    let ast = parser.parse().unwrap();
+    assert_eq!(
+        ast,
+        vec![
+            ASTNodes::ImportDef(ImportDef {
+                path: vec!["std".to_string(), "io".to_string()],
+            }),
+            ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Datatype::I32,
+                body: Block {
+                    body: vec![
+                        ASTNodes::LetStmt(LetStmt {
+                            name: "_".to_string(),
+                            value: Expression::Simple {
+                                left: Box::new(ASTNodes::ImportCall(ImportCall {
+                                    path: vec!["io".to_string()],
+                                    ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                                        name: "println".to_string(),
+                                        args: vec![Expression::String("Hello World".to_string())],
+                                    })),
+                                })),
+                                right: None,
+                                operator: None,
+                            },
+                            // TODO: void datatype
+                            datatype: Datatype::CUSTOM("void".to_string()),
+                            mutable: false,
+                        }),
+                        ASTNodes::Return(Return {
+                            value: Some(Expression::Simple {
+                                left: Box::new(ASTNodes::Literal(Literal {
+                                    value: "0".to_string(),
+                                    r#type: Types::NUMBER
+                                })),
+                                right: None,
+                                operator: None
+                            }),
+                        }),
+                    ],
+                },
+            })
+        ]
+    )
 }
 
 #[test]
@@ -518,7 +560,7 @@ fn test_parse_full_7() {
     )
 }
 
-#[ignore = "impl casts, imports, function calls"]
+#[ignore = "impl casts"]
 #[test]
 fn test_parse_full_8() {
     let mut lexer = Lexer::new(
@@ -530,9 +572,9 @@ fn test_parse_full_8() {
         let u32 b = a -> u32
         let f32 c = b -> f32
         
-        io:printflt(a)
-        io:printint(b)
-        io:printflt(c)
+        io::printflt(a)
+        io::printint(b)
+        io::printflt(c)
         
         return 0
     }"#,

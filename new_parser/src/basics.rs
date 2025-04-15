@@ -40,6 +40,12 @@ impl Parser {
             })
         };
 
+        if self.peek_if_type(Types::OPERATOR(Operator::PATH)).is_some() {
+            return self
+                .parse_import_call()
+                .map(|call| ASTNodes::ImportCall(call));
+        }
+
         while self.next_if_type(Types::OPERATOR(Operator::DOT)).is_some() {
             parent = if self.next_if_type(Types::IDENTIFIER_FUNC).is_some() {
                 let method = self.parse_function_call()?;

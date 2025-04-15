@@ -2,23 +2,24 @@ use lexer::types::{Datatype, Operator, Types};
 
 #[derive(Debug, PartialEq)]
 pub enum ASTNodes {
+    AssignStmt(AssignStmt),
+    Attr(Attr),
     Block(Block),
+    Conditional(Conditional),
     Expression(Expression),
     Function(Function),
     FunctionCall(FunctionCall),
+    ImportDef(ImportDef),
     ImportCall(ImportCall),
-    Literal(Literal),
-    Token(Types),
-    Return(Return),
-    Variable(Variable),
     LetStmt(LetStmt),
-    AssignStmt(AssignStmt),
-    StructDef(StructDef),
-    Conditional(Conditional),
+    Literal(Literal),
     Loop(Loop),
     ForLoop(ForLoop),
-    Attr(Attr),
     Method(Method),
+    Return(Return),
+    StructDef(StructDef),
+    Token(Types),
+    Variable(Variable),
 }
 
 #[derive(Debug, PartialEq)]
@@ -96,7 +97,6 @@ pub struct LetStmt {
 pub struct FunctionCall {
     pub name: String,
     pub args: Vec<Expression>,
-    // pub imported: Option<Vec<String>>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -106,7 +106,7 @@ pub struct StructDef {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct ImportCall {
+pub struct ImportDef {
     pub path: Vec<String>,
 }
 
@@ -146,4 +146,10 @@ pub struct ForLoop {
     pub increment: Variable,
     pub iterator: Expression,
     pub body: Block,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ImportCall {
+    pub path: Vec<String>,
+    pub ident: Box<ASTNodes>,
 }
