@@ -12,7 +12,10 @@ impl Parser {
 
         let (else_if_condition, else_if_body) = self.parse_else_if()?;
 
-        if self.current_with_type(Types::KEYWORD(Keyword::ELSE)).is_ok() {
+        if self
+            .current_with_type(Types::KEYWORD(Keyword::ELSE))
+            .is_ok()
+        {
             self.prev();
         }
 

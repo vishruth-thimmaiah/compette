@@ -3,11 +3,11 @@ use lexer::types::{Datatype, Delimiter, Types};
 use crate::parser_error;
 
 use super::{
+    Parser,
     nodes::{
         BreakNode, ExpressionParserNode, FunctionCallParserNode, FunctionParserNode, ReturnNode,
         ValueParserNode,
     },
-    Parser,
 };
 
 impl Parser {

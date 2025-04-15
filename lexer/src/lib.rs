@@ -17,4 +17,3 @@ pub fn lexer_error(char: u8, msg: &str, line: usize, column: usize) -> ! {
     eprintln!("{}", Backtrace::capture());
     exit(1)
 }
-

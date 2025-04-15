@@ -1,7 +1,7 @@
 use std::{
     fs,
     path::PathBuf,
-    process::{exit, Command},
+    process::{Command, exit},
 };
 
 use inkwell::module::Module;

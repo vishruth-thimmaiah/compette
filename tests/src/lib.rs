@@ -1,8 +1,8 @@
 use inkwell::context::Context;
 
 use lexer::lexer::Lexer;
-use parser::Parser;
 use llvm::codegen::CodeGen;
+use parser::Parser;
 
 mod conditionals;
 mod general;

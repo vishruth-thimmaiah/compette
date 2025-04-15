@@ -3,8 +3,8 @@ use lexer::types::Types;
 use crate::parser_error;
 
 use super::{
-    nodes::{ImportParserNode, ParserType},
     Parser,
+    nodes::{ImportParserNode, ParserType},
 };
 
 impl Parser {
