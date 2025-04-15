@@ -22,6 +22,7 @@ stdlib = { path = "./stdlib" }
 
 lexer = { path = "./lexer" }
 parser = { path = "./parser" }
+new_parser = { path = "./new_parser" }
 llvm = { path = "./llvm" }
 
 tests = { path = "./tests" }

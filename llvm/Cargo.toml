@@ -9,4 +9,5 @@ edition = "2024"
 inkwell = { workspace = true }
 stdlib = { workspace = true }
 parser = { workspace = true }
+new_parser = { workspace = true }
 lexer = { workspace = true }

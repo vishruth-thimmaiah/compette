@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl Parser {
-    pub fn parse_loop(&mut self) -> Result<ASTNodes> {
+    pub(crate) fn parse_loop(&mut self) -> Result<ASTNodes> {
         if self.next_if_type(Types::KEYWORD(Keyword::RANGE)).is_some() {
             return self.parse_for_loop().map(|f| ASTNodes::ForLoop(f));
         }
@@ -29,7 +29,7 @@ impl Parser {
         }))
     }
 
-    pub fn parse_for_loop(&mut self) -> Result<ForLoop> {
+    pub(crate) fn parse_for_loop(&mut self) -> Result<ForLoop> {
         let value = self.parse_variable()?;
         self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
         let increment = self.parse_variable()?;
