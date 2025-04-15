@@ -160,7 +160,9 @@ mod tests {
                         },
                         body: Block {
                             body: vec![ASTNodes::AssignStmt(AssignStmt {
-                                name: "a".to_string(),
+                                name: Box::new(ASTNodes::Variable(Variable {
+                                    name: "a".to_string(),
+                                })),
                                 value: Expression::Simple {
                                     left: Box::new(ASTNodes::Variable(Variable {
                                         name: "i".to_string(),

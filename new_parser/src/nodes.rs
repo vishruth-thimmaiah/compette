@@ -112,7 +112,7 @@ pub struct ImportDef {
 
 #[derive(Debug, PartialEq)]
 pub struct AssignStmt {
-    pub name: String,
+    pub name: Box<ASTNodes>,
     pub value: Expression,
 }
 

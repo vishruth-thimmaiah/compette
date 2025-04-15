@@ -47,12 +47,12 @@ impl Parser {
     }
 
     pub(crate) fn parse_assign_stmt(&mut self) -> Result<AssignStmt> {
-        let name = self.current_with_type(Types::IDENTIFIER)?;
+        let name = self.parse_complex_variable()?;
         self.next_with_type(Types::OPERATOR(Operator::ASSIGN))?;
         let value = self.parse_expression(vec![Types::NL, Types::DELIMITER(Delimiter::RBRACE)])?;
 
         Ok(AssignStmt {
-            name: name.value.unwrap(),
+            name: Box::new(name),
             value,
         })
     }
@@ -62,7 +62,7 @@ impl Parser {
 mod tests {
     use lexer::{lexer::Lexer, types::Datatype};
 
-    use crate::nodes::{ASTNodes, Block, Expression, Function, LetStmt, Literal, Variable};
+    use crate::nodes::{ASTNodes, Attr, Block, Expression, Function, LetStmt, Literal, Variable};
 
     use super::*;
 
@@ -159,7 +159,48 @@ mod tests {
                 return_type: Datatype::U32,
                 body: Block {
                     body: vec![ASTNodes::AssignStmt(AssignStmt {
-                        name: "a".to_string(),
+                        name: Box::new(ASTNodes::Variable(Variable {
+                            name: "a".to_string(),
+                        })),
+                        value: Expression::Simple {
+                            left: Box::new(ASTNodes::Literal(Literal {
+                                value: "1".to_string(),
+                                r#type: lexer::types::Types::NUMBER
+                            })),
+                            right: Some(Box::new(ASTNodes::Literal(Literal {
+                                value: "7".to_string(),
+                                r#type: lexer::types::Types::NUMBER
+                            }))),
+                            operator: Some(Operator::PLUS)
+                        },
+                    })]
+                },
+            })]
+        );
+    }
+
+    #[test]
+    fn test_parse_assign_to_attr() {
+        let mut lexer = Lexer::new("func main() u32 { a.b = 1 + 7 }");
+
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse().unwrap();
+        assert_eq!(
+            ast,
+            vec![ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Datatype::U32,
+                body: Block {
+                    body: vec![ASTNodes::AssignStmt(AssignStmt {
+                        name: Box::new(ASTNodes::Attr(Attr {
+                            name: Variable {
+                                name: "b".to_string()
+                            },
+                            parent: Box::new(ASTNodes::Variable(Variable {
+                                name: "a".to_string()
+                            }))
+                        })),
                         value: Expression::Simple {
                             left: Box::new(ASTNodes::Literal(Literal {
                                 value: "1".to_string(),

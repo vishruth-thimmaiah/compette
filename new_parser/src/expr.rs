@@ -202,7 +202,7 @@ impl Parser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lexer::lexer::{Lexer, Token};
+    use lexer::lexer::Lexer;
 
     #[test]
     fn test_parse_expression() {

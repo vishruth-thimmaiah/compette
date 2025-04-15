@@ -305,7 +305,9 @@ fn test_parse_full_4() {
                         condition: None,
                         body: Block {
                             body: vec![ASTNodes::AssignStmt(AssignStmt {
-                                name: "a".to_string(),
+                                name: Box::new(ASTNodes::Variable(Variable {
+                                    name: "a".to_string(),
+                                })),
                                 value: Expression::Simple {
                                     left: Box::new(ASTNodes::Variable(Variable {
                                         name: "a".to_string(),
@@ -426,7 +428,7 @@ fn test_parse_full_6() {
     import std::io
 
     func main() i32 {
-        let void _ = io::println("Hello World")
+        _ = io::println("Hello World")
         return 0
     }"#,
     );
@@ -445,8 +447,10 @@ fn test_parse_full_6() {
                 return_type: Datatype::I32,
                 body: Block {
                     body: vec![
-                        ASTNodes::LetStmt(LetStmt {
-                            name: "_".to_string(),
+                        ASTNodes::AssignStmt(AssignStmt {
+                            name: Box::new(ASTNodes::Variable(Variable {
+                                name: "_".to_string(),
+                            })),
                             value: Expression::Simple {
                                 left: Box::new(ASTNodes::ImportCall(ImportCall {
                                     path: vec!["io".to_string()],
@@ -458,9 +462,6 @@ fn test_parse_full_6() {
                                 right: None,
                                 operator: None,
                             },
-                            // TODO: void datatype
-                            datatype: Datatype::CUSTOM("void".to_string()),
-                            mutable: false,
                         }),
                         ASTNodes::Return(Return {
                             value: Some(Expression::Simple {
@@ -571,9 +572,9 @@ fn test_parse_full_8() {
         let u32 b = a -> u32
         let f32 c = b -> f32
         
-        let void _ = io::printflt(a)
-        let void _ = io::printint(b)
-        let void _ = io::printflt(c)
+        _ = io::printflt(a)
+        _ = io::printint(b)
+        _ = io::printflt(c)
         
         return 0
     }"#,
@@ -634,8 +635,10 @@ fn test_parse_full_8() {
                             datatype: Datatype::F32,
                             mutable: false
                         }),
-                        ASTNodes::LetStmt(LetStmt {
-                            name: "_".to_string(),
+                        ASTNodes::AssignStmt(AssignStmt {
+                            name: Box::new(ASTNodes::Variable(Variable {
+                                name: "_".to_string(),
+                            })),
                             value: Expression::Simple {
                                 left: Box::new(ASTNodes::ImportCall(ImportCall {
                                     path: vec!["io".to_string()],
@@ -653,11 +656,11 @@ fn test_parse_full_8() {
                                 right: None,
                                 operator: None,
                             },
-                            datatype: Datatype::CUSTOM("void".to_string()),
-                            mutable: false,
                         }),
-                        ASTNodes::LetStmt(LetStmt {
-                            name: "_".to_string(),
+                        ASTNodes::AssignStmt(AssignStmt {
+                            name: Box::new(ASTNodes::Variable(Variable {
+                                name: "_".to_string(),
+                            })),
                             value: Expression::Simple {
                                 left: Box::new(ASTNodes::ImportCall(ImportCall {
                                     path: vec!["io".to_string()],
@@ -675,11 +678,11 @@ fn test_parse_full_8() {
                                 right: None,
                                 operator: None,
                             },
-                            datatype: Datatype::CUSTOM("void".to_string()),
-                            mutable: false,
                         }),
-                        ASTNodes::LetStmt(LetStmt {
-                            name: "_".to_string(),
+                        ASTNodes::AssignStmt(AssignStmt {
+                            name: Box::new(ASTNodes::Variable(Variable {
+                                name: "_".to_string(),
+                            })),
                             value: Expression::Simple {
                                 left: Box::new(ASTNodes::ImportCall(ImportCall {
                                     path: vec!["io".to_string()],
@@ -697,8 +700,6 @@ fn test_parse_full_8() {
                                 right: None,
                                 operator: None,
                             },
-                            datatype: Datatype::CUSTOM("void".to_string()),
-                            mutable: false,
                         }),
                         ASTNodes::Return(Return {
                             value: Some(Expression::Simple {
@@ -816,7 +817,9 @@ fn test_parse_full_9() {
                         },
                         body: Block {
                             body: vec![ASTNodes::AssignStmt(AssignStmt {
-                                name: "a".to_string(),
+                                name: Box::new(ASTNodes::Variable(Variable {
+                                    name: "a".to_string(),
+                                })),
                                 value: Expression::Simple {
                                     left: Box::new(ASTNodes::Variable(Variable {
                                         name: "i".to_string(),
