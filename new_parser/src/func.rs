@@ -12,7 +12,14 @@ impl Parser {
     pub(crate) fn parse_function_def(&mut self) -> Result<Function> {
         let name = self.next_with_type(Types::IDENTIFIER_FUNC)?;
         let args = self.parse_function_args()?;
-        let return_type = self.parse_datatype()?;
+        let return_type = if self
+            .peek_if_type(Types::DELIMITER(Delimiter::LBRACE))
+            .is_some()
+        {
+            None
+        } else {
+            Some(self.parse_datatype()?)
+        };
         let body = self.parse_scoped_block()?;
 
         Ok(Function {
@@ -118,7 +125,23 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
+                body: Block { body: vec![] },
+            })]
+        );
+    }
+
+    #[test]
+    fn test_parse_function_def_no_ret() {
+        let mut lexer = Lexer::new("func main() {}");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse().unwrap();
+        assert_eq!(
+            ast,
+            vec![ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: None,
                 body: Block { body: vec![] },
             })]
         );
@@ -134,7 +157,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::Return(Return { value: None })]
                 },
@@ -152,7 +175,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::Return(Return {
                         value: Some(Expression::Simple {
@@ -182,7 +205,7 @@ mod tests {
                     ("a".to_string(), Datatype::U32),
                     ("b".to_string(), Datatype::U32)
                 ],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block { body: vec![] },
             })]
         );
@@ -198,7 +221,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::FunctionCall(FunctionCall {
                         name: "call".to_string(),
@@ -219,7 +242,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::LetStmt(LetStmt {
                         name: "a".to_string(),

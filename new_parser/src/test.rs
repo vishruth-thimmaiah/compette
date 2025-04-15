@@ -28,7 +28,7 @@ fn test_parse_full_1() {
         vec![ASTNodes::Function(Function {
             name: "main".to_string(),
             args: vec![],
-            return_type: Datatype::U32,
+            return_type: Some(Datatype::U32),
             body: Block {
                 body: vec![
                     ASTNodes::LetStmt(LetStmt {
@@ -89,7 +89,7 @@ fn test_parse_full_2() {
                     ("e".to_string(), Datatype::U32),
                     ("f".to_string(), Datatype::U32)
                 ],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::Return(Return {
                         value: Some(Expression::Simple {
@@ -107,7 +107,7 @@ fn test_parse_full_2() {
             ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![
                         ASTNodes::LetStmt(LetStmt {
@@ -196,7 +196,7 @@ fn test_parse_full_3() {
         vec![ASTNodes::Function(Function {
             name: "main".to_string(),
             args: vec![],
-            return_type: Datatype::U32,
+            return_type: Some(Datatype::U32),
             body: Block {
                 body: vec![
                     ASTNodes::Conditional(Conditional {
@@ -285,7 +285,7 @@ fn test_parse_full_4() {
         vec![ASTNodes::Function(Function {
             name: "main".to_string(),
             args: vec![],
-            return_type: Datatype::U32,
+            return_type: Some(Datatype::U32),
             body: Block {
                 body: vec![
                     ASTNodes::LetStmt(LetStmt {
@@ -354,7 +354,7 @@ fn test_parse_full_5() {
         vec![ASTNodes::Function(Function {
             name: "main".to_string(),
             args: vec![],
-            return_type: Datatype::U32,
+            return_type: Some(Datatype::U32),
             body: Block {
                 body: vec![
                     ASTNodes::LetStmt(LetStmt {
@@ -444,7 +444,7 @@ fn test_parse_full_6() {
             ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::I32,
+                return_type: Some(Datatype::I32),
                 body: Block {
                     body: vec![
                         ASTNodes::AssignStmt(AssignStmt {
@@ -513,7 +513,7 @@ fn test_parse_full_7() {
             ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![
                         ASTNodes::LetStmt(LetStmt {
@@ -591,7 +591,7 @@ fn test_parse_full_8() {
             ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![
                         ASTNodes::LetStmt(LetStmt {
@@ -738,7 +738,7 @@ fn test_parse_full_9() {
         vec![ASTNodes::Function(Function {
             name: "main".to_string(),
             args: vec![],
-            return_type: Datatype::U32,
+            return_type: Some(Datatype::U32),
             body: Block {
                 body: vec![
                     ASTNodes::LetStmt(LetStmt {

@@ -17,10 +17,10 @@ impl<'ctx> CodeGen<'ctx> {
             Datatype::BOOL => self.context.bool_type().into(),
             Datatype::F32 => self.context.f32_type().into(),
             Datatype::F64 => self.context.f64_type().into(),
-            Datatype::NONE => todo!(),
             Datatype::STRING(_) => todo!(),
             Datatype::NARRAY(_) => todo!(),
             Datatype::CUSTOM(_) => todo!(),
+            Datatype::NONE => unreachable!(),
             // To be removed
             _ => unreachable!(),
         }

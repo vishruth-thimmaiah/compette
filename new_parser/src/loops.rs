@@ -67,7 +67,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::Loop(Loop {
                         condition: None,
@@ -99,7 +99,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::Loop(Loop {
                         condition: Some(Expression::Simple {
@@ -142,7 +142,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::ForLoop(ForLoop {
                         value: Variable {

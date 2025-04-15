@@ -26,7 +26,7 @@ pub enum ASTNodes {
 pub struct Function {
     pub name: String,
     pub args: Vec<(String, Datatype)>,
-    pub return_type: Datatype,
+    pub return_type: Option<Datatype>,
     pub body: Block,
 }
 

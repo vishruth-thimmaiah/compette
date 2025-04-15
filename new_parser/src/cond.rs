@@ -66,7 +66,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::Conditional(Conditional {
                         condition: Expression::Simple {
@@ -108,7 +108,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::Conditional(Conditional {
                         condition: Expression::Simple {
@@ -163,7 +163,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::Conditional(Conditional {
                         condition: Expression::Simple {

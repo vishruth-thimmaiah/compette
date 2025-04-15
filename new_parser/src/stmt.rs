@@ -77,7 +77,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::LetStmt(LetStmt {
                         name: "a".to_string(),
@@ -108,7 +108,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::LetStmt(LetStmt {
                         name: "b".to_string(),
@@ -156,7 +156,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::AssignStmt(AssignStmt {
                         name: Box::new(ASTNodes::Variable(Variable {
@@ -190,7 +190,7 @@ mod tests {
             vec![ASTNodes::Function(Function {
                 name: "main".to_string(),
                 args: vec![],
-                return_type: Datatype::U32,
+                return_type: Some(Datatype::U32),
                 body: Block {
                     body: vec![ASTNodes::AssignStmt(AssignStmt {
                         name: Box::new(ASTNodes::Attr(Attr {
