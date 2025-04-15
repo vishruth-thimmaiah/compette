@@ -2,9 +2,7 @@ name: Run Tests
 
 on:
   push:
-    branches: [ "master" ]
   pull_request:
-    branches: [ "master" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -12,16 +10,14 @@ env:
 jobs:
   tests:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
+
     - name: Install LLVM and Clang
-      uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: "18"
-    - name: llvm-config
-      run: llvm-config --version --bindir --libdir
+      run: sudo apt-get install -y llvm llvm-dev clang libclang1 libclang-dev
+
     - name: Run tests
       run: cargo test --verbose
