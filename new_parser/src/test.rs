@@ -560,7 +560,6 @@ fn test_parse_full_7() {
     )
 }
 
-#[ignore = "impl casts"]
 #[test]
 fn test_parse_full_8() {
     let mut lexer = Lexer::new(
@@ -572,17 +571,150 @@ fn test_parse_full_8() {
         let u32 b = a -> u32
         let f32 c = b -> f32
         
-        io::printflt(a)
-        io::printint(b)
-        io::printflt(c)
+        let void _ = io::printflt(a)
+        let void _ = io::printint(b)
+        let void _ = io::printflt(c)
         
         return 0
     }"#,
     );
 
     let mut parser = Parser::new(lexer.tokenize());
-    let _ast = parser.parse().unwrap();
-    todo!();
+    let ast = parser.parse().unwrap();
+    assert_eq!(
+        ast,
+        vec![
+            ASTNodes::ImportDef(ImportDef {
+                path: vec!["std".to_string(), "io".to_string()],
+            }),
+            ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Datatype::U32,
+                body: Block {
+                    body: vec![
+                        ASTNodes::LetStmt(LetStmt {
+                            name: "a".to_string(),
+                            value: Expression::Simple {
+                                left: Box::new(ASTNodes::Literal(Literal {
+                                    value: "34.1".to_string(),
+                                    r#type: lexer::types::Types::NUMBER
+                                })),
+                                right: None,
+                                operator: None
+                            },
+                            datatype: Datatype::F32,
+                            mutable: false
+                        }),
+                        ASTNodes::LetStmt(LetStmt {
+                            name: "b".to_string(),
+                            value: Expression::Simple {
+                                left: Box::new(ASTNodes::Variable(Variable {
+                                    name: "a".to_string(),
+                                })),
+                                right: Some(Box::new(ASTNodes::Token(Types::DATATYPE(
+                                    Datatype::U32
+                                )))),
+                                operator: Some(Operator::CAST)
+                            },
+                            datatype: Datatype::U32,
+                            mutable: false
+                        }),
+                        ASTNodes::LetStmt(LetStmt {
+                            name: "c".to_string(),
+                            value: Expression::Simple {
+                                left: Box::new(ASTNodes::Variable(Variable {
+                                    name: "b".to_string(),
+                                })),
+                                right: Some(Box::new(ASTNodes::Token(Types::DATATYPE(
+                                    Datatype::F32
+                                )))),
+                                operator: Some(Operator::CAST)
+                            },
+                            datatype: Datatype::F32,
+                            mutable: false
+                        }),
+                        ASTNodes::LetStmt(LetStmt {
+                            name: "_".to_string(),
+                            value: Expression::Simple {
+                                left: Box::new(ASTNodes::ImportCall(ImportCall {
+                                    path: vec!["io".to_string()],
+                                    ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                                        name: "printflt".to_string(),
+                                        args: vec![Expression::Simple {
+                                            left: Box::new(ASTNodes::Variable(Variable {
+                                                name: "a".to_string(),
+                                            })),
+                                            right: None,
+                                            operator: None
+                                        }],
+                                    })),
+                                })),
+                                right: None,
+                                operator: None,
+                            },
+                            datatype: Datatype::CUSTOM("void".to_string()),
+                            mutable: false,
+                        }),
+                        ASTNodes::LetStmt(LetStmt {
+                            name: "_".to_string(),
+                            value: Expression::Simple {
+                                left: Box::new(ASTNodes::ImportCall(ImportCall {
+                                    path: vec!["io".to_string()],
+                                    ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                                        name: "printint".to_string(),
+                                        args: vec![Expression::Simple {
+                                            left: Box::new(ASTNodes::Variable(Variable {
+                                                name: "b".to_string(),
+                                            })),
+                                            right: None,
+                                            operator: None
+                                        }],
+                                    })),
+                                })),
+                                right: None,
+                                operator: None,
+                            },
+                            datatype: Datatype::CUSTOM("void".to_string()),
+                            mutable: false,
+                        }),
+                        ASTNodes::LetStmt(LetStmt {
+                            name: "_".to_string(),
+                            value: Expression::Simple {
+                                left: Box::new(ASTNodes::ImportCall(ImportCall {
+                                    path: vec!["io".to_string()],
+                                    ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                                        name: "printflt".to_string(),
+                                        args: vec![Expression::Simple {
+                                            left: Box::new(ASTNodes::Variable(Variable {
+                                                name: "c".to_string(),
+                                            })),
+                                            right: None,
+                                            operator: None
+                                        }],
+                                    })),
+                                })),
+                                right: None,
+                                operator: None,
+                            },
+                            datatype: Datatype::CUSTOM("void".to_string()),
+                            mutable: false,
+                        }),
+                        ASTNodes::Return(Return {
+                            value: Some(Expression::Simple {
+                                left: Box::new(ASTNodes::Literal(Literal {
+                                    value: "0".to_string(),
+                                    r#type: lexer::types::Types::NUMBER
+                                })),
+                                right: None,
+                                operator: None
+                            })
+                        })
+                    ]
+                },
+            })
+        ]
+    )
 }
 
 #[test]

@@ -35,6 +35,10 @@ impl Parser {
                 Types::IDENTIFIER => {
                     operands.push(self.parse_complex_variable()?);
                 }
+                Types::OPERATOR(Operator::CAST) => {
+                    operands.push(ASTNodes::Token(Types::DATATYPE(self.parse_cast()?)));
+                    operators.push(token.r#type);
+                }
                 Types::OPERATOR(ref op) => {
                     while !operators.is_empty() {
                         let pop_op = operators.last().unwrap();
@@ -188,12 +192,17 @@ impl Parser {
 
         return Ok(Expression::Struct(fields));
     }
+
+    fn parse_cast(&mut self) -> Result<Datatype> {
+        self.current_with_type(Types::OPERATOR(Operator::CAST))?;
+        return self.parse_datatype();
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lexer::lexer::Lexer;
+    use lexer::lexer::{Lexer, Token};
 
     #[test]
     fn test_parse_expression() {
@@ -328,6 +337,38 @@ mod tests {
                     }
                 )
             ])
+        );
+    }
+
+    #[test]
+    fn test_parse_cast() {
+        let mut lexer = Lexer::new("(23 + 43 * 3) -> f32 ");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
+        assert_eq!(
+            ast,
+            Expression::Simple {
+                left: Box::new(ASTNodes::Expression(Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "23".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: Some(Box::new(ASTNodes::Expression(Expression::Simple {
+                        left: Box::new(ASTNodes::Literal(Literal {
+                            value: "43".to_string(),
+                            r#type: Types::NUMBER
+                        })),
+                        right: Some(Box::new(ASTNodes::Literal(Literal {
+                            value: "3".to_string(),
+                            r#type: Types::NUMBER
+                        }))),
+                        operator: Some(Operator::MULTIPLY)
+                    }))),
+                    operator: Some(Operator::PLUS)
+                })),
+                right: Some(Box::new(ASTNodes::Token(Types::DATATYPE(Datatype::F32)))),
+                operator: Some(Operator::CAST)
+            }
         );
     }
 }
