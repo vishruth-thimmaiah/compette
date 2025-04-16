@@ -3,7 +3,10 @@ use inkwell::{
 };
 use new_parser::nodes::ASTNodes;
 
+mod block;
+mod expr;
 mod func;
+mod ops;
 mod utils;
 
 pub struct CodeGen<'ctx> {
