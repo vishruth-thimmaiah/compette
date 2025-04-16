@@ -2,12 +2,14 @@ use inkwell::{
     builder::Builder, context::Context, execution_engine::ExecutionEngine, module::Module,
 };
 use new_parser::nodes::ASTNodes;
+use structs::StructDefs;
 
 mod block;
 mod expr;
 mod func;
 mod ops;
 mod stmt;
+mod structs;
 mod utils;
 
 pub struct CodeGen<'ctx> {
@@ -16,6 +18,7 @@ pub struct CodeGen<'ctx> {
     pub module: Module<'ctx>,
     pub execution_engine: Option<ExecutionEngine<'ctx>>,
     pub tokens: Vec<ASTNodes>,
+    pub struct_defs: StructDefs<'ctx>,
 }
 
 impl<'ctx> CodeGen<'ctx> {
@@ -29,6 +32,8 @@ impl<'ctx> CodeGen<'ctx> {
             module,
             execution_engine,
             tokens,
+
+            struct_defs: StructDefs::default(),
         }
     }
 
@@ -36,7 +41,7 @@ impl<'ctx> CodeGen<'ctx> {
         for node in self.tokens.iter() {
             match node {
                 ASTNodes::Function(func) => self.impl_function_def(func)?,
-                ASTNodes::StructDef(_) => todo!(),
+                ASTNodes::StructDef(st) => self.def_struct(st),
                 ASTNodes::ImportDef(_) => todo!(),
                 _ => unreachable!(),
             }

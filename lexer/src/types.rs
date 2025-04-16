@@ -78,7 +78,7 @@ pub enum Datatype {
     STRING(usize),
     //TODO: remove after porting to new parser
     ARRAY(Box<ArrayDetails>),
-    NARRAY(Box<Datatype>),
+    NARRAY(Box<Datatype>, usize),
     CUSTOM(String),
     NONE,
 }

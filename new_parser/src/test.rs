@@ -385,7 +385,7 @@ fn test_parse_full_5() {
                                 operator: None
                             }
                         ]),
-                        datatype: Datatype::NARRAY(Box::new(Datatype::U32)),
+                        datatype: Datatype::NARRAY(Box::new(Datatype::U32), 3),
                         mutable: false
                     }),
                     ASTNodes::LetStmt(LetStmt {
@@ -743,7 +743,7 @@ fn test_parse_full_9() {
                 body: vec![
                     ASTNodes::LetStmt(LetStmt {
                         name: "array".to_string(),
-                        datatype: Datatype::NARRAY(Box::new(Datatype::U32)),
+                        datatype: Datatype::NARRAY(Box::new(Datatype::U32), 5),
                         mutable: false,
                         value: Expression::Array(vec![
                             Expression::Simple {

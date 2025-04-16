@@ -20,6 +20,8 @@ impl<'ctx> CodeGen<'ctx> {
             };
         }
 
+        // TODO: check if the last instruction is a terminator; if it is not, then we
+        // need to add a return instruction
         Ok(())
     }
 }

@@ -1,4 +1,7 @@
-use inkwell::{types::BasicTypeEnum, values::BasicValueEnum};
+use inkwell::{
+    types::{BasicType, BasicTypeEnum},
+    values::BasicValueEnum,
+};
 use lexer::types::{Operator, Types};
 use new_parser::nodes::{ASTNodes, Expression, Literal};
 
@@ -28,6 +31,34 @@ impl<'ctx> CodeGen<'ctx> {
                 }
                 return Ok(left_val);
             }
+            Expression::Array(arr) if dt.is_array_type() => {
+                let dt = dt.into_array_type();
+                let inner_dt = dt.get_element_type();
+                inner_dt.as_basic_type_enum();
+                let mut array_val = vec![];
+                for value in arr {
+                    array_val.push(self.impl_expr(value, inner_dt)?);
+                }
+                return Ok(self.dt_to_array(&inner_dt, array_val).into());
+            }
+            Expression::Struct(fields) if dt.is_struct_type() => {
+                let mut struct_vals = vec![None; fields.len()];
+                let dt = dt.into_struct_type();
+                let name = dt.get_name().unwrap().to_str().unwrap();
+
+                for (field, val) in fields {
+                    let field = self.struct_defs.get_field_index(name, field).unwrap();
+                    struct_vals[field] = Some(
+                        self.impl_expr(val, dt.get_field_type_at_index(field as u32).unwrap())
+                            .unwrap(),
+                    );
+                }
+                let struct_vals = struct_vals
+                    .into_iter()
+                    .map(|v| v.unwrap())
+                    .collect::<Vec<_>>();
+                Ok(dt.const_named_struct(&struct_vals).into())
+            }
             _ => todo!(),
         }
     }
@@ -39,7 +70,7 @@ impl<'ctx> CodeGen<'ctx> {
     ) -> Result<BasicValueEnum<'ctx>, ()> {
         match arm {
             ASTNodes::Literal(lit) => self.impl_literal(lit, dt),
-            _ => todo!(),
+            _ => todo!("Simple expr arm {:?}", arm),
         }
     }
 
@@ -49,7 +80,6 @@ impl<'ctx> CodeGen<'ctx> {
         right_val: BasicValueEnum<'ctx>,
         operator: &Operator,
     ) -> Result<BasicValueEnum<'ctx>, ()> {
-
         match operator {
             Operator::PLUS => self.add_binary_operation(&left_val, &right_val),
             Operator::MINUS => self.sub_binary_operation(&left_val, &right_val),
@@ -60,11 +90,7 @@ impl<'ctx> CodeGen<'ctx> {
             | Operator::GREATER
             | Operator::GREATER_EQUAL
             | Operator::LESSER
-            | Operator::LESSER_EQUAL => self.comp_binary_operation(
-                operator,
-                &left_val,
-                &right_val,
-            ),
+            | Operator::LESSER_EQUAL => self.comp_binary_operation(operator, &left_val, &right_val),
             _ => todo!("Binary operator {:?} not implemented", operator),
         }
     }

@@ -133,7 +133,7 @@ impl<'ctx> CodeGen<'ctx> {
                     .array_type(inner.length)
                     .into(),
             ),
-            Datatype::NARRAY(_) => todo!(),
+            Datatype::NARRAY(..) => todo!(),
 
             Datatype::NONE => None,
 

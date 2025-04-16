@@ -1,17 +1,23 @@
-use lexer::types::{Delimiter, Operator, Types};
+use lexer::types::{Datatype, Delimiter, Operator, Types};
 
 use crate::{
     Parser, Result,
-    nodes::{AssignStmt, LetStmt, StructDef},
+    nodes::{AssignStmt, Expression, LetStmt, StructDef},
 };
 
 impl Parser {
     pub(crate) fn parse_statement(&mut self) -> Result<LetStmt> {
-        let datatype = self.parse_datatype()?;
+        let mut datatype = self.parse_datatype()?;
         let mutable = self.next_if_type(Types::OPERATOR(Operator::NOT)).is_some();
         let name = self.next_with_type(Types::IDENTIFIER)?;
         self.next_with_type(Types::OPERATOR(Operator::ASSIGN))?;
         let value = self.parse_expression(vec![Types::NL, Types::DELIMITER(Delimiter::RBRACE)])?;
+
+        if let Expression::Array(ref vec) = value {
+            if let Datatype::NARRAY(inner, _) = datatype {
+                datatype = Datatype::NARRAY(inner, vec.len());
+            }
+        }
 
         Ok(LetStmt {
             name: name.value.unwrap(),

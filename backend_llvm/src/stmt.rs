@@ -37,4 +37,23 @@ entry:
 "#
         )
     }
+
+    #[test]
+    fn test_codegen_let_stmt_array() {
+        let data = "func main() { let u32[] a = [1, 2, 3, 4, 5] }";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define void @main() {
+entry:
+  %a = alloca [5 x i32], align 4
+  store [5 x i32] [i32 1, i32 2, i32 3, i32 4, i32 5], ptr %a, align 4
+}
+"#
+        )
+    }
 }

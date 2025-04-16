@@ -19,7 +19,7 @@ impl Parser {
             .is_some()
         {
             self.next_with_type(Types::DELIMITER(Delimiter::RBRACKET))?;
-            return Ok(Datatype::NARRAY(Box::new(dt)));
+            return Ok(Datatype::NARRAY(Box::new(dt), 0));
         }
         Ok(dt)
     }
@@ -84,7 +84,7 @@ mod tests {
         let mut lexer = Lexer::new("u32[]");
         let mut parser = Parser::new(lexer.tokenize());
         let ast = parser.parse_datatype().unwrap();
-        assert_eq!(ast, Datatype::NARRAY(Box::new(Datatype::U32)));
+        assert_eq!(ast, Datatype::NARRAY(Box::new(Datatype::U32), 0));
     }
 
     #[test]
