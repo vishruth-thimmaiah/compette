@@ -7,6 +7,7 @@ mod block;
 mod expr;
 mod func;
 mod ops;
+mod stmt;
 mod utils;
 
 pub struct CodeGen<'ctx> {

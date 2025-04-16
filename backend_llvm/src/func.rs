@@ -1,6 +1,6 @@
 use inkwell::{
     types::{BasicMetadataTypeEnum, BasicType},
-    values::FunctionValue,
+    values::{FunctionValue, InstructionValue},
 };
 use lexer::types::Datatype;
 use new_parser::nodes::{self, Return};
@@ -49,14 +49,13 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         built_func: FunctionValue<'ctx>,
         ret: &Return,
-    ) -> Result<(), ()> {
+    ) -> Result<InstructionValue<'ctx>, ()> {
         if let Some(expr) = &ret.value {
             let ret_val = self.impl_expr(expr, built_func.get_type().get_return_type().unwrap())?;
-            self.builder.build_return(Some(&ret_val)).unwrap();
+            Ok(self.builder.build_return(Some(&ret_val)).unwrap())
         } else {
-            self.builder.build_return(None).unwrap();
+            Ok(self.builder.build_return(None).unwrap())
         }
-        Ok(())
     }
 }
 
