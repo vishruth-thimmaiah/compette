@@ -1,4 +1,4 @@
-use inkwell::values::BasicValueEnum;
+use inkwell::values::{BasicValueEnum, IntValue};
 use lexer::types::Operator;
 
 use crate::CodeGen;
@@ -9,7 +9,7 @@ impl<'ctx> CodeGen<'ctx> {
         op: &Operator,
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
-    ) -> Result<BasicValueEnum<'ctx>, ()> {
+    ) -> Result<IntValue<'ctx>, ()> {
         let (ip, fp) = self.ops_to_llvm_predicate(op);
         if left.is_int_value() && right.is_int_value() {
             let left_int = left.into_int_value();
@@ -17,16 +17,14 @@ impl<'ctx> CodeGen<'ctx> {
             Ok(self
                 .builder
                 .build_int_compare(ip, left_int, right_int, "")
-                .unwrap()
-                .into())
+                .unwrap())
         } else {
             let left_float = left.into_float_value();
             let right_float = right.into_float_value();
             Ok(self
                 .builder
                 .build_float_compare(fp, left_float, right_float, "")
-                .unwrap()
-                .into())
+                .unwrap())
         }
     }
 

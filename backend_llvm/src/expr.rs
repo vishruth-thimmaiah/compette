@@ -92,7 +92,9 @@ impl<'ctx> CodeGen<'ctx> {
             | Operator::GREATER
             | Operator::GREATER_EQUAL
             | Operator::LESSER
-            | Operator::LESSER_EQUAL => self.comp_binary_operation(operator, &left_val, &right_val),
+            | Operator::LESSER_EQUAL => self
+                .comp_binary_operation(operator, &left_val, &right_val)
+                .map(|v| v.into()),
             _ => todo!("Binary operator {:?} not implemented", operator),
         }
     }

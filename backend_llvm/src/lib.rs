@@ -6,6 +6,7 @@ use stmt::Variables;
 use structs::StructDefs;
 
 mod block;
+mod cond;
 mod expr;
 mod func;
 mod ops;
