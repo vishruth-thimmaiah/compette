@@ -64,7 +64,7 @@ mod tests {
 
     #[test]
     fn test_codegen_function_def() {
-        let data = "func main() i32 { }";
+        let data = "func main() i32 { return 0 }";
         let result = crate::get_codegen_for_string(data).unwrap();
 
         assert_eq!(
@@ -74,6 +74,7 @@ source_filename = "main"
 
 define i32 @main() {
 entry:
+  ret i32 0
 }
 "#
         )
@@ -91,6 +92,7 @@ source_filename = "main"
 
 define void @main() {
 entry:
+  ret void
 }
 "#
         )
@@ -98,7 +100,7 @@ entry:
 
     #[test]
     fn test_codegen_function_def_with_args() {
-        let data = "func main(a u32, b u32) u32 {}";
+        let data = "func main(a u32, b u32) {}";
         let result = crate::get_codegen_for_string(data).unwrap();
 
         assert_eq!(
@@ -106,8 +108,9 @@ entry:
             r#"; ModuleID = 'main'
 source_filename = "main"
 
-define i32 @main(i32 %a, i32 %b) {
+define void @main(i32 %a, i32 %b) {
 entry:
+  ret void
 }
 "#
         )

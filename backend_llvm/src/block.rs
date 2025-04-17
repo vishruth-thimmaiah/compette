@@ -20,8 +20,13 @@ impl<'ctx> CodeGen<'ctx> {
             };
         }
 
-        // TODO: check if the last instruction is a terminator; if it is not, then we
-        // need to add a return instruction
+        if basic_block.get_terminator().is_none() {
+            if built_func.get_type().get_return_type().is_none() {
+                self.builder.build_return(None).unwrap();
+            } else {
+                return Err(());
+            }
+        }
         Ok(())
     }
 

@@ -59,6 +59,7 @@ define void @main() {
 entry:
   %a = alloca i32, align 4
   store i32 5, ptr %a, align 4
+  ret void
 }
 "#
         )
@@ -78,6 +79,7 @@ define void @main() {
 entry:
   %a = alloca [5 x i32], align 4
   store [5 x i32] [i32 1, i32 2, i32 3, i32 4, i32 5], ptr %a, align 4
+  ret void
 }
 "#
         )

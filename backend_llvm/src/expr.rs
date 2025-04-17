@@ -136,7 +136,7 @@ impl<'ctx> CodeGen<'ctx> {
 mod tests {
     #[test]
     fn test_impl_expr() {
-        let data = "func main() u32 { let u32 a = 1 + 2 * 3 - 10 / 5 }";
+        let data = "func main() { let u32 a = 1 + 2 * 3 - 10 / 5 }";
         let result = crate::get_codegen_for_string(data).unwrap();
 
         assert_eq!(
@@ -144,10 +144,11 @@ mod tests {
             r#"; ModuleID = 'main'
 source_filename = "main"
 
-define i32 @main() {
+define void @main() {
 entry:
   %a = alloca i32, align 4
   store i32 5, ptr %a, align 4
+  ret void
 }
 "#
         )
