@@ -129,8 +129,10 @@ impl<'ctx> CodeGen<'ctx> {
         var: &Variable,
         dt: BasicTypeEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, ()> {
-        let ptr = self.var_ptrs.get(&var.name).ok_or(())?;
-        self.builder.build_load(dt, ptr, &var.name).map_err(|_| ())
+        let var_data = self.var_ptrs.get(&var.name).ok_or(())?;
+        self.builder
+            .build_load(dt, var_data.ptr, &var.name)
+            .map_err(|_| ())
     }
 }
 

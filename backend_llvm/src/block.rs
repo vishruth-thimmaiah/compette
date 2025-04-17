@@ -24,6 +24,9 @@ impl<'ctx> CodeGen<'ctx> {
                 ASTNodes::Return(ret) => {
                     self.impl_function_return(built_func, ret)?;
                 }
+                ASTNodes::AssignStmt(stmt) => {
+                    self.impl_assign_stmt(stmt)?;
+                }
                 _ => todo!(),
             };
         }
