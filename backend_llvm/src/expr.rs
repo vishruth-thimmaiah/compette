@@ -3,7 +3,7 @@ use inkwell::{
     values::BasicValueEnum,
 };
 use lexer::types::{Operator, Types};
-use new_parser::nodes::{ASTNodes, Expression, Literal};
+use new_parser::nodes::{ASTNodes, Expression, Literal, Variable};
 
 use crate::CodeGen;
 
@@ -70,6 +70,8 @@ impl<'ctx> CodeGen<'ctx> {
     ) -> Result<BasicValueEnum<'ctx>, ()> {
         match arm {
             ASTNodes::Literal(lit) => self.impl_literal(lit, dt),
+            ASTNodes::Variable(var) => self.impl_variable(var, dt),
+            ASTNodes::Expression(expr) => self.impl_expr(expr, dt),
             _ => todo!("Simple expr arm {:?}", arm),
         }
     }
@@ -118,5 +120,69 @@ impl<'ctx> CodeGen<'ctx> {
             }
             _ => todo!(),
         }
+    }
+
+    fn impl_variable(
+        &self,
+        var: &Variable,
+        dt: BasicTypeEnum<'ctx>,
+    ) -> Result<BasicValueEnum<'ctx>, ()> {
+        let ptr = self.var_ptrs.get(&var.name).ok_or(())?;
+        self.builder.build_load(dt, ptr, &var.name).map_err(|_| ())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_impl_expr() {
+        let data = "func main() u32 { let u32 a = 1 + 2 * 3 - 10 / 5 }";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %a = alloca i32, align 4
+  store i32 5, ptr %a, align 4
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_impl_expr_with_vars() {
+        let data = "func main() u32 { 
+    let u32 a = 1
+    let u32 b = 2
+    let u32 c = a + b
+    return c
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %a = alloca i32, align 4
+  store i32 1, ptr %a, align 4
+  %b = alloca i32, align 4
+  store i32 2, ptr %b, align 4
+  %a1 = load i32, ptr %a, align 4
+  %b2 = load i32, ptr %b, align 4
+  %0 = add i32 %a1, %b2
+  %c = alloca i32, align 4
+  store i32 %0, ptr %c, align 4
+  %c3 = load i32, ptr %c, align 4
+  ret i32 %c3
+}
+"#
+        )
     }
 }

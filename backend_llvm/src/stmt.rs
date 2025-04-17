@@ -1,7 +1,32 @@
-use inkwell::values::InstructionValue;
+use std::{cell::RefCell, collections::HashMap};
+
+use inkwell::values::{InstructionValue, PointerValue};
 use new_parser::nodes;
 
 use crate::CodeGen;
+
+#[derive(Debug, Default)]
+pub struct Variables<'ctx> {
+    vars: RefCell<HashMap<String, PointerValue<'ctx>>>,
+}
+
+impl<'ctx> Variables<'ctx> {
+    pub(crate) fn get(&self, name: &str) -> Option<PointerValue<'ctx>> {
+        self.vars.borrow().get(name).cloned()
+    }
+
+    pub(crate) fn insert(&self, name: &str, ptr: PointerValue<'ctx>) {
+        self.vars.borrow_mut().insert(name.to_string(), ptr);
+    }
+
+    pub(crate) fn remove(&self, name: &str) {
+        self.vars.borrow_mut().remove(name);
+    }
+
+    pub(crate) fn clear(&self) {
+        self.vars.borrow_mut().clear();
+    }
+}
 
 impl<'ctx> CodeGen<'ctx> {
     pub(crate) fn impl_let_stmt(
@@ -12,6 +37,7 @@ impl<'ctx> CodeGen<'ctx> {
         let expr = self.impl_expr(&stmt.value, dt)?;
 
         let ptr = self.builder.build_alloca(dt, &stmt.name).map_err(|_| ())?;
+        self.var_ptrs.insert(&stmt.name, ptr);
 
         self.builder.build_store(ptr, expr).map_err(|_| ())
     }

@@ -28,7 +28,7 @@ impl<'ctx> CodeGen<'ctx> {
             arg.set_name(&func.args[index].0);
         }
 
-        self.codegen_block(&func.body, built_func)?;
+        self.codegen_function_block(&func.body, built_func)?;
 
         Ok(())
     }

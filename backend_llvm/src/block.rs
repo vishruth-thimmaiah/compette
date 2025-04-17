@@ -24,4 +24,14 @@ impl<'ctx> CodeGen<'ctx> {
         // need to add a return instruction
         Ok(())
     }
+
+    pub(crate) fn codegen_function_block(
+        &self,
+        block: &Block,
+        built_func: FunctionValue<'ctx>,
+    ) -> Result<(), ()> {
+        self.codegen_block(block, built_func)?;
+        self.var_ptrs.clear();
+        Ok(())
+    }
 }

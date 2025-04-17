@@ -2,6 +2,7 @@ use inkwell::{
     builder::Builder, context::Context, execution_engine::ExecutionEngine, module::Module,
 };
 use new_parser::nodes::ASTNodes;
+use stmt::Variables;
 use structs::StructDefs;
 
 mod block;
@@ -18,7 +19,9 @@ pub struct CodeGen<'ctx> {
     pub module: Module<'ctx>,
     pub execution_engine: Option<ExecutionEngine<'ctx>>,
     pub tokens: Vec<ASTNodes>,
+
     pub struct_defs: StructDefs<'ctx>,
+    pub var_ptrs: Variables<'ctx>,
 }
 
 impl<'ctx> CodeGen<'ctx> {
@@ -34,6 +37,7 @@ impl<'ctx> CodeGen<'ctx> {
             tokens,
 
             struct_defs: StructDefs::default(),
+            var_ptrs: Variables::default(),
         }
     }
 
