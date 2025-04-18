@@ -7,8 +7,8 @@ use lexer::types::Datatype;
 use crate::CodeGen;
 
 impl<'ctx> CodeGen<'ctx> {
-    pub(crate) fn parser_to_llvm_dt(&self, bt: &Datatype) -> BasicTypeEnum<'ctx> {
-        match bt {
+    pub(crate) fn parser_to_llvm_dt(&self, dt: &Datatype) -> BasicTypeEnum<'ctx> {
+        match dt {
             Datatype::U8 => self.context.i8_type().into(),
             Datatype::U16 => self.context.i16_type().into(),
             Datatype::U32 => self.context.i32_type().into(),

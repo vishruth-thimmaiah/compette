@@ -137,8 +137,8 @@ impl Parser {
         match operator {
             Types::OPERATOR(Operator::PLUS) | Types::OPERATOR(Operator::MINUS) => 1,
             Types::OPERATOR(Operator::MULTIPLY) | Types::OPERATOR(Operator::DIVIDE) => 2,
+            Types::OPERATOR(Operator::CAST) => 3,
             Types::DELIMITER(Delimiter::LPAREN) => 0,
-            Types::OPERATOR(Operator::CAST) => 0,
             _ => unreachable!(),
         }
     }

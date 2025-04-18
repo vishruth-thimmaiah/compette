@@ -8,7 +8,10 @@ use new_parser::nodes::{self, Return};
 use crate::{CodeGen, CodeGenError};
 
 impl<'ctx> CodeGen<'ctx> {
-    pub(crate) fn impl_function_def(&self, func: &nodes::Function) -> Result<FunctionValue<'ctx>, CodeGenError> {
+    pub(crate) fn impl_function_def(
+        &self,
+        func: &nodes::Function,
+    ) -> Result<FunctionValue<'ctx>, CodeGenError> {
         // Function parameters
         let args = self.impl_function_args(&func.args)?;
 

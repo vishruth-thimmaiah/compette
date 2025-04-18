@@ -22,6 +22,14 @@ impl<'ctx> CodeGen<'ctx> {
                 let left_val = self.impl_simple_expr_arm(left, dt)?;
 
                 if let Some(right_val) = right {
+                    if let ASTNodes::Token(Types::DATATYPE(dt)) = &**right_val {
+                        operator.as_ref().unwrap().ne(&Operator::CAST).then_some(
+                            CodeGenError::new("Invalid expression; expected a cast operation"),
+                        );
+                        let dt = self.parser_to_llvm_dt(dt);
+                        return self.impl_cast_expr(left_val, dt);
+                    }
+
                     let right_val = self.impl_simple_expr_arm(right_val, dt)?;
                     return self.impl_binary_operation(
                         left_val,
@@ -127,15 +135,50 @@ impl<'ctx> CodeGen<'ctx> {
     fn impl_variable(
         &self,
         var: &Variable,
-        dt: BasicTypeEnum<'ctx>,
+        _dt: BasicTypeEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         let var_data = self
             .var_ptrs
             .get(&var.name)
             .ok_or(CodeGenError::new("Variable not found"))?;
         self.builder
-            .build_load(dt, var_data.ptr, &var.name)
+            .build_load(var_data.type_, var_data.ptr, &var.name)
             .map_err(CodeGenError::from_llvm_err)
+    }
+
+    fn impl_cast_expr(
+        &self,
+        left_expr: BasicValueEnum<'ctx>,
+        cast_to: BasicTypeEnum<'ctx>,
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
+        let left_type = left_expr.get_type();
+
+        let cast_fn = |op| {
+            self.builder
+                .build_cast(op, left_expr, cast_to, "")
+                .map_err(CodeGenError::from_llvm_err)
+        };
+
+        match (left_type, cast_to) {
+            _ if left_type == cast_to => Ok(left_expr),
+            (BasicTypeEnum::IntType(_), BasicTypeEnum::FloatType(_)) => {
+                cast_fn(inkwell::values::InstructionOpcode::SIToFP)
+            }
+            (BasicTypeEnum::FloatType(_), BasicTypeEnum::IntType(_)) => {
+                cast_fn(inkwell::values::InstructionOpcode::FPToSI)
+            }
+            (BasicTypeEnum::IntType(a), BasicTypeEnum::IntType(b))
+                if a.get_bit_width() < b.get_bit_width() =>
+            {
+                cast_fn(inkwell::values::InstructionOpcode::ZExt)
+            }
+            (BasicTypeEnum::IntType(a), BasicTypeEnum::IntType(b))
+                if a.get_bit_width() > b.get_bit_width() =>
+            {
+                cast_fn(inkwell::values::InstructionOpcode::Trunc)
+            }
+            _ => todo!(),
+        }
     }
 }
 
@@ -189,6 +232,118 @@ entry:
   store i32 %0, ptr %c, align 4
   %c3 = load i32, ptr %c, align 4
   ret i32 %c3
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_impl_cast_expr() {
+        let data = "func main() i32 { 
+    let f32 a = 3.24
+    let i32 b = a -> i32
+    return b
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %a = alloca float, align 4
+  store float 0x4009EB8520000000, ptr %a, align 4
+  %a1 = load float, ptr %a, align 4
+  %0 = fptosi float %a1 to i32
+  %b = alloca i32, align 4
+  store i32 %0, ptr %b, align 4
+  %b2 = load i32, ptr %b, align 4
+  ret i32 %b2
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_impl_cast_expr_with_ints() {
+        let data = "func main() i32 {
+    let i32 a = 8
+    let i64 b = 3
+    let i32 c = a + b -> i32
+    let i64 d = c -> i64 + b
+    return d -> i32
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %a = alloca i32, align 4
+  store i32 8, ptr %a, align 4
+  %b = alloca i64, align 8
+  store i64 3, ptr %b, align 4
+  %a1 = load i32, ptr %a, align 4
+  %b2 = load i64, ptr %b, align 4
+  %0 = trunc i64 %b2 to i32
+  %1 = add i32 %a1, %0
+  %c = alloca i32, align 4
+  store i32 %1, ptr %c, align 4
+  %c3 = load i32, ptr %c, align 4
+  %2 = zext i32 %c3 to i64
+  %b4 = load i64, ptr %b, align 4
+  %3 = add i64 %2, %b4
+  %d = alloca i64, align 8
+  store i64 %3, ptr %d, align 4
+  %d5 = load i64, ptr %d, align 4
+  %4 = trunc i64 %d5 to i32
+  ret i32 %4
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_impl_cast_expr_with_brackets() {
+        let data = "func main() i32 {
+    let i32 a = 3
+    let i32 b = 7
+    let i32 c = 10
+    
+    let i64 d = (a + b + c) -> i64
+    return d -> i32
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %a = alloca i32, align 4
+  store i32 3, ptr %a, align 4
+  %b = alloca i32, align 4
+  store i32 7, ptr %b, align 4
+  %c = alloca i32, align 4
+  store i32 10, ptr %c, align 4
+  %a1 = load i32, ptr %a, align 4
+  %b2 = load i32, ptr %b, align 4
+  %0 = add i32 %a1, %b2
+  %c3 = load i32, ptr %c, align 4
+  %1 = add i32 %0, %c3
+  %2 = zext i32 %1 to i64
+  %d = alloca i64, align 8
+  store i64 %2, ptr %d, align 4
+  %d4 = load i64, ptr %d, align 4
+  %3 = trunc i64 %d4 to i32
+  ret i32 %3
 }
 "#
         )
