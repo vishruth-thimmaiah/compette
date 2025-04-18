@@ -101,8 +101,8 @@ pub(crate) fn get_codegen_for_string(code: &str) -> Result<String, CodeGenError>
     let context = Context::create();
     let lexer = Lexer::new(code).tokenize();
     let parser = Parser::new(lexer).parse();
-    if parser.is_err() {
-        return Err(CodeGenError::new("Failed to parse"));
+    if let Err(err) = parser {
+        return Err(CodeGenError::new(&format!("Failed to parse: {}", err)));
     }
     let parser = parser.unwrap();
     let codegen = CodeGen::new(&context, parser);

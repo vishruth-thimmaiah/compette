@@ -2,7 +2,7 @@ use std::{cell::RefCell, collections::HashMap};
 
 use inkwell::{
     types::BasicTypeEnum,
-    values::{InstructionValue, PointerValue},
+    values::{FunctionValue, InstructionValue, PointerValue},
 };
 use new_parser::nodes::{self, ASTNodes};
 
@@ -56,10 +56,11 @@ impl<'ctx> Variables<'ctx> {
 impl<'ctx> CodeGen<'ctx> {
     pub(crate) fn impl_let_stmt(
         &self,
+        built_func: FunctionValue<'ctx>,
         stmt: &nodes::LetStmt,
     ) -> Result<InstructionValue<'ctx>, CodeGenError> {
         let dt = self.parser_to_llvm_dt(&stmt.datatype);
-        let expr = self.impl_expr(&stmt.value, dt)?;
+        let expr = self.impl_expr(&stmt.value, built_func, dt)?;
 
         let ptr = self
             .builder
@@ -74,6 +75,7 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub(crate) fn impl_assign_stmt(
         &self,
+        built_func: FunctionValue<'ctx>,
         stmt: &nodes::AssignStmt,
     ) -> Result<InstructionValue, CodeGenError> {
         let var = self.resolve_var(&stmt.name).and_then(|op| {
@@ -81,7 +83,7 @@ impl<'ctx> CodeGen<'ctx> {
                 .then_some(op)
                 .ok_or(CodeGenError::new("Variable not mutable"))
         })?;
-        let expr = self.impl_expr(&stmt.value, var.type_)?;
+        let expr = self.impl_expr(&stmt.value, built_func, var.type_)?;
 
         self.builder
             .build_store(var.ptr, expr)

@@ -1,6 +1,6 @@
 use inkwell::{
     types::{BasicType, BasicTypeEnum},
-    values::BasicValueEnum,
+    values::{BasicValueEnum, FunctionValue},
 };
 use lexer::types::{Operator, Types};
 use new_parser::nodes::{ASTNodes, Expression, Literal, Variable};
@@ -11,6 +11,7 @@ impl<'ctx> CodeGen<'ctx> {
     pub(crate) fn impl_expr(
         &self,
         node: &Expression,
+        built_func: FunctionValue<'ctx>,
         dt: BasicTypeEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         match node {
@@ -19,7 +20,7 @@ impl<'ctx> CodeGen<'ctx> {
                 right,
                 operator,
             } => {
-                let left_val = self.impl_simple_expr_arm(left, dt)?;
+                let left_val = self.impl_simple_expr_arm(left, built_func, dt)?;
 
                 if let Some(right_val) = right {
                     if let ASTNodes::Token(Types::DATATYPE(dt)) = &**right_val {
@@ -30,7 +31,7 @@ impl<'ctx> CodeGen<'ctx> {
                         return self.impl_cast_expr(left_val, dt);
                     }
 
-                    let right_val = self.impl_simple_expr_arm(right_val, dt)?;
+                    let right_val = self.impl_simple_expr_arm(right_val, built_func, dt)?;
                     return self.impl_binary_operation(
                         left_val,
                         right_val,
@@ -45,7 +46,7 @@ impl<'ctx> CodeGen<'ctx> {
                 inner_dt.as_basic_type_enum();
                 let mut array_val = vec![];
                 for value in arr {
-                    array_val.push(self.impl_expr(value, inner_dt)?);
+                    array_val.push(self.impl_expr(value, built_func, inner_dt)?);
                 }
                 return Ok(self.dt_to_array(&inner_dt, array_val).into());
             }
@@ -57,8 +58,12 @@ impl<'ctx> CodeGen<'ctx> {
                 for (field, val) in fields {
                     let field = self.struct_defs.get_field_index(name, field).unwrap();
                     struct_vals[field] = Some(
-                        self.impl_expr(val, dt.get_field_type_at_index(field as u32).unwrap())
-                            .unwrap(),
+                        self.impl_expr(
+                            val,
+                            built_func,
+                            dt.get_field_type_at_index(field as u32).unwrap(),
+                        )
+                        .unwrap(),
                     );
                 }
                 let struct_vals = struct_vals
@@ -74,12 +79,20 @@ impl<'ctx> CodeGen<'ctx> {
     fn impl_simple_expr_arm(
         &self,
         arm: &ASTNodes,
+        built_func: FunctionValue<'ctx>,
         dt: BasicTypeEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         match arm {
             ASTNodes::Literal(lit) => self.impl_literal(lit, dt),
-            ASTNodes::Variable(var) => self.impl_variable(var, dt),
-            ASTNodes::Expression(expr) => self.impl_expr(expr, dt),
+            ASTNodes::Variable(var) => self.impl_variable(var, built_func, dt),
+            ASTNodes::Expression(expr) => self.impl_expr(expr, built_func, dt),
+            ASTNodes::FunctionCall(call) => {
+                self.impl_function_call(built_func, call).and_then(|v| {
+                    v.ok_or(CodeGenError::new(
+                        "Function does not have an associated return type; it cannot be used as an expression",
+                    ))
+                })
+            }
             _ => todo!("Simple expr arm {:?}", arm),
         }
     }
@@ -135,15 +148,22 @@ impl<'ctx> CodeGen<'ctx> {
     fn impl_variable(
         &self,
         var: &Variable,
+        built_func: FunctionValue<'ctx>,
         _dt: BasicTypeEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
-        let var_data = self
-            .var_ptrs
-            .get(&var.name)
-            .ok_or(CodeGenError::new("Variable not found"))?;
-        self.builder
-            .build_load(var_data.type_, var_data.ptr, &var.name)
-            .map_err(CodeGenError::from_llvm_err)
+        if let Some(var_data) = self.var_ptrs.get(&var.name) {
+            self.builder
+                .build_load(var_data.type_, var_data.ptr, &var.name)
+                .map_err(CodeGenError::from_llvm_err)
+        } else {
+            built_func
+                .get_param_iter()
+                .find(|param| param.get_name().to_str().unwrap() == var.name)
+                .ok_or(CodeGenError::new(&format!(
+                    "Variable {} not found",
+                    var.name
+                )))
+        }
     }
 
     fn impl_cast_expr(

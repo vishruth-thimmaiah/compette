@@ -16,7 +16,7 @@ impl<'ctx> CodeGen<'ctx> {
         for node in &block.body {
             match node {
                 ASTNodes::LetStmt(let_stmt) => {
-                    self.impl_let_stmt(let_stmt)?;
+                    self.impl_let_stmt(built_func, let_stmt)?;
                 }
                 ASTNodes::Conditional(cond) => {
                     self.impl_if_stmt(built_func, cond)?;
@@ -25,7 +25,10 @@ impl<'ctx> CodeGen<'ctx> {
                     self.impl_function_return(built_func, ret)?;
                 }
                 ASTNodes::AssignStmt(stmt) => {
-                    self.impl_assign_stmt(stmt)?;
+                    self.impl_assign_stmt(built_func, stmt)?;
+                }
+                ASTNodes::FunctionCall(call) => {
+                    self.impl_function_call(built_func, call)?;
                 }
                 _ => todo!(),
             };

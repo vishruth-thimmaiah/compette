@@ -9,7 +9,7 @@ impl<'ctx> CodeGen<'ctx> {
         built_func: FunctionValue<'ctx>,
         stmt: &nodes::Conditional,
     ) -> Result<(), CodeGenError> {
-        let mut then_cond = self.impl_expr(&stmt.condition, self.context.bool_type().into())?;
+        let mut then_cond = self.impl_expr(&stmt.condition, built_func, self.context.bool_type().into())?;
         let mut then_block = self.codegen_block(&stmt.body, built_func, "then")?;
 
         let mut count = 0;
@@ -17,7 +17,7 @@ impl<'ctx> CodeGen<'ctx> {
         while let Some((cond, body)) = stmt.get_else_if_for(count) {
             let else_block = self.context.append_basic_block(built_func, "else");
             self.builder.position_at_end(else_block);
-            let else_cond = self.impl_expr(&cond, self.context.bool_type().into())?;
+            let else_cond = self.impl_expr(&cond, built_func, self.context.bool_type().into())?;
 
             self.builder
                 .position_at_end(then_block.get_previous_basic_block().unwrap());
