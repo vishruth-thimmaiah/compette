@@ -1,25 +1,25 @@
 use lexer::types::{Datatype, Delimiter, Operator, Types};
 
-use crate::nodes::{ASTNodes, Attr, Method, Variable};
+use crate::nodes::{ASTNodes, ArrayIndex, Attr, Method, Variable};
 
 use super::{Parser, ParserError, Result};
 
 impl Parser {
     pub(crate) fn parse_datatype(&mut self) -> Result<Datatype> {
         let token = self.next().ok_or(ParserError::default())?;
-        let dt = if let Types::DATATYPE(dt) = token.r#type {
+        let mut dt = if let Types::DATATYPE(dt) = token.r#type {
             dt
         } else if let Types::IDENTIFIER = token.r#type {
             Datatype::CUSTOM(token.value.unwrap())
         } else {
             return Err(ParserError::default());
         };
-        if self
+        while self
             .next_if_type(Types::DELIMITER(Delimiter::LBRACKET))
             .is_some()
         {
             self.next_with_type(Types::DELIMITER(Delimiter::RBRACKET))?;
-            return Ok(Datatype::NARRAY(Box::new(dt), 0));
+            dt = Datatype::NARRAY(Box::new(dt), 0);
         }
         Ok(dt)
     }
@@ -59,6 +59,17 @@ impl Parser {
                     parent: Box::new(parent),
                 })
             };
+        }
+
+        while self
+            .next_if_type(Types::DELIMITER(Delimiter::LBRACKET))
+            .is_some()
+        {
+            parent = ASTNodes::ArrayIndex(ArrayIndex {
+                array_var: Box::new(parent),
+                index: self.parse_expression(vec![Types::DELIMITER(Delimiter::RBRACKET)])?,
+            });
+            self.next_with_type(Types::DELIMITER(Delimiter::RBRACKET))?;
         }
 
         Ok(parent)
@@ -278,6 +289,64 @@ mod tests {
                         })),
                     })),
                 })),
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_complex_call_3() {
+        let mut lexer = Lexer::new("test[0]");
+        let mut parser = Parser::new(lexer.tokenize());
+        parser.next();
+        let ast = parser.parse_complex_variable().unwrap();
+        assert_eq!(
+            ast,
+            ASTNodes::ArrayIndex(ArrayIndex {
+                array_var: Box::new(ASTNodes::Variable(Variable {
+                    name: "test".to_string()
+                })),
+                index: Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "0".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                }
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_complex_call_4() {
+        let mut lexer = Lexer::new("test[0][1]");
+        let mut parser = Parser::new(lexer.tokenize());
+        parser.next();
+        let ast = parser.parse_complex_variable().unwrap();
+        assert_eq!(
+            ast,
+            ASTNodes::ArrayIndex(ArrayIndex {
+                array_var: Box::new(ASTNodes::ArrayIndex(ArrayIndex {
+                    array_var: Box::new(ASTNodes::Variable(Variable {
+                        name: "test".to_string(),
+                    })),
+                    index: Expression::Simple {
+                        left: Box::new(ASTNodes::Literal(Literal {
+                            value: "0".to_string(),
+                            r#type: Types::NUMBER
+                        })),
+                        right: None,
+                        operator: None
+                    },
+                })),
+                index: Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "1".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                }
             })
         );
     }

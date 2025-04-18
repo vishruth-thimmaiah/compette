@@ -3,6 +3,7 @@ use lexer::types::{Datatype, Operator, Types};
 #[derive(Debug, PartialEq)]
 pub enum ASTNodes {
     AssignStmt(AssignStmt),
+    ArrayIndex(ArrayIndex),
     Attr(Attr),
     Block(Block),
     Conditional(Conditional),
@@ -152,4 +153,10 @@ pub struct ForLoop {
 pub struct ImportCall {
     pub path: Vec<String>,
     pub ident: Box<ASTNodes>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ArrayIndex {
+    pub array_var: Box<ASTNodes>,
+    pub index: Expression,
 }

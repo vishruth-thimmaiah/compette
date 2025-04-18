@@ -76,7 +76,7 @@ impl Parser {
                     self.prev();
                     break;
                 }
-                _ => return Err(ParserError::new("Expected an expression", token)),
+                _ => return Err(ParserError::unexpected_token_err(token)),
             }
         }
         while !operators.is_empty() {

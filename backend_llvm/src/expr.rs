@@ -72,7 +72,7 @@ impl<'ctx> CodeGen<'ctx> {
                     .collect::<Vec<_>>();
                 Ok(dt.const_named_struct(&struct_vals).into())
             }
-            _ => todo!(),
+            _ => todo!("{:?}", node),
         }
     }
 
@@ -93,6 +93,8 @@ impl<'ctx> CodeGen<'ctx> {
                     ))
                 })
             }
+            ASTNodes::ArrayIndex(ind) => self.impl_array_index_val(built_func, ind),
+            ASTNodes::Attr(attr) => self.impl_attr_access_val(built_func, attr),
             _ => todo!("Simple expr arm {:?}", arm),
         }
     }

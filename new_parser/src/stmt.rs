@@ -13,11 +13,7 @@ impl Parser {
         self.next_with_type(Types::OPERATOR(Operator::ASSIGN))?;
         let value = self.parse_expression(vec![Types::NL, Types::DELIMITER(Delimiter::RBRACE)])?;
 
-        if let Expression::Array(ref vec) = value {
-            if let Datatype::NARRAY(inner, _) = datatype {
-                datatype = Datatype::NARRAY(inner, vec.len());
-            }
-        }
+        datatype = self.update_arr_datatype(datatype, &value);
 
         Ok(LetStmt {
             name: name.value.unwrap(),
@@ -25,6 +21,16 @@ impl Parser {
             datatype,
             mutable,
         })
+    }
+
+    fn update_arr_datatype(&mut self, mut dt: Datatype, arr: &Expression) -> Datatype {
+        if let Expression::Array(arr) = arr {
+            if let Datatype::NARRAY(mut inner, _) = dt {
+                inner = Box::new(self.update_arr_datatype(*inner, arr.get(0).unwrap()));
+                dt = Datatype::NARRAY(inner, arr.len());
+            }
+        }
+        dt
     }
 
     pub(crate) fn parse_struct_def(&mut self) -> Result<StructDef> {

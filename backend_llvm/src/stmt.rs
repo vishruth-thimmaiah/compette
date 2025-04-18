@@ -2,7 +2,7 @@ use std::{cell::RefCell, collections::HashMap};
 
 use inkwell::{
     types::BasicTypeEnum,
-    values::{FunctionValue, InstructionValue, PointerValue},
+    values::{BasicValueEnum, FunctionValue, InstructionValue, PointerValue},
 };
 use new_parser::nodes::{self, ASTNodes};
 
@@ -78,7 +78,7 @@ impl<'ctx> CodeGen<'ctx> {
         built_func: FunctionValue<'ctx>,
         stmt: &nodes::AssignStmt,
     ) -> Result<InstructionValue, CodeGenError> {
-        let var = self.resolve_var(&stmt.name).and_then(|op| {
+        let var = self.resolve_var(built_func, &stmt.name).and_then(|op| {
             op.mutable
                 .then_some(op)
                 .ok_or(CodeGenError::new("Variable not mutable"))
@@ -92,6 +92,7 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub(crate) fn resolve_var(
         &self,
+        built_func: FunctionValue<'ctx>,
         node: &nodes::ASTNodes,
     ) -> Result<Variable<'ctx>, CodeGenError> {
         match node {
@@ -99,8 +100,45 @@ impl<'ctx> CodeGen<'ctx> {
                 .var_ptrs
                 .get(&var.name)
                 .ok_or(CodeGenError::new("Variable not found"))?),
-            _ => todo!(),
+            ASTNodes::Attr(attr) => self.impl_attr_access(built_func, attr),
+            ASTNodes::ArrayIndex(ind) => self.impl_array_index(built_func, ind),
+            _ => todo!("{:?}", node),
         }
+    }
+
+    pub(crate) fn impl_array_index(
+        &self,
+        built_func: FunctionValue<'ctx>,
+        index: &nodes::ArrayIndex,
+    ) -> Result<Variable<'ctx>, CodeGenError> {
+        let mut array_var = self.resolve_var(built_func, &index.array_var)?;
+        let index = self.impl_expr(&index.index, built_func, self.context.i32_type().into())?;
+        let inner_dt = array_var.type_.into_array_type().get_element_type();
+        let ptr = unsafe {
+            self.builder
+                .build_in_bounds_gep(
+                    array_var.type_,
+                    array_var.ptr,
+                    &[self.context.i32_type().const_zero(), index.into_int_value()],
+                    "",
+                )
+                .map_err(CodeGenError::from_llvm_err)
+                .map(|v| v.into())
+        }?;
+        array_var.ptr = ptr;
+        array_var.type_ = inner_dt;
+        Ok(array_var)
+    }
+
+    pub(crate) fn impl_array_index_val(
+        &self,
+        built_func: FunctionValue<'ctx>,
+        ind: &nodes::ArrayIndex,
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
+        let array_var = self.impl_array_index(built_func, ind)?;
+        self.builder
+            .build_load(array_var.type_, array_var.ptr, "")
+            .map_err(CodeGenError::from_llvm_err)
     }
 }
 
@@ -167,6 +205,58 @@ entry:
   store i32 10, ptr %a, align 4
   %a1 = load i32, ptr %a, align 4
   ret i32 %a1
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_codegen_access_array() {
+        let data = "func main() u32 { 
+let u32[] a = [1, 2, 3, 4, 5]
+return a[2]
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %a = alloca [5 x i32], align 4
+  store [5 x i32] [i32 1, i32 2, i32 3, i32 4, i32 5], ptr %a, align 4
+  %0 = getelementptr inbounds [5 x i32], ptr %a, i32 0, i32 2
+  %1 = load i32, ptr %0, align 4
+  ret i32 %1
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_codegen_access_array_nested() {
+        let data = "func main() u32 { 
+let u32[][][] a = [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]]
+return a[2][1][0]
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %a = alloca [3 x [2 x [2 x i32]]], align 4
+  store [3 x [2 x [2 x i32]]] [[2 x [2 x i32]] [[2 x i32] [i32 1, i32 2], [2 x i32] [i32 3, i32 4]], [2 x [2 x i32]] [[2 x i32] [i32 5, i32 6], [2 x i32] [i32 7, i32 8]], [2 x [2 x i32]] [[2 x i32] [i32 9, i32 10], [2 x i32] [i32 11, i32 12]]], ptr %a, align 4
+  %0 = getelementptr inbounds [3 x [2 x [2 x i32]]], ptr %a, i32 0, i32 2
+  %1 = getelementptr inbounds [2 x [2 x i32]], ptr %0, i32 0, i32 1
+  %2 = getelementptr inbounds [2 x i32], ptr %1, i32 0, i32 0
+  %3 = load i32, ptr %2, align 4
+  ret i32 %3
 }
 "#
         )
