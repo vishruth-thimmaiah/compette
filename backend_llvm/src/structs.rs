@@ -3,7 +3,7 @@ use std::{cell::RefCell, collections::HashMap};
 use inkwell::types::StructType;
 use new_parser::nodes::StructDef;
 
-use crate::CodeGen;
+use crate::{CodeGen, CodeGenError};
 
 #[derive(Debug, Default)]
 pub struct StructDefs<'ctx> {
@@ -38,7 +38,10 @@ impl<'ctx> StructDefs<'ctx> {
 }
 
 impl<'ctx> CodeGen<'ctx> {
-    pub(crate) fn def_struct(&self, r#struct: &StructDef) {
+    pub(crate) fn def_struct(
+        &self,
+        r#struct: &StructDef,
+    ) -> Result<StructType<'ctx>, CodeGenError> {
         let struct_def = self.context.opaque_struct_type(&r#struct.name);
         let fields = r#struct
             .fields
@@ -48,6 +51,7 @@ impl<'ctx> CodeGen<'ctx> {
         struct_def.set_body(&fields, false);
 
         self.struct_defs.add_struct(r#struct, struct_def);
+        Ok(struct_def)
     }
 }
 

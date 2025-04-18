@@ -5,14 +5,14 @@ use inkwell::{
 use lexer::types::{Operator, Types};
 use new_parser::nodes::{ASTNodes, Expression, Literal, Variable};
 
-use crate::CodeGen;
+use crate::{CodeGen, CodeGenError};
 
 impl<'ctx> CodeGen<'ctx> {
     pub(crate) fn impl_expr(
         &self,
         node: &Expression,
         dt: BasicTypeEnum<'ctx>,
-    ) -> Result<BasicValueEnum<'ctx>, ()> {
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         match node {
             Expression::Simple {
                 left,
@@ -67,7 +67,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         arm: &ASTNodes,
         dt: BasicTypeEnum<'ctx>,
-    ) -> Result<BasicValueEnum<'ctx>, ()> {
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         match arm {
             ASTNodes::Literal(lit) => self.impl_literal(lit, dt),
             ASTNodes::Variable(var) => self.impl_variable(var, dt),
@@ -81,7 +81,7 @@ impl<'ctx> CodeGen<'ctx> {
         left_val: BasicValueEnum<'ctx>,
         right_val: BasicValueEnum<'ctx>,
         operator: &Operator,
-    ) -> Result<BasicValueEnum<'ctx>, ()> {
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         match operator {
             Operator::PLUS => self.add_binary_operation(&left_val, &right_val),
             Operator::MINUS => self.sub_binary_operation(&left_val, &right_val),
@@ -103,7 +103,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         lit: &Literal,
         dt: BasicTypeEnum<'ctx>,
-    ) -> Result<BasicValueEnum<'ctx>, ()> {
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         match lit.r#type {
             Types::BOOL => Ok(self
                 .context
@@ -128,11 +128,14 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         var: &Variable,
         dt: BasicTypeEnum<'ctx>,
-    ) -> Result<BasicValueEnum<'ctx>, ()> {
-        let var_data = self.var_ptrs.get(&var.name).ok_or(())?;
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
+        let var_data = self
+            .var_ptrs
+            .get(&var.name)
+            .ok_or(CodeGenError::new("Variable not found"))?;
         self.builder
             .build_load(dt, var_data.ptr, &var.name)
-            .map_err(|_| ())
+            .map_err(CodeGenError::from_llvm_err)
     }
 }
 

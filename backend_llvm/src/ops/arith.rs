@@ -1,13 +1,13 @@
 use inkwell::values::BasicValueEnum;
 
-use crate::CodeGen;
+use crate::{CodeGen, CodeGenError};
 
 impl<'ctx> CodeGen<'ctx> {
     pub(crate) fn add_binary_operation(
         &self,
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
-    ) -> Result<BasicValueEnum<'ctx>, ()> {
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         if left.is_int_value() && right.is_int_value() {
             let left_int = left.into_int_value();
             let right_int = right.into_int_value();
@@ -31,7 +31,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
-    ) -> Result<BasicValueEnum<'ctx>, ()> {
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         if left.is_int_value() && right.is_int_value() {
             let left_int = left.into_int_value();
             let right_int = right.into_int_value();
@@ -55,7 +55,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
-    ) -> Result<BasicValueEnum<'ctx>, ()> {
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         if left.is_int_value() && right.is_int_value() {
             let left_int = left.into_int_value();
             let right_int = right.into_int_value();
@@ -79,7 +79,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
-    ) -> Result<BasicValueEnum<'ctx>, ()> {
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         if left.is_int_value() && right.is_int_value() {
             let left_int = left.into_int_value();
             let right_int = right.into_int_value();

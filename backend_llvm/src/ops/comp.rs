@@ -1,7 +1,7 @@
 use inkwell::values::{BasicValueEnum, IntValue};
 use lexer::types::Operator;
 
-use crate::CodeGen;
+use crate::{CodeGen, CodeGenError};
 
 impl<'ctx> CodeGen<'ctx> {
     pub(crate) fn comp_binary_operation(
@@ -9,7 +9,7 @@ impl<'ctx> CodeGen<'ctx> {
         op: &Operator,
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
-    ) -> Result<IntValue<'ctx>, ()> {
+    ) -> Result<IntValue<'ctx>, CodeGenError> {
         let (ip, fp) = self.ops_to_llvm_predicate(op);
         if left.is_int_value() && right.is_int_value() {
             let left_int = left.into_int_value();

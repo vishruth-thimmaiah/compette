@@ -1,5 +1,10 @@
+use std::{error::Error, fmt::Display};
+
 use inkwell::{
-    builder::Builder, context::Context, execution_engine::ExecutionEngine, module::Module,
+    builder::{Builder, BuilderError},
+    context::Context,
+    execution_engine::ExecutionEngine,
+    module::Module,
 };
 use new_parser::nodes::ASTNodes;
 use stmt::Variables;
@@ -42,14 +47,18 @@ impl<'ctx> CodeGen<'ctx> {
         }
     }
 
-    pub fn codegen(&self) -> Result<(), ()> {
+    pub fn codegen(&self) -> Result<(), CodeGenError> {
         for node in self.tokens.iter() {
             match node {
-                ASTNodes::Function(func) => self.impl_function_def(func)?,
-                ASTNodes::StructDef(st) => self.def_struct(st),
+                ASTNodes::Function(func) => {
+                    self.impl_function_def(func)?;
+                }
+                ASTNodes::StructDef(st) => {
+                    self.def_struct(st)?;
+                }
                 ASTNodes::ImportDef(_) => todo!(),
                 _ => unreachable!(),
-            }
+            };
         }
         Ok(())
     }
@@ -59,8 +68,33 @@ impl<'ctx> CodeGen<'ctx> {
     }
 }
 
+#[derive(Debug)]
+pub struct CodeGenError {
+    msg: String,
+}
+impl Display for CodeGenError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "CodeGenError: {}", self.msg)
+    }
+}
+impl Error for CodeGenError {}
+
+impl CodeGenError {
+    fn new(msg: &str) -> Self {
+        Self {
+            msg: msg.to_string(),
+        }
+    }
+
+    fn from_llvm_err(err: BuilderError) -> Self {
+        Self {
+            msg: err.to_string(),
+        }
+    }
+}
+
 #[cfg(test)]
-pub(crate) fn get_codegen_for_string(code: &str) -> Result<String, ()> {
+pub(crate) fn get_codegen_for_string(code: &str) -> Result<String, CodeGenError> {
     use lexer::lexer::Lexer;
     use new_parser::Parser;
 
@@ -68,7 +102,7 @@ pub(crate) fn get_codegen_for_string(code: &str) -> Result<String, ()> {
     let lexer = Lexer::new(code).tokenize();
     let parser = Parser::new(lexer).parse();
     if parser.is_err() {
-        return Err(());
+        return Err(CodeGenError::new("Failed to parse"));
     }
     let parser = parser.unwrap();
     let codegen = CodeGen::new(&context, parser);

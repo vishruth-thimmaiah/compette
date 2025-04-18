@@ -6,7 +6,7 @@ use inkwell::{
 };
 use new_parser::nodes::{self, ASTNodes};
 
-use crate::CodeGen;
+use crate::{CodeGen, CodeGenError};
 
 #[derive(Debug, Default)]
 pub struct Variables<'ctx> {
@@ -57,31 +57,46 @@ impl<'ctx> CodeGen<'ctx> {
     pub(crate) fn impl_let_stmt(
         &self,
         stmt: &nodes::LetStmt,
-    ) -> Result<InstructionValue<'ctx>, ()> {
+    ) -> Result<InstructionValue<'ctx>, CodeGenError> {
         let dt = self.parser_to_llvm_dt(&stmt.datatype);
         let expr = self.impl_expr(&stmt.value, dt)?;
 
-        let ptr = self.builder.build_alloca(dt, &stmt.name).map_err(|_| ())?;
+        let ptr = self
+            .builder
+            .build_alloca(dt, &stmt.name)
+            .map_err(CodeGenError::from_llvm_err)?;
         self.var_ptrs.insert(&stmt.name, ptr, dt, stmt.mutable);
 
-        self.builder.build_store(ptr, expr).map_err(|_| ())
+        self.builder
+            .build_store(ptr, expr)
+            .map_err(CodeGenError::from_llvm_err)
     }
 
     pub(crate) fn impl_assign_stmt(
         &self,
         stmt: &nodes::AssignStmt,
-    ) -> Result<InstructionValue, ()> {
-        let var = self
-            .resolve_var(&stmt.name)
-            .and_then(|op| op.mutable.then_some(op).ok_or(()))?;
+    ) -> Result<InstructionValue, CodeGenError> {
+        let var = self.resolve_var(&stmt.name).and_then(|op| {
+            op.mutable
+                .then_some(op)
+                .ok_or(CodeGenError::new("Variable not mutable"))
+        })?;
         let expr = self.impl_expr(&stmt.value, var.type_)?;
 
-        self.builder.build_store(var.ptr, expr).map_err(|_| ())
+        self.builder
+            .build_store(var.ptr, expr)
+            .map_err(CodeGenError::from_llvm_err)
     }
 
-    pub(crate) fn resolve_var(&self, node: &nodes::ASTNodes) -> Result<Variable<'ctx>, ()> {
+    pub(crate) fn resolve_var(
+        &self,
+        node: &nodes::ASTNodes,
+    ) -> Result<Variable<'ctx>, CodeGenError> {
         match node {
-            ASTNodes::Variable(var) => Ok(self.var_ptrs.get(&var.name).ok_or(())?),
+            ASTNodes::Variable(var) => Ok(self
+                .var_ptrs
+                .get(&var.name)
+                .ok_or(CodeGenError::new("Variable not found"))?),
             _ => todo!(),
         }
     }

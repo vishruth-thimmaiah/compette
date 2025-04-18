@@ -1,7 +1,7 @@
 use inkwell::{basic_block::BasicBlock, values::FunctionValue};
 use new_parser::nodes::{ASTNodes, Block};
 
-use crate::CodeGen;
+use crate::{CodeGen, CodeGenError};
 
 impl<'ctx> CodeGen<'ctx> {
     pub(crate) fn codegen_block(
@@ -9,7 +9,7 @@ impl<'ctx> CodeGen<'ctx> {
         block: &Block,
         built_func: FunctionValue<'ctx>,
         block_name: &str,
-    ) -> Result<BasicBlock, ()> {
+    ) -> Result<BasicBlock, CodeGenError> {
         let basic_block = self.context.append_basic_block(built_func, block_name);
         self.builder.position_at_end(basic_block);
 
@@ -34,7 +34,7 @@ impl<'ctx> CodeGen<'ctx> {
             if built_func.get_type().get_return_type().is_none() {
                 self.builder.build_return(None).unwrap();
             } else {
-                return Err(());
+                return Err(CodeGenError::new("Missing return statement"));
             }
         }
         Ok(basic_block)
@@ -44,7 +44,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         block: &Block,
         built_func: FunctionValue<'ctx>,
-    ) -> Result<(), ()> {
+    ) -> Result<(), CodeGenError> {
         self.codegen_block(block, built_func, "entry")?;
         self.var_ptrs.clear();
         Ok(())

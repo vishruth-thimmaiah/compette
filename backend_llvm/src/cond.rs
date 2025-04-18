@@ -1,14 +1,14 @@
 use inkwell::values::FunctionValue;
 use new_parser::nodes;
 
-use crate::CodeGen;
+use crate::{CodeGen, CodeGenError};
 
 impl<'ctx> CodeGen<'ctx> {
     pub(crate) fn impl_if_stmt(
         &self,
         built_func: FunctionValue<'ctx>,
         stmt: &nodes::Conditional,
-    ) -> Result<(), ()> {
+    ) -> Result<(), CodeGenError> {
         let mut then_cond = self.impl_expr(&stmt.condition, self.context.bool_type().into())?;
         let mut then_block = self.codegen_block(&stmt.body, built_func, "then")?;
 

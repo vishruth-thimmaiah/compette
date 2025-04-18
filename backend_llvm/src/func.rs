@@ -5,10 +5,10 @@ use inkwell::{
 use lexer::types::Datatype;
 use new_parser::nodes::{self, Return};
 
-use crate::CodeGen;
+use crate::{CodeGen, CodeGenError};
 
 impl<'ctx> CodeGen<'ctx> {
-    pub(crate) fn impl_function_def(&self, func: &nodes::Function) -> Result<(), ()> {
+    pub(crate) fn impl_function_def(&self, func: &nodes::Function) -> Result<FunctionValue<'ctx>, CodeGenError> {
         // Function parameters
         let args = self.impl_function_args(&func.args)?;
 
@@ -30,13 +30,13 @@ impl<'ctx> CodeGen<'ctx> {
 
         self.codegen_function_block(&func.body, built_func)?;
 
-        Ok(())
+        Ok(built_func)
     }
 
     fn impl_function_args(
         &self,
         args: &Vec<(String, Datatype)>,
-    ) -> Result<Vec<BasicMetadataTypeEnum<'ctx>>, ()> {
+    ) -> Result<Vec<BasicMetadataTypeEnum<'ctx>>, CodeGenError> {
         let mut res_args = vec![];
         for (_, dt) in args {
             let llvm_dt = self.parser_to_llvm_dt(&dt);
@@ -49,7 +49,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         built_func: FunctionValue<'ctx>,
         ret: &Return,
-    ) -> Result<InstructionValue<'ctx>, ()> {
+    ) -> Result<InstructionValue<'ctx>, CodeGenError> {
         if let Some(expr) = &ret.value {
             let ret_val = self.impl_expr(expr, built_func.get_type().get_return_type().unwrap())?;
             Ok(self.builder.build_return(Some(&ret_val)).unwrap())
