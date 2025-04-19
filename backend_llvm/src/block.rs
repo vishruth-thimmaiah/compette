@@ -8,9 +8,8 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         block: &Block,
         built_func: FunctionValue<'ctx>,
-        block_name: &str,
+        basic_block: BasicBlock<'ctx>,
     ) -> Result<BasicBlock, CodeGenError> {
-        let basic_block = self.context.append_basic_block(built_func, block_name);
         self.builder.position_at_end(basic_block);
 
         for node in &block.body {
@@ -20,6 +19,12 @@ impl<'ctx> CodeGen<'ctx> {
                 }
                 ASTNodes::Conditional(cond) => {
                     self.impl_if_stmt(built_func, cond)?;
+                }
+                ASTNodes::Loop(loop_stmt) => {
+                    self.impl_loop_stmt(built_func, loop_stmt)?;
+                }
+                ASTNodes::ForLoop(loop_stmt) => {
+                    self.impl_for_loop_stmt(built_func, loop_stmt)?;
                 }
                 ASTNodes::Return(ret) => {
                     self.impl_function_return(built_func, ret)?;
@@ -33,13 +38,6 @@ impl<'ctx> CodeGen<'ctx> {
                 _ => todo!(),
             };
         }
-        if basic_block.get_terminator().is_none() {
-            if built_func.get_type().get_return_type().is_none() {
-                self.builder.build_return(None).unwrap();
-            } else {
-                return Err(CodeGenError::new("Missing return statement"));
-            }
-        }
         Ok(basic_block)
     }
 
@@ -48,8 +46,17 @@ impl<'ctx> CodeGen<'ctx> {
         block: &Block,
         built_func: FunctionValue<'ctx>,
     ) -> Result<(), CodeGenError> {
-        self.codegen_block(block, built_func, "entry")?;
+        let basic_block = self.context.append_basic_block(built_func, "entry");
+        self.codegen_block(block, built_func, basic_block)?;
         self.var_ptrs.clear();
+
+        if basic_block.get_terminator().is_none() {
+            if built_func.get_type().get_return_type().is_none() {
+                self.builder.build_return(None).unwrap();
+            } else {
+                return Err(CodeGenError::new("Missing return statement"));
+            }
+        }
         Ok(())
     }
 }

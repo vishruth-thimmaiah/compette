@@ -15,6 +15,7 @@ mod block;
 mod cond;
 mod expr;
 mod func;
+mod loops;
 mod ops;
 mod stmt;
 mod structs;

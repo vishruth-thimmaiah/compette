@@ -1,5 +1,5 @@
 use inkwell::{
-    types::{BasicType, BasicTypeEnum},
+    types::{BasicType, BasicTypeEnum, FloatType},
     values::{ArrayValue, BasicValueEnum},
 };
 use lexer::types::Datatype;
@@ -73,6 +73,18 @@ impl<'ctx> CodeGen<'ctx> {
                     .map(|v| v.into_vector_value())
                     .collect::<Vec<_>>(),
             ),
+        }
+    }
+
+    pub(crate) fn get_float_size(&self, dt: FloatType<'ctx>) -> u32 {
+        if self.context.f128_type().eq(&dt) {
+            return 16;
+        } else if self.context.f64_type().eq(&dt) {
+            return 8;
+        } else if self.context.f32_type().eq(&dt) {
+            return 4;
+        } else {
+            return 2;
         }
     }
 }

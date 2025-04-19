@@ -32,6 +32,7 @@ impl<'ctx> CodeGen<'ctx> {
                     }
 
                     let right_val = self.impl_simple_expr_arm(right_val, built_func, dt)?;
+                    let (left_val, right_val) = self.impl_cast_simple_expr(left_val, right_val)?;
                     return self.impl_binary_operation(
                         left_val,
                         right_val,
@@ -84,7 +85,7 @@ impl<'ctx> CodeGen<'ctx> {
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         match arm {
             ASTNodes::Literal(lit) => self.impl_literal(lit, dt),
-            ASTNodes::Variable(var) => self.impl_variable(var, built_func, dt),
+            ASTNodes::Variable(var) => self.impl_variable(var, built_func),
             ASTNodes::Expression(expr) => self.impl_expr(expr, built_func, dt),
             ASTNodes::FunctionCall(call) => {
                 self.impl_function_call(built_func, call).and_then(|v| {
@@ -134,12 +135,15 @@ impl<'ctx> CodeGen<'ctx> {
                 .const_int(lit.value.parse::<u64>().unwrap(), false)
                 .into()),
             Types::NUMBER => {
-                if dt.is_float_type() {
+                if lit.value.contains('.') && dt.is_float_type() {
                     let f64_value = lit.value.parse::<f64>().unwrap();
                     return Ok(dt.into_float_type().const_float(f64_value).into());
-                } else if dt.is_int_type() {
+                } else if dt.is_int_type() && dt.into_int_type().get_bit_width() != 1 {
                     let i64_value = lit.value.parse::<u64>().unwrap();
                     return Ok(dt.into_int_type().const_int(i64_value, false).into());
+                } else if dt.is_int_type() {
+                    let i64_value = lit.value.parse::<u64>().unwrap();
+                    return Ok(self.context.i64_type().const_int(i64_value, false).into());
                 }
                 unreachable!()
             }
@@ -151,7 +155,6 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         var: &Variable,
         built_func: FunctionValue<'ctx>,
-        _dt: BasicTypeEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         if let Some(var_data) = self.var_ptrs.get(&var.name) {
             self.builder
@@ -165,6 +168,66 @@ impl<'ctx> CodeGen<'ctx> {
                     "Variable {} not found",
                     var.name
                 )))
+        }
+    }
+
+    fn impl_cast_simple_expr(
+        &self,
+        left_expr: BasicValueEnum<'ctx>,
+        right_expr: BasicValueEnum<'ctx>,
+    ) -> Result<(BasicValueEnum<'ctx>, BasicValueEnum<'ctx>), CodeGenError> {
+        let left_type = left_expr.get_type();
+        let right_type = right_expr.get_type();
+
+        let cast_fn = |op, value, r#type| {
+            self.builder
+                .build_cast(op, value, r#type, "")
+                .map_err(CodeGenError::from_llvm_err)
+        };
+
+        match (left_type, right_type) {
+            _ if left_type == right_type => Ok((left_expr, right_expr)),
+            (BasicTypeEnum::IntType(a), BasicTypeEnum::IntType(b))
+                if a.get_bit_width() < b.get_bit_width() =>
+            {
+                cast_fn(
+                    inkwell::values::InstructionOpcode::ZExt,
+                    left_expr,
+                    right_type,
+                )
+                .map(|v| (v, right_expr))
+            }
+            (BasicTypeEnum::IntType(a), BasicTypeEnum::IntType(b))
+                if a.get_bit_width() > b.get_bit_width() =>
+            {
+                cast_fn(
+                    inkwell::values::InstructionOpcode::ZExt,
+                    right_expr,
+                    left_type,
+                )
+                .map(|v| (left_expr, v))
+            }
+            (BasicTypeEnum::FloatType(a), BasicTypeEnum::FloatType(b))
+                if self.get_float_size(a) < self.get_float_size(b) =>
+            {
+                cast_fn(
+                    inkwell::values::InstructionOpcode::FPExt,
+                    left_expr,
+                    right_type,
+                )
+                .map(|v| (v, right_expr))
+            }
+            (BasicTypeEnum::FloatType(a), BasicTypeEnum::FloatType(b))
+                if self.get_float_size(a) > self.get_float_size(b) =>
+            {
+                cast_fn(
+                    inkwell::values::InstructionOpcode::FPTrunc,
+                    right_expr,
+                    left_type,
+                )
+                .map(|v| (left_expr, v))
+            }
+            _ => todo!("impl_cast_simple_expr {:?} to {:?}", left_type, right_type),
         }
     }
 

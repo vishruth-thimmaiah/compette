@@ -39,7 +39,7 @@ mod tests {
             return a
         }"#;
 
-        assert_eq!(4, generate_result(contents).unwrap());
+        assert_eq!(4, generate_new_result(contents).unwrap());
     }
 
     #[test]

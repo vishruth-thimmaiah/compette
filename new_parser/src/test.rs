@@ -199,7 +199,7 @@ fn test_parse_full_3() {
             return_type: Some(Datatype::U32),
             body: Block {
                 body: vec![
-                    ASTNodes::Conditional(Conditional {
+                    ASTNodes::Conditional(Conditional::If {
                         condition: Expression::Simple {
                             left: Box::new(ASTNodes::Literal(Literal {
                                 value: "0".to_string(),
@@ -220,11 +220,9 @@ fn test_parse_full_3() {
                                 })
                             })]
                         },
-                        else_if_condition: vec![],
-                        else_if_body: vec![],
                         else_body: None,
                     }),
-                    ASTNodes::Conditional(Conditional {
+                    ASTNodes::Conditional(Conditional::If {
                         condition: Expression::Simple {
                             left: Box::new(ASTNodes::Literal(Literal {
                                 value: "1".to_string(),
@@ -245,8 +243,6 @@ fn test_parse_full_3() {
                                 })
                             })]
                         },
-                        else_if_condition: vec![],
-                        else_if_body: vec![],
                         else_body: None,
                     }),
                     ASTNodes::Return(Return {

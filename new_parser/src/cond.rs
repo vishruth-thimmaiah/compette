@@ -1,50 +1,30 @@
 use lexer::types::{Delimiter, Keyword, Types};
 
-use crate::{
-    Parser, Result,
-    nodes::{Block, Conditional, Expression},
-};
+use crate::{Parser, Result, nodes::Conditional};
 
 impl Parser {
     pub(crate) fn parse_if(&mut self) -> Result<Conditional> {
         let condition = self.parse_expression(vec![Types::DELIMITER(Delimiter::LBRACE)])?;
         let block = self.parse_scoped_block()?;
 
-        let (else_if_condition, else_if_body) = self.parse_else_if()?;
-
-        if self
-            .current_with_type(Types::KEYWORD(Keyword::ELSE))
-            .is_ok()
-        {
-            self.prev();
-        }
-
-        Ok(Conditional {
+        Ok(Conditional::If {
             condition,
             body: block,
-            else_if_condition,
-            else_if_body,
-            else_body: self.parse_else()?,
+            else_body: self.parse_else()?.map(|b| Box::new(b)),
         })
     }
 
-    fn parse_else_if(&mut self) -> Result<(Vec<Expression>, Vec<Block>)> {
-        let mut conditions = Vec::new();
-        let mut blocks = Vec::new();
-        while self.next_if_type(Types::KEYWORD(Keyword::ELSE)).is_some()
-            && self.next_if_type(Types::KEYWORD(Keyword::IF)).is_some()
-        {
-            conditions.push(self.parse_expression(vec![Types::DELIMITER(Delimiter::LBRACE)])?);
-            blocks.push(self.parse_scoped_block()?);
+    fn parse_else(&mut self) -> Result<Option<Conditional>> {
+        if self.next_if_type(Types::KEYWORD(Keyword::ELSE)).is_none() {
+            return Ok(None);
         }
-        Ok((conditions, blocks))
-    }
-
-    fn parse_else(&mut self) -> Result<Option<Block>> {
-        if self.next_if_type(Types::KEYWORD(Keyword::ELSE)).is_some() {
-            return self.parse_scoped_block().map(|b| Some(b));
+        if self.next_if_type(Types::KEYWORD(Keyword::IF)).is_some() {
+            return self.parse_if().map(|b| Some(b));
+        } else {
+            return self
+                .parse_scoped_block()
+                .map(|b| Some(Conditional::Else { body: b }));
         }
-        Ok(None)
     }
 }
 
@@ -68,7 +48,7 @@ mod tests {
                 args: vec![],
                 return_type: Some(Datatype::U32),
                 body: Block {
-                    body: vec![ASTNodes::Conditional(Conditional {
+                    body: vec![ASTNodes::Conditional(Conditional::If {
                         condition: Expression::Simple {
                             left: Box::new(ASTNodes::Literal(Literal {
                                 value: "1".to_string(),
@@ -89,8 +69,6 @@ mod tests {
                                 })
                             })]
                         },
-                        else_if_condition: vec![],
-                        else_if_body: vec![],
                         else_body: None,
                     })]
                 },
@@ -110,7 +88,7 @@ mod tests {
                 args: vec![],
                 return_type: Some(Datatype::U32),
                 body: Block {
-                    body: vec![ASTNodes::Conditional(Conditional {
+                    body: vec![ASTNodes::Conditional(Conditional::If {
                         condition: Expression::Simple {
                             left: Box::new(ASTNodes::Literal(Literal {
                                 value: "1".to_string(),
@@ -131,20 +109,20 @@ mod tests {
                                 })
                             })]
                         },
-                        else_if_condition: vec![],
-                        else_if_body: vec![],
-                        else_body: Some(Block {
-                            body: vec![ASTNodes::Return(Return {
-                                value: Some(Expression::Simple {
-                                    left: Box::new(ASTNodes::Literal(Literal {
-                                        value: "2".to_string(),
-                                        r#type: lexer::types::Types::NUMBER
-                                    })),
-                                    right: None,
-                                    operator: None
-                                })
-                            })]
-                        }),
+                        else_body: Some(Box::new(Conditional::Else {
+                            body: Block {
+                                body: vec![ASTNodes::Return(Return {
+                                    value: Some(Expression::Simple {
+                                        left: Box::new(ASTNodes::Literal(Literal {
+                                            value: "2".to_string(),
+                                            r#type: lexer::types::Types::NUMBER
+                                        })),
+                                        right: None,
+                                        operator: None
+                                    })
+                                })]
+                            }
+                        })),
                     })]
                 },
             })]
@@ -165,7 +143,7 @@ mod tests {
                 args: vec![],
                 return_type: Some(Datatype::U32),
                 body: Block {
-                    body: vec![ASTNodes::Conditional(Conditional {
+                    body: vec![ASTNodes::Conditional(Conditional::If {
                         condition: Expression::Simple {
                             left: Box::new(ASTNodes::Literal(Literal {
                                 value: "1".to_string(),
@@ -186,8 +164,8 @@ mod tests {
                                 })
                             })]
                         },
-                        else_if_condition: vec![
-                            Expression::Simple {
+                        else_body: Some(Box::new(Conditional::If {
+                            condition: Expression::Simple {
                                 left: Box::new(ASTNodes::Literal(Literal {
                                     value: "0".to_string(),
                                     r#type: lexer::types::Types::BOOL
@@ -195,17 +173,7 @@ mod tests {
                                 right: None,
                                 operator: None
                             },
-                            Expression::Simple {
-                                left: Box::new(ASTNodes::Literal(Literal {
-                                    value: "1".to_string(),
-                                    r#type: lexer::types::Types::BOOL
-                                })),
-                                right: None,
-                                operator: None
-                            }
-                        ],
-                        else_if_body: vec![
-                            Block {
+                            body: Block {
                                 body: vec![ASTNodes::Return(Return {
                                     value: Some(Expression::Simple {
                                         left: Box::new(ASTNodes::Literal(Literal {
@@ -217,31 +185,43 @@ mod tests {
                                     })
                                 })]
                             },
-                            Block {
-                                body: vec![ASTNodes::Return(Return {
-                                    value: Some(Expression::Simple {
-                                        left: Box::new(ASTNodes::Literal(Literal {
-                                            value: "3".to_string(),
-                                            r#type: lexer::types::Types::NUMBER
-                                        })),
-                                        right: None,
-                                        operator: None
-                                    })
-                                })]
-                            }
-                        ],
-                        else_body: Some(Block {
-                            body: vec![ASTNodes::Return(Return {
-                                value: Some(Expression::Simple {
+                            else_body: Some(Box::new(Conditional::If {
+                                condition: Expression::Simple {
                                     left: Box::new(ASTNodes::Literal(Literal {
-                                        value: "4".to_string(),
-                                        r#type: lexer::types::Types::NUMBER
+                                        value: "1".to_string(),
+                                        r#type: lexer::types::Types::BOOL
                                     })),
                                     right: None,
                                     operator: None
-                                })
-                            })]
-                        }),
+                                },
+                                body: Block {
+                                    body: vec![ASTNodes::Return(Return {
+                                        value: Some(Expression::Simple {
+                                            left: Box::new(ASTNodes::Literal(Literal {
+                                                value: "3".to_string(),
+                                                r#type: lexer::types::Types::NUMBER
+                                            })),
+                                            right: None,
+                                            operator: None
+                                        })
+                                    })]
+                                },
+                                else_body: Some(Box::new(Conditional::Else {
+                                    body: Block {
+                                        body: vec![ASTNodes::Return(Return {
+                                            value: Some(Expression::Simple {
+                                                left: Box::new(ASTNodes::Literal(Literal {
+                                                    value: "4".to_string(),
+                                                    r#type: lexer::types::Types::NUMBER
+                                                })),
+                                                right: None,
+                                                operator: None
+                                            })
+                                        })]
+                                    }
+                                }))
+                            }))
+                        }))
                     })]
                 },
             })]
