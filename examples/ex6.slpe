@@ -3,3 +3,4 @@ func main() u32 {
 	let u32 b = a.len()
 	return b
 }
+

@@ -44,7 +44,7 @@ impl<'ctx> Variables<'ctx> {
         );
     }
 
-    pub(crate) fn remove(&self, name: &str) {
+    pub(crate) fn _remove(&self, name: &str) {
         self.vars.borrow_mut().remove(name);
     }
 

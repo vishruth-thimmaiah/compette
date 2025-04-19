@@ -7,3 +7,4 @@ func main() u32 {
 	let u32 b = num(5, 4)
 	return a * b
 }
+

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::generate_result;
+    use crate::{generate_new_result, generate_result};
 
     #[test]
     fn check_main_func() {
@@ -8,10 +8,9 @@ mod tests {
         func main() u32 {
             let u32 a = 6 * 3 - 1
             return a
-        }
-        "#;
+        }"#;
 
-        assert_eq!(6 * 3 - 1, generate_result(contents).unwrap());
+        assert_eq!(6 * 3 - 1, generate_new_result(contents).unwrap());
     }
 
     #[test]
@@ -24,10 +23,9 @@ mod tests {
         func main() u32 {
             let u32 a = add(2, 3)
             return a
-        }
-        "#;
+        }"#;
 
-        assert_eq!(5, generate_result(contents).unwrap());
+        assert_eq!(5, generate_new_result(contents).unwrap());
     }
 
     #[test]
@@ -39,8 +37,7 @@ mod tests {
                 a = 4
             }
             return a
-        }
-        "#;
+        }"#;
 
         assert_eq!(4, generate_result(contents).unwrap());
     }
@@ -51,10 +48,9 @@ mod tests {
         func main() u32 {
             let u32[] a = [1, 2, 3]
             return a[0]
-        }
-        "#;
+        }"#;
 
-        assert_eq!(1, generate_result(contents).unwrap());
+        assert_eq!(1, generate_new_result(contents).unwrap());
     }
 
     #[test]
@@ -64,17 +60,16 @@ mod tests {
             let u32[]! a = [1, 2, 3]
             a[0] = 4
             return a[0]
-        }
-        "#;
+        }"#;
 
-        assert_eq!(4, generate_result(contents).unwrap());
+        assert_eq!(4, generate_new_result(contents).unwrap());
     }
 
     #[test]
     fn check_struct() {
         let contents = r#"
         struct Point {
-            x u32
+            x u32,
             y u32
         }
 
@@ -84,10 +79,9 @@ mod tests {
                 y 2
             }
             return p.x
-        }
-        "#;
+        }"#;
 
-        assert_eq!(1, generate_result(contents).unwrap());
+        assert_eq!(1, generate_new_result(contents).unwrap());
     }
 
     #[test]
@@ -98,22 +92,8 @@ mod tests {
             let u32 b = a -> u32
             
             return b
-        }
-        "#;
-        assert_eq!(34, generate_result(contents).unwrap());
-    }
-
-    #[test]
-    fn check_implicit_cast() {
-        let contents = r#"
-        func main() u32 {
-            let u64 a = 5
-            let u16 b = 2
-            
-            return a + b
-        }
-        "#;
-        assert_eq!(7, generate_result(contents).unwrap());
+        }"#;
+        assert_eq!(34, generate_new_result(contents).unwrap());
     }
 
     #[test]

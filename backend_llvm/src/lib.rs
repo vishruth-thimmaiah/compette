@@ -1,6 +1,7 @@
 use std::{error::Error, fmt::Display};
 
 use inkwell::{
+    OptimizationLevel,
     builder::{Builder, BuilderError},
     context::Context,
     execution_engine::ExecutionEngine,
@@ -31,10 +32,14 @@ pub struct CodeGen<'ctx> {
 }
 
 impl<'ctx> CodeGen<'ctx> {
-    pub fn new(context: &'ctx Context, tokens: Vec<ASTNodes>) -> Self {
+    pub fn new(context: &'ctx Context, tokens: Vec<ASTNodes>, with_jit: bool) -> Self {
         let builder = context.create_builder();
         let module = context.create_module("main");
-        let execution_engine = None;
+        let execution_engine = with_jit.then(|| {
+            module
+                .create_jit_execution_engine(OptimizationLevel::None)
+                .unwrap()
+        });
         Self {
             context,
             builder,
@@ -63,8 +68,15 @@ impl<'ctx> CodeGen<'ctx> {
         Ok(())
     }
 
-    pub fn string_as_ir(&self) -> String {
+    pub fn ir_as_string(&self) -> String {
         self.module.print_to_string().to_string()
+    }
+
+    pub fn run_with_jit(&self) -> Option<i32> {
+        let function = self.module.get_function("main").unwrap();
+        let exec_engine = self.execution_engine.as_ref().unwrap();
+        let result = unsafe { exec_engine.run_function_as_main(function, &[]) };
+        return Some(result);
     }
 }
 
@@ -105,7 +117,7 @@ pub(crate) fn get_codegen_for_string(code: &str) -> Result<String, CodeGenError>
         return Err(CodeGenError::new(&format!("Failed to parse: {}", err)));
     }
     let parser = parser.unwrap();
-    let codegen = CodeGen::new(&context, parser);
+    let codegen = CodeGen::new(&context, parser, false);
     codegen.codegen()?;
-    Ok(codegen.string_as_ir())
+    Ok(codegen.ir_as_string())
 }

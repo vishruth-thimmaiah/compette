@@ -5,3 +5,4 @@ func main() u32 {
 	}
 	return a
 }
+

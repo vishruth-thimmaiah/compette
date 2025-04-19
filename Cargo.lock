@@ -185,9 +185,11 @@ dependencies = [
 name = "tests"
 version = "0.1.0"
 dependencies = [
+ "backend_llvm",
  "inkwell",
  "lexer",
  "llvm",
+ "new_parser",
  "parser",
 ]
 

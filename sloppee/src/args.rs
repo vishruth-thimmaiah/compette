@@ -2,24 +2,36 @@ use std::{path::Path, process::exit};
 
 #[derive(Debug)]
 pub struct Args {
-    pub print_lexer_ouput: bool,
-    pub print_ast_output: bool,
-    pub jit: bool,
-    pub build: bool,
-    pub run: bool,
+    pub parser_opts: ParserArgs,
+    pub compiler_opts: CodeGenArgs,
     pub path: Option<String>,
     pub dry_run: bool,
     pub new_impl: bool,
 }
 
+#[derive(Debug)]
+pub struct ParserArgs {
+    pub print_lexer_ouput: bool,
+    pub print_ast_output: bool,
+}
+
+#[derive(Debug)]
+pub struct CodeGenArgs {
+    pub jit: bool,
+    pub run: bool,
+}
+
 impl Default for Args {
     fn default() -> Self {
         Args {
-            print_lexer_ouput: false,
-            print_ast_output: false,
-            jit: false,
-            build: false,
-            run: false,
+            parser_opts: ParserArgs {
+                print_lexer_ouput: false,
+                print_ast_output: false,
+            },
+            compiler_opts: CodeGenArgs {
+                jit: false,
+                run: false,
+            },
             path: None,
             dry_run: false,
             new_impl: true,
@@ -58,9 +70,9 @@ pub fn parse_args(args: &Vec<String>) -> Args {
     match args.get(1) {
         Some(arg) => match arg.as_str() {
             "--help" | "-h" => show_help(),
-            "build" => result.build = true,
-            "run" => result.run = true,
-            "jit" => result.jit = true,
+            "build" => result.compiler_opts.run = false,
+            "run" => result.compiler_opts.run = true,
+            "jit" => result.compiler_opts.jit = true,
             _ => show_usage(),
         },
         None => show_usage(),
@@ -83,10 +95,10 @@ pub fn parse_args(args: &Vec<String>) -> Args {
     for arg in args.get(2..).unwrap() {
         match arg.as_str() {
             "--help" | "-h" => show_help(),
-            "--print-lexer-output" => result.print_lexer_ouput = true,
-            "--print-ast-output" => result.print_ast_output = true,
+            "--print-lexer-output" => result.parser_opts.print_lexer_ouput = true,
+            "--print-ast-output" => result.parser_opts.print_ast_output = true,
             "--dry-run" => {
-                if result.build {
+                if !result.compiler_opts.run {
                     result.dry_run = true
                 } else {
                     eprintln!("--dry-run can only be used with build");

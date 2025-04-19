@@ -8,3 +8,5 @@ lexer = { workspace = true }
 parser = { workspace = true }
 llvm = { workspace = true }
 inkwell = { workspace = true }
+new_parser = { workspace = true }
+backend_llvm = { workspace = true }
