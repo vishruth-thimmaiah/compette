@@ -6,5 +6,5 @@ edition = "2024"
 [dependencies]
 inkwell = { workspace = true }
 stdlib = { workspace = true }
-new_parser = { workspace = true }
+parser = { workspace = true }
 lexer = { workspace = true }

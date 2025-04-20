@@ -1,5 +1,5 @@
 use inkwell::{basic_block::BasicBlock, values::FunctionValue};
-use new_parser::nodes::{ASTNodes, Block};
+use parser::nodes::{ASTNodes, Block};
 
 use crate::{CodeGen, CodeGenError};
 

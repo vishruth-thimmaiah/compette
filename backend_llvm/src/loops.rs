@@ -1,6 +1,6 @@
 use inkwell::{basic_block::BasicBlock, values::FunctionValue};
 use lexer::types::Operator;
-use new_parser::nodes::{self, ASTNodes, Expression};
+use parser::nodes::{self, ASTNodes, Expression};
 
 use crate::{CodeGen, CodeGenError};
 

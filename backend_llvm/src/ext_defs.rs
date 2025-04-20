@@ -5,7 +5,7 @@ use inkwell::{
     types::{BasicTypeEnum, FunctionType},
     values::BasicValueEnum,
 };
-use new_parser::nodes::ImportDef;
+use parser::nodes::ImportDef;
 
 use crate::CodeGenError;
 

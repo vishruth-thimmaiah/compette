@@ -14,7 +14,7 @@ version = "0.1.0"
 dependencies = [
  "inkwell",
  "lexer",
- "new_parser",
+ "parser",
  "stdlib",
 ]
 
@@ -75,16 +75,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c19937216e9d3aa9956d9bb8dfc0b0c8beb6058fc4f7a4dc4d850edf86a237d6"
 
 [[package]]
-name = "llvm"
-version = "0.1.0"
-dependencies = [
- "inkwell",
- "lexer",
- "parser",
- "stdlib",
-]
-
-[[package]]
 name = "llvm-sys"
 version = "180.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -96,13 +86,6 @@ dependencies = [
  "libc",
  "regex-lite",
  "semver",
-]
-
-[[package]]
-name = "new_parser"
-version = "0.1.0"
-dependencies = [
- "lexer",
 ]
 
 [[package]]
@@ -161,8 +144,6 @@ dependencies = [
  "backend_llvm",
  "inkwell",
  "lexer",
- "llvm",
- "new_parser",
  "parser",
 ]
 
@@ -188,8 +169,6 @@ dependencies = [
  "backend_llvm",
  "inkwell",
  "lexer",
- "llvm",
- "new_parser",
  "parser",
 ]
 

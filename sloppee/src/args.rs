@@ -6,7 +6,6 @@ pub struct Args {
     pub compiler_opts: CodeGenArgs,
     pub path: Option<String>,
     pub dry_run: bool,
-    pub new_impl: bool,
 }
 
 #[derive(Debug)]
@@ -34,7 +33,6 @@ impl Default for Args {
             },
             path: None,
             dry_run: false,
-            new_impl: true,
         }
     }
 }

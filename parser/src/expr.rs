@@ -1,202 +1,134 @@
-use lexer::{
-    lexer::Token,
-    types::{Datatype, Delimiter, Operator, Types},
-};
-
-use crate::parser_error;
+use lexer::types::{Datatype, Delimiter, Operator, Types};
 
 use super::{
-    Parser,
-    nodes::{ExpressionParserNode, ParserType, ValueIterCallParserNode, ValueParserNode},
-    types::ParserTypes,
+    Parser, Result,
+    errors::ParserError,
+    nodes::{ASTNodes, Expression, Literal},
 };
 
 impl Parser {
-    pub fn parse_expression(&mut self) -> Box<ExpressionParserNode> {
-        let mut operands: Vec<Box<dyn ParserType>> = Vec::new();
-        let mut operators: Vec<Token> = Vec::new();
-
-        // Values that cannot have operations performed on them.
-        match self.get_next_token().r#type {
-            Types::DELIMITER(Delimiter::LBRACKET) => {
-                self.set_next_position();
-                return Box::new(ExpressionParserNode {
-                    left: self.parse_array(),
-                    right: None,
-                    operator: None,
-                });
-            }
-            Types::DELIMITER(Delimiter::LBRACE) => {
-                self.set_next_position();
-                return Box::new(ExpressionParserNode {
-                    left: self.parse_struct(),
-                    right: None,
-                    operator: None,
-                });
-            }
-            Types::DATATYPE(Datatype::STRING(str)) => {
-                self.set_next_position();
-                return Box::new(ExpressionParserNode {
-                    left: Box::new(ValueParserNode {
-                        r#type: Types::DATATYPE(Datatype::STRING(str)),
-                        value: self.get_current_token().value.unwrap(),
-                    }),
-                    right: None,
-                    operator: None,
-                });
-            }
-            _ => (),
+    pub(crate) fn parse_expression(&mut self, delim: Vec<Types>) -> Result<Expression> {
+        if self
+            .next_if_type(Types::DELIMITER(Delimiter::LBRACKET))
+            .is_some()
+        {
+            return self.parse_array();
+        } else if let Types::DATATYPE(Datatype::STRING(_)) = self.peek().unwrap().r#type {
+            return Ok(Expression::String(self.next().unwrap().value.unwrap()));
+        } else if self
+            .next_if_type(Types::DELIMITER(Delimiter::LBRACE))
+            .is_some()
+        {
+            return self.parse_struct();
         }
 
+        let mut operands: Vec<ASTNodes> = Vec::new();
+        let mut operators: Vec<Types> = Vec::new();
+
         'outer: loop {
-            let token = self.get_next_token();
+            let token = self.next().ok_or(ParserError::unexpected_eof(None))?;
             match token.r#type {
-                Types::NUMBER | Types::BOOL => operands.push(Box::new(ValueParserNode {
-                    r#type: token.r#type,
+                Types::NUMBER | Types::BOOL => operands.push(ASTNodes::Literal(Literal {
                     value: token.value.unwrap(),
+                    r#type: token.r#type,
                 })),
                 Types::IDENTIFIER => {
-                    if self.tree[self.position + 2].r#type == Types::DELIMITER(Delimiter::LBRACKET)
-                    {
-                        self.set_next_position();
-                        self.set_next_position();
-
-                        operands.push(Box::new(ValueIterCallParserNode {
-                            value: token.value.clone().unwrap(),
-                            index: self.parse_expression(),
-                        }));
-                    } else {
-                        operands.push(Box::new(ValueParserNode {
-                            r#type: token.r#type,
-                            value: token.value.unwrap(),
-                        }))
-                    }
+                    operands.push(self.parse_complex_variable()?);
                 }
-                Types::DATATYPE(dt) => {
-                    if self.get_current_token().r#type == Types::OPERATOR(Operator::CAST) {
-                        operands.push(Box::new(ValueParserNode {
-                            r#type: Types::DATATYPE(dt),
-                            value: "".to_string(),
-                        }));
-                    }
+                Types::OPERATOR(Operator::CAST) => {
+                    operands.push(ASTNodes::Token(Types::DATATYPE(self.parse_cast()?)));
+                    operators.push(token.r#type);
                 }
-                Types::IMPORT_CALL => {
-                    self.set_next_position();
-                    operands.push(self.parse_import_call());
-                    self.position -= 1;
-                }
-                Types::IDENTIFIER_FUNC => {
-                    self.set_next_position();
-                    operands.push(self.parse_function_call(None));
-                }
-                Types::OPERATOR(_) => {
+                Types::OPERATOR(ref op) => {
                     while !operators.is_empty() {
-                        let pop_op = &operators.last().unwrap().r#type;
+                        let pop_op = operators.last().unwrap();
                         if self.get_precedence(&token.r#type) > self.get_precedence(pop_op) {
                             break;
                         }
                         let pop = operators.pop().unwrap();
-                        operands.push(Box::new(ValueParserNode {
-                            r#type: pop.r#type,
-                            value: "".to_string(),
-                        }));
+                        operands.push(ASTNodes::Token(pop));
                     }
-                    operators.push(token);
+                    operators.push(Types::OPERATOR(op.clone()));
                 }
                 Types::DELIMITER(Delimiter::LPAREN) => {
-                    operators.push(token);
+                    operators.push(token.r#type);
                 }
                 Types::DELIMITER(Delimiter::RPAREN) => loop {
                     let pop_op = &operators.pop();
                     if let Some(op) = pop_op {
-                        if op.r#type == Types::DELIMITER(Delimiter::LPAREN) {
+                        if op == &Types::DELIMITER(Delimiter::LPAREN) {
                             break;
                         }
-                        operands.push(Box::new(ValueParserNode {
-                            r#type: op.r#type.clone(),
-                            value: "".to_string(),
-                        }));
+                        operands.push(ASTNodes::Token(op.clone()));
                     } else {
-                        break 'outer;
-                        // errors::parser_error(self, "Parenthesis not closed.")
+                        if delim.contains(&Types::DELIMITER(Delimiter::RPAREN)) {
+                            self.prev();
+                            break 'outer;
+                        } else {
+                            return Err(ParserError::new("Unexpected LPAREN", token));
+                        }
                     }
                 },
-                _ => break,
+                Types::IDENTIFIER_FUNC => {
+                    operands.push(ASTNodes::FunctionCall(self.parse_function_call()?));
+                }
+                ty if delim.contains(&ty) => {
+                    self.prev();
+                    break;
+                }
+                _ => return Err(ParserError::unexpected_token_err(token)),
             }
-            self.set_next_position();
         }
         while !operators.is_empty() {
             let value = operators.pop().unwrap();
-            if value.r#type == Types::DELIMITER(Delimiter::LPAREN) {
-                parser_error(self, "Parenthesis not closed.")
-            }
-            operands.push(Box::new(ValueParserNode {
-                r#type: value.r#type,
-                value: value.value.unwrap_or("".to_string()),
-            }));
+            if value == Types::DELIMITER(Delimiter::LPAREN) {}
+            operands.push(ASTNodes::Token(value));
+        }
+
+        if operands.is_empty() {
+            return Ok(Expression::None);
         }
 
         self.postfix_to_tree(&mut operands)
     }
 
-    fn postfix_to_tree(
-        &self,
-        operands: &mut Vec<Box<dyn ParserType>>,
-    ) -> Box<ExpressionParserNode> {
+    fn postfix_to_tree(&self, operands: &mut Vec<ASTNodes>) -> Result<Expression> {
         let op = if operands.len() > 1 {
-            let pop = operands.pop().unwrap();
-            let value = pop.any().downcast_ref::<ValueParserNode>().unwrap();
+            let value = operands.pop().unwrap();
             self.value_to_operator(value).unwrap()
         } else if operands.len() == 0 {
-            parser_error(self, "Invalid postfix expression");
+            todo!()
+            // errors::parser_error(self, "Invalid postfix expression");
         } else {
             let token = operands.pop().unwrap();
-            return Box::new(ExpressionParserNode {
-                left: token,
+            return Ok(Expression::Simple {
+                left: Box::new(token),
                 right: None,
                 operator: None,
             });
         };
 
-        let right: Box<dyn ParserType> = {
+        let right = {
             let last_op = operands.last().unwrap();
-            if last_op.get_type() == ParserTypes::VALUE {
-                if let Types::OPERATOR(_) = last_op
-                    .any()
-                    .downcast_ref::<ValueParserNode>()
-                    .unwrap()
-                    .r#type
-                {
-                    self.postfix_to_tree(operands)
-                } else {
-                    operands.pop().unwrap()
-                }
+            if let ASTNodes::Token(Types::OPERATOR(_)) = last_op {
+                ASTNodes::Expression(self.postfix_to_tree(operands)?)
             } else {
                 operands.pop().unwrap()
             }
         };
 
-        let left: Box<dyn ParserType> = {
+        let left = {
             let last_op = operands.last().unwrap();
-            if last_op.get_type() == ParserTypes::VALUE {
-                if let Types::OPERATOR(_) = last_op
-                    .any()
-                    .downcast_ref::<ValueParserNode>()
-                    .unwrap()
-                    .r#type
-                {
-                    self.postfix_to_tree(operands)
-                } else {
-                    operands.pop().unwrap()
-                }
+            if let ASTNodes::Token(Types::OPERATOR(_)) = last_op {
+                ASTNodes::Expression(self.postfix_to_tree(operands)?)
             } else {
                 operands.pop().unwrap()
             }
         };
 
-        Box::new(ExpressionParserNode {
-            left,
-            right: Some(right),
+        Ok(Expression::Simple {
+            left: Box::new(left),
+            right: Some(Box::new(right)),
             operator: Some(op),
         })
     }
@@ -205,16 +137,238 @@ impl Parser {
         match operator {
             Types::OPERATOR(Operator::PLUS) | Types::OPERATOR(Operator::MINUS) => 1,
             Types::OPERATOR(Operator::MULTIPLY) | Types::OPERATOR(Operator::DIVIDE) => 2,
+            Types::OPERATOR(Operator::CAST) => 3,
             Types::DELIMITER(Delimiter::LPAREN) => 0,
-            Types::OPERATOR(Operator::CAST) => 0,
             _ => unreachable!(),
         }
     }
 
-    fn value_to_operator(&self, value: &ValueParserNode) -> Option<Operator> {
-        if let Types::OPERATOR(op) = &value.r#type {
+    fn value_to_operator(&self, value: ASTNodes) -> Option<Operator> {
+        if let ASTNodes::Token(Types::OPERATOR(op)) = &value {
             return Some(op.clone());
         }
         None
+    }
+
+    // FIXME: Support trailing commas
+    pub(crate) fn parse_array(&mut self) -> Result<Expression> {
+        let mut array = Vec::new();
+        loop {
+            array.push(self.parse_expression(vec![
+                Types::DELIMITER(Delimiter::COMMA),
+                Types::DELIMITER(Delimiter::RBRACKET),
+            ])?);
+            if self
+                .next_if_type(Types::DELIMITER(Delimiter::RBRACKET))
+                .is_some()
+            {
+                break;
+            }
+            self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
+        }
+        return Ok(Expression::Array(array));
+    }
+
+    // FIXME: Support trailing commas
+    pub(crate) fn parse_struct(&mut self) -> Result<Expression> {
+        let mut fields = vec![];
+
+        loop {
+            let name = self.next_with_type(Types::IDENTIFIER)?;
+            let expr = self.parse_expression(vec![
+                Types::DELIMITER(Delimiter::COMMA),
+                Types::DELIMITER(Delimiter::RBRACE),
+            ])?;
+            fields.push((name.value.unwrap(), expr));
+
+            if self
+                .next_if_type(Types::DELIMITER(Delimiter::RBRACE))
+                .is_some()
+            {
+                break;
+            }
+            self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
+        }
+
+        return Ok(Expression::Struct(fields));
+    }
+
+    fn parse_cast(&mut self) -> Result<Datatype> {
+        self.current_with_type(Types::OPERATOR(Operator::CAST))?;
+        return self.parse_datatype();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lexer::lexer::Lexer;
+
+    #[test]
+    fn test_parse_expression() {
+        let mut lexer = Lexer::new("1 + 2 * 3 - 4 / 5 ");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
+        assert_eq!(
+            ast,
+            Expression::Simple {
+                left: Box::new(ASTNodes::Expression(Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "1".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: Some(Box::new(ASTNodes::Expression(Expression::Simple {
+                        left: Box::new(ASTNodes::Literal(Literal {
+                            value: "2".to_string(),
+                            r#type: Types::NUMBER
+                        })),
+                        right: Some(Box::new(ASTNodes::Literal(Literal {
+                            value: "3".to_string(),
+                            r#type: Types::NUMBER
+                        }))),
+                        operator: Some(Operator::MULTIPLY)
+                    }))),
+                    operator: Some(Operator::PLUS)
+                })),
+                right: Some(Box::new(ASTNodes::Expression(Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "4".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: Some(Box::new(ASTNodes::Literal(Literal {
+                        value: "5".to_string(),
+                        r#type: Types::NUMBER
+                    }))),
+                    operator: Some(Operator::DIVIDE)
+                }))),
+                operator: Some(Operator::MINUS)
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_array() {
+        let mut lexer = Lexer::new("[1, 2, 3, 4, 5]");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
+        assert_eq!(
+            ast,
+            Expression::Array(vec![
+                Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "1".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                },
+                Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "2".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                },
+                Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "3".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                },
+                Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "4".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                },
+                Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "5".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: None,
+                    operator: None
+                }
+            ])
+        );
+    }
+
+    #[test]
+    fn test_parse_string() {
+        let mut lexer = Lexer::new("\"Hello World\"");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
+        assert_eq!(ast, Expression::String("Hello World".to_string()));
+    }
+
+    #[test]
+    fn test_parse_struct() {
+        let mut lexer = Lexer::new(" { a 4, b 7 }");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
+        assert_eq!(
+            ast,
+            Expression::Struct(vec![
+                (
+                    "a".to_string(),
+                    Expression::Simple {
+                        left: Box::new(ASTNodes::Literal(Literal {
+                            value: "4".to_string(),
+                            r#type: Types::NUMBER
+                        })),
+                        right: None,
+                        operator: None
+                    }
+                ),
+                (
+                    "b".to_string(),
+                    Expression::Simple {
+                        left: Box::new(ASTNodes::Literal(Literal {
+                            value: "7".to_string(),
+                            r#type: Types::NUMBER
+                        })),
+                        right: None,
+                        operator: None
+                    }
+                )
+            ])
+        );
+    }
+
+    #[test]
+    fn test_parse_cast() {
+        let mut lexer = Lexer::new("(23 + 43 * 3) -> f32 ");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
+        assert_eq!(
+            ast,
+            Expression::Simple {
+                left: Box::new(ASTNodes::Expression(Expression::Simple {
+                    left: Box::new(ASTNodes::Literal(Literal {
+                        value: "23".to_string(),
+                        r#type: Types::NUMBER
+                    })),
+                    right: Some(Box::new(ASTNodes::Expression(Expression::Simple {
+                        left: Box::new(ASTNodes::Literal(Literal {
+                            value: "43".to_string(),
+                            r#type: Types::NUMBER
+                        })),
+                        right: Some(Box::new(ASTNodes::Literal(Literal {
+                            value: "3".to_string(),
+                            r#type: Types::NUMBER
+                        }))),
+                        operator: Some(Operator::MULTIPLY)
+                    }))),
+                    operator: Some(Operator::PLUS)
+                })),
+                right: Some(Box::new(ASTNodes::Token(Types::DATATYPE(Datatype::F32)))),
+                operator: Some(Operator::CAST)
+            }
+        );
     }
 }

@@ -1,5 +1,5 @@
 use inkwell::{basic_block::BasicBlock, values::FunctionValue};
-use new_parser::nodes::{self, Conditional};
+use parser::nodes::{self, Conditional};
 
 use crate::{CodeGen, CodeGenError};
 

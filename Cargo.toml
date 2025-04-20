@@ -3,8 +3,6 @@ members = [
 	"sloppee",
 	"lexer",
 	"parser",
-	"new_parser",
-	"llvm",
 	"backend_llvm",
 	"stdlib",
 	"tests",
@@ -23,8 +21,6 @@ stdlib = { path = "./stdlib" }
 
 lexer = { path = "./lexer" }
 parser = { path = "./parser" }
-new_parser = { path = "./new_parser" }
-llvm = { path = "./llvm" }
 backend_llvm = { path = "./backend_llvm" }
 
 tests = { path = "./tests" }

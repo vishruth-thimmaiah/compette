@@ -4,7 +4,7 @@ use inkwell::{
     types::StructType,
     values::{BasicValueEnum, FunctionValue},
 };
-use new_parser::nodes::{self, StructDef};
+use parser::nodes::{self, StructDef};
 
 use crate::{CodeGen, CodeGenError, stmt::Variable};
 

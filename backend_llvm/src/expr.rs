@@ -4,7 +4,7 @@ use inkwell::{
     values::{BasicValueEnum, FunctionValue},
 };
 use lexer::types::{Operator, Types};
-use new_parser::nodes::{ASTNodes, Expression, Literal, Variable};
+use parser::nodes::{ASTNodes, Expression, Literal, Variable};
 
 use crate::{CodeGen, CodeGenError};
 

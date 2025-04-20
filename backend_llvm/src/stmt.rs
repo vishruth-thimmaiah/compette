@@ -4,7 +4,7 @@ use inkwell::{
     types::BasicTypeEnum,
     values::{BasicValueEnum, FunctionValue, InstructionValue, PointerValue},
 };
-use new_parser::nodes::{self, ASTNodes};
+use parser::nodes::{self, ASTNodes};
 
 use crate::{CodeGen, CodeGenError};
 

@@ -8,7 +8,7 @@ use inkwell::{
     execution_engine::ExecutionEngine,
     module::Module,
 };
-use new_parser::nodes::ASTNodes;
+use parser::nodes::ASTNodes;
 use stmt::Variables;
 use structs::StructDefs;
 
@@ -115,7 +115,7 @@ impl CodeGenError {
 #[cfg(test)]
 pub(crate) fn get_codegen_for_string(code: &str) -> Result<String, CodeGenError> {
     use lexer::lexer::Lexer;
-    use new_parser::Parser;
+    use parser::Parser;
 
     let context = Context::create();
     let lexer = Lexer::new(code).tokenize();

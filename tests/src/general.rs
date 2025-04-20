@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::generate_new_result;
+    use crate::generate_result;
 
     #[test]
     fn check_main_func() {
@@ -10,7 +10,7 @@ mod tests {
             return a
         }"#;
 
-        assert_eq!(6 * 3 - 1, generate_new_result(contents).unwrap());
+        assert_eq!(6 * 3 - 1, generate_result(contents).unwrap());
     }
 
     #[test]
@@ -25,7 +25,7 @@ mod tests {
             return a
         }"#;
 
-        assert_eq!(5, generate_new_result(contents).unwrap());
+        assert_eq!(5, generate_result(contents).unwrap());
     }
 
     #[test]
@@ -39,7 +39,7 @@ mod tests {
             return a
         }"#;
 
-        assert_eq!(4, generate_new_result(contents).unwrap());
+        assert_eq!(4, generate_result(contents).unwrap());
     }
 
     #[test]
@@ -50,7 +50,7 @@ mod tests {
             return a[0]
         }"#;
 
-        assert_eq!(1, generate_new_result(contents).unwrap());
+        assert_eq!(1, generate_result(contents).unwrap());
     }
 
     #[test]
@@ -62,7 +62,7 @@ mod tests {
             return a[0]
         }"#;
 
-        assert_eq!(4, generate_new_result(contents).unwrap());
+        assert_eq!(4, generate_result(contents).unwrap());
     }
 
     #[test]
@@ -81,7 +81,7 @@ mod tests {
             return p.x
         }"#;
 
-        assert_eq!(1, generate_new_result(contents).unwrap());
+        assert_eq!(1, generate_result(contents).unwrap());
     }
 
     #[test]
@@ -93,7 +93,7 @@ mod tests {
             
             return b
         }"#;
-        assert_eq!(34, generate_new_result(contents).unwrap());
+        assert_eq!(34, generate_result(contents).unwrap());
     }
 
     #[test]
@@ -105,6 +105,6 @@ mod tests {
             
             return b
         }"#;
-        assert_eq!(4, generate_new_result(contents).unwrap());
+        assert_eq!(4, generate_result(contents).unwrap());
     }
 }
