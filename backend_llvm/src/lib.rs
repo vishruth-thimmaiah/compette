@@ -68,7 +68,7 @@ impl<'ctx> CodeGen<'ctx> {
                 }
                 ASTNodes::ImportDef(imp) => {
                     self.import_resolver.resolve_import_def(imp)?;
-                },
+                }
                 _ => unreachable!(),
             };
         }

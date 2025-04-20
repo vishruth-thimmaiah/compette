@@ -126,7 +126,7 @@ pub enum Conditional {
     },
     Else {
         body: Block,
-    }
+    },
 }
 
 #[derive(Debug, PartialEq)]

@@ -5,7 +5,6 @@ const STDLIB_PATH: &'static str = "target/debug/libstdlib.a";
 #[cfg(not(debug_assertions))]
 const STDLIB_PATH: &'static str = ".build/stdlib.a";
 
-
 fn output_path() -> PathBuf {
     let path = PathBuf::from(".build/");
     if !path.exists() {

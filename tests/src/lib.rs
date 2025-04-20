@@ -1,10 +1,10 @@
 use inkwell::context::Context;
 
+use backend_llvm::CodeGen as NewCodeGen;
 use lexer::lexer::Lexer;
 use llvm::codegen::CodeGen;
-use parser::Parser;
 use new_parser::Parser as NewParser;
-use backend_llvm::CodeGen as NewCodeGen;
+use parser::Parser;
 
 mod conditionals;
 mod general;
@@ -27,5 +27,5 @@ pub fn generate_new_result(contents: &str) -> Option<i32> {
     let context = Context::create();
     let codegen = NewCodeGen::new(&context, parser, true);
     codegen.codegen().unwrap();
-    return codegen.run_with_jit()
+    return codegen.run_with_jit();
 }
