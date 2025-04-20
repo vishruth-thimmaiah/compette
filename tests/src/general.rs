@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::{generate_new_result, generate_result};
+    use crate::generate_new_result;
 
     #[test]
     fn check_main_func() {
@@ -100,12 +100,11 @@ mod tests {
     fn check_stdlib_builtin() {
         let contents = r#"
         func main() u32 {
-            let f32[] a = [10, 30, 50, 60]
+            let u32[] a = [10, 30, 50, 60]
             let u32 b = a.len()
             
             return b
-        }
-        "#;
-        assert_eq!(4, generate_result(contents).unwrap());
+        }"#;
+        assert_eq!(4, generate_new_result(contents).unwrap());
     }
 }

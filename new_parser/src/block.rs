@@ -1,4 +1,4 @@
-use lexer::types::{Delimiter, Keyword, Types};
+use lexer::types::{Delimiter, Keyword, Operator, Types};
 
 use super::{
     Parser, ParserError, Result,
@@ -36,6 +36,11 @@ impl Parser {
                 Types::KEYWORD(Keyword::IF) => ASTNodes::Conditional(self.parse_if()?),
                 Types::KEYWORD(Keyword::LOOP) => self.parse_loop()?,
                 Types::IDENTIFIER_FUNC => ASTNodes::FunctionCall(self.parse_function_call()?),
+                Types::IDENTIFIER
+                    if self.peek_if_type(Types::OPERATOR(Operator::PATH)).is_some() =>
+                {
+                    ASTNodes::ImportCall(self.parse_import_call()?)
+                }
                 Types::IDENTIFIER => ASTNodes::AssignStmt(self.parse_assign_stmt()?),
                 Types::DELIMITER(Delimiter::RBRACE) => break,
                 _ => return Err(ParserError::unimplemented(token)),

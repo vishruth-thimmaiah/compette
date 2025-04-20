@@ -424,7 +424,7 @@ fn test_parse_full_6() {
     import std::io
 
     func main() i32 {
-        _ = io::println("Hello World")
+        io::println("Hello World")
         return 0
     }"#,
     );
@@ -443,21 +443,12 @@ fn test_parse_full_6() {
                 return_type: Some(Datatype::I32),
                 body: Block {
                     body: vec![
-                        ASTNodes::AssignStmt(AssignStmt {
-                            name: Box::new(ASTNodes::Variable(Variable {
-                                name: "_".to_string(),
+                        ASTNodes::ImportCall(ImportCall {
+                            path: vec!["io".to_string(), "println".to_string()],
+                            ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                                name: "println".to_string(),
+                                args: vec![Expression::String("Hello World".to_string())],
                             })),
-                            value: Expression::Simple {
-                                left: Box::new(ASTNodes::ImportCall(ImportCall {
-                                    path: vec!["io".to_string()],
-                                    ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
-                                        name: "println".to_string(),
-                                        args: vec![Expression::String("Hello World".to_string())],
-                                    })),
-                                })),
-                                right: None,
-                                operator: None,
-                            },
                         }),
                         ASTNodes::Return(Return {
                             value: Some(Expression::Simple {
@@ -568,9 +559,9 @@ fn test_parse_full_8() {
         let u32 b = a -> u32
         let f32 c = b -> f32
         
-        _ = io::printflt(a)
-        _ = io::printint(b)
-        _ = io::printflt(c)
+        io::printflt(a)
+        io::printint(b)
+        io::printflt(c)
         
         return 0
     }"#,
@@ -631,71 +622,44 @@ fn test_parse_full_8() {
                             datatype: Datatype::F32,
                             mutable: false
                         }),
-                        ASTNodes::AssignStmt(AssignStmt {
-                            name: Box::new(ASTNodes::Variable(Variable {
-                                name: "_".to_string(),
-                            })),
-                            value: Expression::Simple {
-                                left: Box::new(ASTNodes::ImportCall(ImportCall {
-                                    path: vec!["io".to_string()],
-                                    ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
-                                        name: "printflt".to_string(),
-                                        args: vec![Expression::Simple {
-                                            left: Box::new(ASTNodes::Variable(Variable {
-                                                name: "a".to_string(),
-                                            })),
-                                            right: None,
-                                            operator: None
-                                        }],
+                        ASTNodes::ImportCall(ImportCall {
+                            path: vec!["io".to_string(), "printflt".to_string()],
+                            ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                                name: "printflt".to_string(),
+                                args: vec![Expression::Simple {
+                                    left: Box::new(ASTNodes::Variable(Variable {
+                                        name: "a".to_string(),
                                     })),
-                                })),
-                                right: None,
-                                operator: None,
-                            },
+                                    right: None,
+                                    operator: None
+                                }],
+                            })),
                         }),
-                        ASTNodes::AssignStmt(AssignStmt {
-                            name: Box::new(ASTNodes::Variable(Variable {
-                                name: "_".to_string(),
-                            })),
-                            value: Expression::Simple {
-                                left: Box::new(ASTNodes::ImportCall(ImportCall {
-                                    path: vec!["io".to_string()],
-                                    ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
-                                        name: "printint".to_string(),
-                                        args: vec![Expression::Simple {
-                                            left: Box::new(ASTNodes::Variable(Variable {
-                                                name: "b".to_string(),
-                                            })),
-                                            right: None,
-                                            operator: None
-                                        }],
+                        ASTNodes::ImportCall(ImportCall {
+                            path: vec!["io".to_string(), "printint".to_string()],
+                            ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                                name: "printint".to_string(),
+                                args: vec![Expression::Simple {
+                                    left: Box::new(ASTNodes::Variable(Variable {
+                                        name: "b".to_string(),
                                     })),
-                                })),
-                                right: None,
-                                operator: None,
-                            },
+                                    right: None,
+                                    operator: None
+                                }],
+                            })),
                         }),
-                        ASTNodes::AssignStmt(AssignStmt {
-                            name: Box::new(ASTNodes::Variable(Variable {
-                                name: "_".to_string(),
-                            })),
-                            value: Expression::Simple {
-                                left: Box::new(ASTNodes::ImportCall(ImportCall {
-                                    path: vec!["io".to_string()],
-                                    ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
-                                        name: "printflt".to_string(),
-                                        args: vec![Expression::Simple {
-                                            left: Box::new(ASTNodes::Variable(Variable {
-                                                name: "c".to_string(),
-                                            })),
-                                            right: None,
-                                            operator: None
-                                        }],
+                        ASTNodes::ImportCall(ImportCall {
+                            path: vec!["io".to_string(), "printflt".to_string()],
+                            ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
+                                name: "printflt".to_string(),
+                                args: vec![Expression::Simple {
+                                    left: Box::new(ASTNodes::Variable(Variable {
+                                        name: "c".to_string(),
                                     })),
-                                })),
-                                right: None,
-                                operator: None,
-                            },
+                                    right: None,
+                                    operator: None
+                                }],
+                            })),
                         }),
                         ASTNodes::Return(Return {
                             value: Some(Expression::Simple {

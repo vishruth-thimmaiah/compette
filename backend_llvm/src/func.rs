@@ -1,9 +1,10 @@
 use inkwell::{
+    module::Linkage,
     types::{BasicMetadataTypeEnum, BasicType},
     values::{BasicValueEnum, FunctionValue, InstructionValue},
 };
 use lexer::types::Datatype;
-use new_parser::nodes::{self, Return};
+use new_parser::nodes::{self, ASTNodes, Return};
 
 use crate::{CodeGen, CodeGenError};
 
@@ -86,6 +87,62 @@ impl<'ctx> CodeGen<'ctx> {
             .build_call(func, &args, "")
             .map_err(CodeGenError::from_llvm_err)?;
         Ok(ret_val.try_as_basic_value().left())
+    }
+
+    pub(crate) fn impl_import_call(
+        &self,
+        built_func: FunctionValue<'ctx>,
+        call: &nodes::ImportCall,
+    ) -> Result<Option<BasicValueEnum<'ctx>>, CodeGenError> {
+        let path = &call.path.join("__");
+
+        let func_attrs = self
+            .import_resolver
+            .get_extern_function(&path, call.path.first().unwrap());
+        if func_attrs.is_none() {
+            return Err(CodeGenError::new("Import could not be resolved"));
+        }
+        let (func_attrs, path) = func_attrs.unwrap();
+
+        let func = if let Some(func) = self.module.get_function(&path) {
+            func
+        } else {
+            let func = self
+                .module
+                .add_function(&path, func_attrs.func, Some(Linkage::External));
+            self.execution_engine
+                .as_ref()
+                .map(|exec| exec.add_global_mapping(&func, func_attrs.ptr));
+            func
+        };
+
+        match &*call.ident {
+            ASTNodes::FunctionCall(func_call) => {
+                let mut args = vec![];
+                let params = func.get_type().get_param_types();
+                for (i, arg) in func_call.args.iter().enumerate() {
+                    let param = params.get(i).ok_or(CodeGenError::new("Invalid arg"))?;
+                    let arg = self.impl_expr(arg, built_func, *param)?;
+                    args.push(arg.into());
+                }
+                let ret_val = self
+                    .builder
+                    .build_call(func, &args, "")
+                    .map_err(CodeGenError::from_llvm_err)?;
+                Ok(ret_val.try_as_basic_value().left())
+            }
+            _ => todo!(),
+        }
+    }
+
+    pub(crate) fn impl_method_call(
+        &self,
+        built_func: FunctionValue<'ctx>,
+        method: &nodes::Method,
+    ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
+        let callee = self.resolve_var(built_func, &*method.parent)?;
+        self.import_resolver
+            .get_builtin_function(callee.type_, &method.func.name)
     }
 }
 
@@ -214,12 +271,12 @@ entry:
 
     #[test]
     fn test_codegen_function_call_as_expr() {
-        let data = "
+        let data = r#"
 func add(a u32, b u32) u32 { return a + b }
 func main() u32 {
     let u32 a = add(5, 7) 
     return a
-}";
+}"#;
         let result = crate::get_codegen_for_string(data).unwrap();
 
         assert_eq!(
@@ -241,6 +298,37 @@ entry:
   %a1 = load i32, ptr %a, align 4
   ret i32 %a1
 }
+"#
+        )
+    }
+
+    #[test]
+    fn test_imported_func_call() {
+        let data = r#"
+func main() u32 {
+    std::io::println("Test")
+    return 0
+}"#;
+
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %0 = alloca [4 x i8], align 1
+  store [4 x i8] c"Test", ptr %0, align 1
+  %1 = alloca { i64, ptr }, align 8
+  %2 = insertvalue { i64, ptr } { i64 4, ptr undef }, ptr %0, 1
+  store { i64, ptr } %2, ptr %1, align 8
+  call void @__std__io__println(ptr %1)
+  ret i32 0
+}
+
+declare void @__std__io__println(i8)
 "#
         )
     }

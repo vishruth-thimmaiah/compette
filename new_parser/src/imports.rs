@@ -8,7 +8,6 @@ use crate::{
 impl Parser {
     pub(crate) fn parse_import_def(&mut self) -> Result<ImportDef> {
         let mut path = Vec::new();
-        println!("{:?}", self.peek());
         loop {
             let subpath = self.next_with_type(Types::IDENTIFIER)?;
             path.push(subpath.value.unwrap());
@@ -33,7 +32,6 @@ impl Parser {
             }
 
             if self.next_if_type(Types::OPERATOR(Operator::PATH)).is_none() {
-                path.pop();
                 break;
             }
         }
@@ -81,7 +79,11 @@ mod tests {
                         name: "a".to_string(),
                         value: Expression::Simple {
                             left: Box::new(ASTNodes::ImportCall(ImportCall {
-                                path: vec!["std".to_string(), "io".to_string()],
+                                path: vec![
+                                    "std".to_string(),
+                                    "io".to_string(),
+                                    "println".to_string()
+                                ],
                                 ident: Box::new(ASTNodes::FunctionCall(FunctionCall {
                                     name: "println".to_string(),
                                     args: vec![

@@ -35,6 +35,9 @@ impl<'ctx> CodeGen<'ctx> {
                 ASTNodes::FunctionCall(call) => {
                     self.impl_function_call(built_func, call)?;
                 }
+                ASTNodes::ImportCall(call) => {
+                    self.impl_import_call(built_func, call)?;
+                }
                 _ => todo!(),
             };
         }

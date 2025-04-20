@@ -1,5 +1,6 @@
 use std::{error::Error, fmt::Display};
 
+use ext_defs::Resolver;
 use inkwell::{
     OptimizationLevel,
     builder::{Builder, BuilderError},
@@ -14,6 +15,7 @@ use structs::StructDefs;
 mod block;
 mod cond;
 mod expr;
+mod ext_defs;
 mod func;
 mod loops;
 mod ops;
@@ -30,6 +32,7 @@ pub struct CodeGen<'ctx> {
 
     pub struct_defs: StructDefs<'ctx>,
     pub var_ptrs: Variables<'ctx>,
+    pub import_resolver: Resolver<'ctx>,
 }
 
 impl<'ctx> CodeGen<'ctx> {
@@ -50,6 +53,7 @@ impl<'ctx> CodeGen<'ctx> {
 
             struct_defs: StructDefs::default(),
             var_ptrs: Variables::default(),
+            import_resolver: Resolver::new(context),
         }
     }
 
@@ -62,7 +66,9 @@ impl<'ctx> CodeGen<'ctx> {
                 ASTNodes::StructDef(st) => {
                     self.def_struct(st)?;
                 }
-                ASTNodes::ImportDef(_) => todo!(),
+                ASTNodes::ImportDef(imp) => {
+                    self.import_resolver.resolve_import_def(imp)?;
+                },
                 _ => unreachable!(),
             };
         }

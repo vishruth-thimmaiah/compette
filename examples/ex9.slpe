@@ -1,13 +1,14 @@
-import std:io
+import std::io
 
 func main() u32 {
 	let f32 a = 34.1
 	let u32 b = a -> u32
 	let f32 c = b -> f32
 	
-	io:printflt(a)
-	io:printint(b)
-	io:printflt(c)
+	io::printflt(a)
+	io::printint(b)
+	io::printflt(c)
 	
 	return 0
 }
+

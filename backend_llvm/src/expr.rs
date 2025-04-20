@@ -1,4 +1,5 @@
 use inkwell::{
+    AddressSpace,
     types::{BasicType, BasicTypeEnum},
     values::{BasicValueEnum, FunctionValue},
 };
@@ -73,7 +74,40 @@ impl<'ctx> CodeGen<'ctx> {
                     .collect::<Vec<_>>();
                 Ok(dt.const_named_struct(&struct_vals).into())
             }
-            _ => todo!("{:?}", node),
+            Expression::String(str) => {
+                let string = self.context.const_string(str.as_bytes(), false);
+                let string_ptr = self.builder.build_alloca(string.get_type(), "").unwrap();
+                self.builder.build_store(string_ptr, string).unwrap();
+
+                let struct_ty = self.context.struct_type(
+                    &[
+                        self.context.i64_type().into(),
+                        self.context.ptr_type(AddressSpace::default()).into(),
+                    ],
+                    false,
+                );
+                let struct_ptr = self.builder.build_alloca(struct_ty, "").unwrap();
+                let str_struct = struct_ty.get_undef();
+
+                let str_struct = self
+                    .builder
+                    .build_insert_value(
+                        str_struct,
+                        self.context.i64_type().const_int(str.len() as u64, false),
+                        0,
+                        "",
+                    )
+                    .unwrap();
+                let str_struct = self
+                    .builder
+                    .build_insert_value(str_struct, string_ptr, 1, "")
+                    .unwrap();
+
+                self.builder.build_store(struct_ptr, str_struct).unwrap();
+
+                Ok(struct_ptr.into())
+            }
+            _ => todo!(),
         }
     }
 
@@ -96,6 +130,7 @@ impl<'ctx> CodeGen<'ctx> {
             }
             ASTNodes::ArrayIndex(ind) => self.impl_array_index_val(built_func, ind),
             ASTNodes::Attr(attr) => self.impl_attr_access_val(built_func, attr),
+            ASTNodes::Method(method) => self.impl_method_call(built_func, method),
             _ => todo!("Simple expr arm {:?}", arm),
         }
     }
@@ -135,17 +170,16 @@ impl<'ctx> CodeGen<'ctx> {
                 .const_int(lit.value.parse::<u64>().unwrap(), false)
                 .into()),
             Types::NUMBER => {
-                if lit.value.contains('.') && dt.is_float_type() {
+                if lit.value.contains('.') {
                     let f64_value = lit.value.parse::<f64>().unwrap();
                     return Ok(dt.into_float_type().const_float(f64_value).into());
                 } else if dt.is_int_type() && dt.into_int_type().get_bit_width() != 1 {
                     let i64_value = lit.value.parse::<u64>().unwrap();
                     return Ok(dt.into_int_type().const_int(i64_value, false).into());
-                } else if dt.is_int_type() {
+                } else {
                     let i64_value = lit.value.parse::<u64>().unwrap();
                     return Ok(self.context.i64_type().const_int(i64_value, false).into());
                 }
-                unreachable!()
             }
             _ => todo!(),
         }

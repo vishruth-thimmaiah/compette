@@ -1,5 +1,11 @@
 use std::{fs, path::PathBuf, process::Command};
 
+#[cfg(debug_assertions)]
+const STDLIB_PATH: &'static str = "target/debug/libstdlib.a";
+#[cfg(not(debug_assertions))]
+const STDLIB_PATH: &'static str = ".build/stdlib.a";
+
+
 fn output_path() -> PathBuf {
     let path = PathBuf::from(".build/");
     if !path.exists() {
@@ -29,7 +35,7 @@ pub fn build(source: PathBuf, ir: String) -> Result<PathBuf, ()> {
 
     let clang_build = Command::new("clang")
         .arg(path)
-        .arg(".build/stdlib.a")
+        .arg(STDLIB_PATH)
         .arg("-o")
         .arg(&output_path)
         .output();

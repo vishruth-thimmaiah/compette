@@ -1,6 +1,5 @@
-import std:io
-
 func main() i32 {
-	io:println("Hello World")
+	std::io::println("Hello World")
 	return 0
 }
+
