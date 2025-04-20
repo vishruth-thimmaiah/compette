@@ -1,4 +1,4 @@
-use inkwell::values::FunctionValue;
+use inkwell::{basic_block::BasicBlock, values::FunctionValue};
 use lexer::types::Operator;
 use new_parser::nodes::{self, ASTNodes, Expression};
 
@@ -86,7 +86,7 @@ impl<'ctx> CodeGen<'ctx> {
             .build_conditional_branch(is_avail, for_body_block, cont)
             .unwrap();
 
-        self.codegen_block(&stmt.body, built_func, for_body_block)?;
+        self.codegen_block(&stmt.body, built_func, for_body_block, Some(cont))?;
 
         self.builder
             .build_unconditional_branch(for_cond_block)
@@ -127,8 +127,12 @@ impl<'ctx> CodeGen<'ctx> {
     ) -> Result<(), CodeGenError> {
         let loop_block = self.context.append_basic_block(built_func, "loop");
         let cont = self.context.append_basic_block(built_func, "loop_cont");
-
         if stmt.condition.is_some() {
+            let loop_init = self.context.prepend_basic_block(loop_block, "loop_init");
+            self.builder
+                .build_unconditional_branch(loop_init)
+                .map_err(CodeGenError::from_llvm_err)?;
+            self.builder.position_at_end(loop_init);
             let expr = self.impl_expr(
                 stmt.condition.as_ref().unwrap(),
                 built_func,
@@ -139,23 +143,28 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_conditional_branch(expr.into_int_value(), loop_block, cont)
                 .map_err(CodeGenError::from_llvm_err)?;
 
-            self.codegen_block(&stmt.body, built_func, loop_block)?;
-            let expr = self.impl_expr(
-                stmt.condition.as_ref().unwrap(),
-                built_func,
-                self.context.bool_type().into(),
-            )?;
-
+            self.codegen_block(&stmt.body, built_func, loop_block, Some(cont))?;
             self.builder
-                .build_conditional_branch(expr.into_int_value(), loop_block, cont)
+                .build_unconditional_branch(loop_init)
                 .map_err(CodeGenError::from_llvm_err)?;
         } else {
             self.builder.build_unconditional_branch(loop_block).unwrap();
-            self.codegen_block(&stmt.body, built_func, loop_block)?;
+            self.codegen_block(&stmt.body, built_func, loop_block, Some(cont))?;
             self.builder.build_unconditional_branch(loop_block).unwrap();
         }
 
         self.builder.position_at_end(cont);
+        Ok(())
+    }
+
+    pub(crate) fn codegen_break_stmt(
+        &self,
+        _built_func: FunctionValue<'ctx>,
+        next_block: Option<BasicBlock<'ctx>>,
+    ) -> Result<(), CodeGenError> {
+        self.builder
+            .build_unconditional_branch(next_block.unwrap())
+            .map_err(CodeGenError::from_llvm_err)?;
         Ok(())
     }
 }
@@ -182,23 +191,23 @@ define i32 @main() {
 entry:
   %a = alloca i32, align 4
   store i32 0, ptr %a, align 4
+  br label %loop_init
+
+loop_init:                                        ; preds = %loop, %entry
   %a1 = load i32, ptr %a, align 4
   %0 = zext i32 %a1 to i64
   %1 = icmp slt i64 %0, 10
   br i1 %1, label %loop, label %loop_cont
 
-loop:                                             ; preds = %loop, %entry
+loop:                                             ; preds = %loop_init
   %a2 = load i32, ptr %a, align 4
   %2 = add i32 %a2, 1
   store i32 %2, ptr %a, align 4
-  %a3 = load i32, ptr %a, align 4
-  %3 = zext i32 %a3 to i64
-  %4 = icmp slt i64 %3, 10
-  br i1 %4, label %loop, label %loop_cont
+  br label %loop_init
 
-loop_cont:                                        ; preds = %loop, %entry
-  %a4 = load i32, ptr %a, align 4
-  ret i32 %a4
+loop_cont:                                        ; preds = %loop_init
+  %a3 = load i32, ptr %a, align 4
+  ret i32 %a3
 }
 "#
         )
@@ -254,6 +263,59 @@ for_cont:                                         ; preds = %for_init
   %a2 = load i64, ptr %a, align 4
   %6 = trunc i64 %a2 to i32
   ret i32 %6
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_impl_loop_stmt_with_break() {
+        let data = "func main() u32 { 
+    let u64! a = 0
+    loop a < 10 {
+        if a == 3 {
+            break
+        }
+        a = a + 1
+    }
+    return a -> u32
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %a = alloca i64, align 8
+  store i64 0, ptr %a, align 4
+  br label %loop_init
+
+loop_init:                                        ; preds = %else, %entry
+  %a1 = load i64, ptr %a, align 4
+  %0 = icmp slt i64 %a1, 10
+  br i1 %0, label %loop, label %loop_cont
+
+loop:                                             ; preds = %loop_init
+  %a2 = load i64, ptr %a, align 4
+  %1 = icmp eq i64 %a2, 3
+  br i1 %1, label %then, label %else
+
+loop_cont:                                        ; preds = %then, %loop_init
+  %a4 = load i64, ptr %a, align 4
+  %2 = trunc i64 %a4 to i32
+  ret i32 %2
+
+then:                                             ; preds = %loop
+  br label %loop_cont
+
+else:                                             ; preds = %loop
+  %a3 = load i64, ptr %a, align 4
+  %3 = add i64 %a3, 1
+  store i64 %3, ptr %a, align 4
+  br label %loop_init
 }
 "#
         )

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::{generate_new_result, generate_result};
+    use crate::generate_new_result;
 
     #[test]
     fn test_loop() {
@@ -45,6 +45,6 @@ mod tests {
             return a
         }"#;
 
-        assert_eq!(11, generate_result(content).unwrap());
+        assert_eq!(11, generate_new_result(content).unwrap());
     }
 }

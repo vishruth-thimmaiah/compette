@@ -1,4 +1,4 @@
-use inkwell::values::FunctionValue;
+use inkwell::{basic_block::BasicBlock, values::FunctionValue};
 use new_parser::nodes::{self, Conditional};
 
 use crate::{CodeGen, CodeGenError};
@@ -8,6 +8,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         built_func: FunctionValue<'ctx>,
         mut stmt: &nodes::Conditional,
+        next_block: Option<BasicBlock<'ctx>>,
     ) -> Result<(), CodeGenError> {
         while let Conditional::If {
             condition,
@@ -24,11 +25,11 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_conditional_branch(then_cond.into_int_value(), then_block, else_block)
                 .map_err(CodeGenError::from_llvm_err)?;
 
-            self.codegen_block(body, built_func, then_block)?;
+            self.codegen_block(body, built_func, then_block, next_block)?;
 
             if let Some(else_body) = else_body {
                 if let Conditional::Else { body } = &**else_body {
-                    self.codegen_block(body, built_func, else_block)?;
+                    self.codegen_block(body, built_func, else_block, next_block)?;
                     break;
                 }
                 stmt = else_body;

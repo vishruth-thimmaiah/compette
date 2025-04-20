@@ -35,6 +35,7 @@ impl Parser {
                 Types::KEYWORD(Keyword::LET) => ASTNodes::LetStmt(self.parse_statement()?),
                 Types::KEYWORD(Keyword::IF) => ASTNodes::Conditional(self.parse_if()?),
                 Types::KEYWORD(Keyword::LOOP) => self.parse_loop()?,
+                Types::KEYWORD(Keyword::BREAK) => ASTNodes::Break,
                 Types::IDENTIFIER_FUNC => ASTNodes::FunctionCall(self.parse_function_call()?),
                 Types::IDENTIFIER
                     if self.peek_if_type(Types::OPERATOR(Operator::PATH)).is_some() =>

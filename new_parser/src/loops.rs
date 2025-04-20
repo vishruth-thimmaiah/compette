@@ -180,4 +180,34 @@ mod tests {
             })]
         )
     }
+
+    #[test]
+    fn test_parse_break_stmt() {
+        let data = "func main() u32 {
+    loop {
+        break
+    }
+}";
+        let mut parser = Parser::new(Lexer::new(data).tokenize());
+        let result = parser.parse().unwrap();
+
+        assert_eq!(
+            result,
+            vec![
+                ASTNodes::Function(Function {
+                    name: "main".to_string(),
+                    args: vec![],
+                    return_type: Some(Datatype::U32),
+                    body: Block {
+                        body: vec![ASTNodes::Loop(Loop {
+                            condition: None,
+                            body: Block {
+                                body: vec![ASTNodes::Break]
+                            }
+                        })]
+                    }
+                })
+            ]
+        )
+    }
 }

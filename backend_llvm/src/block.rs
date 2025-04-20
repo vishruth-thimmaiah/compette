@@ -9,6 +9,7 @@ impl<'ctx> CodeGen<'ctx> {
         block: &Block,
         built_func: FunctionValue<'ctx>,
         basic_block: BasicBlock<'ctx>,
+        next_block: Option<BasicBlock<'ctx>>,
     ) -> Result<BasicBlock, CodeGenError> {
         self.builder.position_at_end(basic_block);
 
@@ -18,7 +19,7 @@ impl<'ctx> CodeGen<'ctx> {
                     self.impl_let_stmt(built_func, let_stmt)?;
                 }
                 ASTNodes::Conditional(cond) => {
-                    self.impl_if_stmt(built_func, cond)?;
+                    self.impl_if_stmt(built_func, cond, next_block)?;
                 }
                 ASTNodes::Loop(loop_stmt) => {
                     self.impl_loop_stmt(built_func, loop_stmt)?;
@@ -38,6 +39,9 @@ impl<'ctx> CodeGen<'ctx> {
                 ASTNodes::ImportCall(call) => {
                     self.impl_import_call(built_func, call)?;
                 }
+                ASTNodes::Break => {
+                    self.codegen_break_stmt(built_func, next_block)?;
+                }
                 _ => todo!(),
             };
         }
@@ -50,7 +54,7 @@ impl<'ctx> CodeGen<'ctx> {
         built_func: FunctionValue<'ctx>,
     ) -> Result<(), CodeGenError> {
         let basic_block = self.context.append_basic_block(built_func, "entry");
-        self.codegen_block(block, built_func, basic_block)?;
+        self.codegen_block(block, built_func, basic_block, None)?;
         self.var_ptrs.clear();
 
         if basic_block.get_terminator().is_none() {

@@ -21,6 +21,7 @@ pub enum ASTNodes {
     StructDef(StructDef),
     Token(Types),
     Variable(Variable),
+    Break,
 }
 
 #[derive(Debug, PartialEq)]
