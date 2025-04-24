@@ -7,136 +7,97 @@ mod tests {
     };
 
     #[test]
-    fn check_lexer() {
+    fn check_lexer_1() {
         let contents = r#"
-        let u32 a = 1
-        let u32! b = 2
+let u32 a = 1
+let u32! b = 2
+"#;
 
-        // let u32 c = 3
+        let tokens = Lexer::new(contents).tokenize();
 
-        if a == 1 {
-            c = 1
-        }
-        else if a != 2 {
-            c = 2
-        }
-        else {
-            c = 3
-        }
+        assert_eq!(
+            tokens,
+            vec![
+                Token::new(KEYWORD(Keyword::LET), None, 0, 0),
+                Token::new(DATATYPE(Datatype::U32), None, 0, 0),
+                Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
+                Token::new(OPERATOR(Operator::ASSIGN), None, 0, 0),
+                Token::new(NUMBER, Some("1".to_string()), 0, 0),
+                Token::new(NL, None, 0, 0),
+                Token::new(KEYWORD(Keyword::LET), None, 0, 0),
+                Token::new(DATATYPE(Datatype::U32), None, 0, 0),
+                Token::new(OPERATOR(Operator::NOT), None, 0, 0),
+                Token::new(IDENTIFIER, Some("b".to_string()), 0, 0),
+                Token::new(OPERATOR(Operator::ASSIGN), None, 0, 0),
+                Token::new(NUMBER, Some("2".to_string()), 0, 0),
+                Token::new(NL, None, 0, 0),
+                Token::new(EOF, None, 0, 0),
+            ]
+        );
+    }
 
-        loop a == 5 {
-            let u32 c = c + 1
-        }
-
-        func add(x, y) u32 {
-            return x + y
-        }
-
-        add(a, b)
+    #[test]
+    fn check_lexer_2() {
+        let contents = r#"
+        let string a = "Hello World"
+        std::io::println(a)
         "#;
+        let tokens = Lexer::new(contents).tokenize();
 
-        let req_result = vec![
-            Token::new(NL, None, 0, 0),
-            Token::new(KEYWORD(Keyword::LET), None, 0, 0),
-            Token::new(DATATYPE(Datatype::U32), None, 0, 0),
-            Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::ASSIGN), None, 0, 0),
-            Token::new(NUMBER, Some("1".to_string()), 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(KEYWORD(Keyword::LET), None, 0, 0),
-            Token::new(DATATYPE(Datatype::U32), None, 0, 0),
-            Token::new(OPERATOR(Operator::NOT), None, 0, 0),
-            Token::new(IDENTIFIER, Some("b".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::ASSIGN), None, 0, 0),
-            Token::new(NUMBER, Some("2".to_string()), 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(KEYWORD(Keyword::IF), None, 0, 0),
-            Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::EQUAL), None, 0, 0),
-            Token::new(NUMBER, Some("1".to_string()), 0, 0),
-            Token::new(DELIMITER(Delimiter::LBRACE), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(IDENTIFIER, Some("c".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::ASSIGN), None, 0, 0),
-            Token::new(NUMBER, Some("1".to_string()), 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(DELIMITER(Delimiter::RBRACE), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(KEYWORD(Keyword::ELSE), None, 0, 0),
-            Token::new(KEYWORD(Keyword::IF), None, 0, 0),
-            Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::NOT_EQUAL), None, 0, 0),
-            Token::new(NUMBER, Some("2".to_string()), 0, 0),
-            Token::new(DELIMITER(Delimiter::LBRACE), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(IDENTIFIER, Some("c".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::ASSIGN), None, 0, 0),
-            Token::new(NUMBER, Some("2".to_string()), 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(DELIMITER(Delimiter::RBRACE), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(KEYWORD(Keyword::ELSE), None, 0, 0),
-            Token::new(DELIMITER(Delimiter::LBRACE), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(IDENTIFIER, Some("c".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::ASSIGN), None, 0, 0),
-            Token::new(NUMBER, Some("3".to_string()), 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(DELIMITER(Delimiter::RBRACE), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(KEYWORD(Keyword::LOOP), None, 0, 0),
-            Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::EQUAL), None, 0, 0),
-            Token::new(NUMBER, Some("5".to_string()), 0, 0),
-            Token::new(DELIMITER(Delimiter::LBRACE), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(KEYWORD(Keyword::LET), None, 0, 0),
-            Token::new(DATATYPE(Datatype::U32), None, 0, 0),
-            Token::new(IDENTIFIER, Some("c".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::ASSIGN), None, 0, 0),
-            Token::new(IDENTIFIER, Some("c".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::PLUS), None, 0, 0),
-            Token::new(NUMBER, Some("1".to_string()), 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(DELIMITER(Delimiter::RBRACE), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(KEYWORD(Keyword::FUNCTION), None, 0, 0),
-            Token::new(IDENTIFIER_FUNC, Some("add".to_string()), 0, 0),
-            Token::new(DELIMITER(Delimiter::LPAREN), None, 0, 0),
-            Token::new(IDENTIFIER, Some("x".to_string()), 0, 0),
-            Token::new(DELIMITER(Delimiter::COMMA), None, 0, 0),
-            Token::new(IDENTIFIER, Some("y".to_string()), 0, 0),
-            Token::new(DELIMITER(Delimiter::RPAREN), None, 0, 0),
-            Token::new(DATATYPE(Datatype::U32), None, 0, 0),
-            Token::new(DELIMITER(Delimiter::LBRACE), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(KEYWORD(Keyword::RETURN), None, 0, 0),
-            Token::new(IDENTIFIER, Some("x".to_string()), 0, 0),
-            Token::new(OPERATOR(Operator::PLUS), None, 0, 0),
-            Token::new(IDENTIFIER, Some("y".to_string()), 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(DELIMITER(Delimiter::RBRACE), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(IDENTIFIER_FUNC, Some("add".to_string()), 0, 0),
-            Token::new(DELIMITER(Delimiter::LPAREN), None, 0, 0),
-            Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
-            Token::new(DELIMITER(Delimiter::COMMA), None, 0, 0),
-            Token::new(IDENTIFIER, Some("b".to_string()), 0, 0),
-            Token::new(DELIMITER(Delimiter::RPAREN), None, 0, 0),
-            Token::new(NL, None, 0, 0),
-            Token::new(EOF, None, 0, 0),
-        ];
-        let result = Lexer::new(contents).tokenize();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::new(KEYWORD(Keyword::LET), None, 0, 0),
+                Token::new(DATATYPE(Datatype::STRING(0)), None, 0, 0),
+                Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
+                Token::new(OPERATOR(Operator::ASSIGN), None, 0, 0),
+                Token::new(
+                    DATATYPE(Datatype::STRING(11)),
+                    Some("Hello World".to_string()),
+                    0,
+                    0
+                ),
+                Token::new(NL, None, 0, 0),
+                Token::new(IDENTIFIER, Some("std".to_string()), 0, 0),
+                Token::new(OPERATOR(Operator::PATH), None, 0, 0),
+                Token::new(IDENTIFIER, Some("io".to_string()), 0, 0),
+                Token::new(OPERATOR(Operator::PATH), None, 0, 0),
+                Token::new(IDENTIFIER_FUNC, Some("println".to_string()), 0, 0),
+                Token::new(DELIMITER(Delimiter::LPAREN), None, 0, 0),
+                Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
+                Token::new(DELIMITER(Delimiter::RPAREN), None, 0, 0),
+                Token::new(NL, None, 0, 0),
+                Token::new(EOF, None, 0, 0),
+            ]
+        );
+    }
 
-        assert_eq!(req_result.len(), result.len());
+    #[test]
+    fn check_lexer_3() {
+        let contents = r#"
+            struct A {
+                a u32,
+                b u32,
+            }
+            "#;
+        let tokens = Lexer::new(contents).tokenize();
 
-        for i in 0..req_result.len() {
-            assert_eq!(req_result[i].r#type, result[i].r#type);
-            assert_eq!(req_result[i].value, result[i].value);
-        }
+        assert_eq!(
+            tokens,
+            vec![
+                Token::new(KEYWORD(Keyword::STRUCT), None, 0, 0),
+                Token::new(IDENTIFIER, Some("A".to_string()), 0, 0),
+                Token::new(DELIMITER(Delimiter::LBRACE), None, 0, 0),
+                Token::new(IDENTIFIER, Some("a".to_string()), 0, 0),
+                Token::new(DATATYPE(Datatype::U32), None, 0, 0),
+                Token::new(DELIMITER(Delimiter::COMMA), None, 0, 0),
+                Token::new(IDENTIFIER, Some("b".to_string()), 0, 0),
+                Token::new(DATATYPE(Datatype::U32), None, 0, 0),
+                Token::new(DELIMITER(Delimiter::COMMA), None, 0, 0),
+                Token::new(DELIMITER(Delimiter::RBRACE), None, 0, 0),
+                Token::new(NL, None, 0, 0),
+                Token::new(EOF, None, 0, 0),
+            ]
+        );
     }
 }

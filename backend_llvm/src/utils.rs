@@ -26,8 +26,6 @@ impl<'ctx> CodeGen<'ctx> {
             }
             Datatype::CUSTOM(name) => self.struct_defs.get_struct_ptr(name).unwrap().into(),
             Datatype::NONE => unreachable!(),
-            // To be removed
-            _ => unreachable!(),
         }
     }
 

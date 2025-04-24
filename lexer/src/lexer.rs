@@ -4,12 +4,18 @@ use crate::lexer_error;
 
 use super::types::{Datatype, Delimiter, Keyword, Operator, Types};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub r#type: Types,
     pub value: Option<String>,
     pub line: usize,
     pub column: usize,
+}
+
+impl PartialEq for Token {
+    fn eq(&self, other: &Self) -> bool {
+        self.r#type == other.r#type && self.value == other.value
+    }
 }
 
 impl Token {
@@ -35,18 +41,18 @@ impl Default for Token {
 }
 
 #[derive(Debug)]
-pub struct Lexer {
-    content: String,
+pub struct Lexer<'a> {
+    content: &'a [u8],
     index: usize,
     prev_index: usize,
     line: usize,
     column: usize,
 }
 
-impl Lexer {
-    pub fn new(content: &str) -> Self {
+impl<'a> Lexer<'a> {
+    pub fn new(content: &'a str) -> Self {
         Self {
-            content: content.to_string(),
+            content: content.as_bytes(),
             index: 0,
             prev_index: 0,
             line: 0,
@@ -54,44 +60,67 @@ impl Lexer {
         }
     }
 
-    fn next_token(&mut self) -> usize {
-        self.index += 1;
-        self.index
+    fn next_byte(&mut self) -> Option<u8> {
+        if self.index < self.content.len() {
+            let token = self.content[self.index];
+            self.index += 1;
+            return Some(token);
+        } else {
+            None
+        }
+    }
+
+    fn peek_byte(&self) -> Option<u8> {
+        if self.index < self.content.len() {
+            Some(self.content[self.index])
+        } else {
+            None
+        }
+    }
+
+    fn current_byte(&self) -> u8 {
+        self.content[self.index - 1]
+    }
+
+    fn previous_byte(&mut self) -> u8 {
+        self.index -= 1;
+        self.content[self.index - 1]
+    }
+
+    fn get_range(&self, start: usize, end: usize) -> String {
+        let a = &self.content[start..end];
+        String::from_utf8(a.to_vec()).unwrap()
+    }
+
+    fn get_relative_range(&self, size: usize) -> String {
+        let a = &self.content[self.index - size..self.index];
+        String::from_utf8(a.to_vec()).unwrap()
     }
 
     pub fn tokenize(&mut self) -> Vec<Token> {
         let mut tokens = vec![];
 
-        while self.index < self.content.len() {
-            let char = self.content.as_bytes()[self.index];
+        while let Some(char) = self.next_byte() {
+            self.column += self.index - self.prev_index;
+            self.prev_index = self.index;
 
-            let token = self.check_char(char);
+            let token = match char {
+                b'0'..=b'9' => self.tokenize_number(),
+                b'A'..=b'Z' | b'a'..=b'z' | b'_' => self.tokenize_identifier(),
+                b'"' | b'\'' => self.tokenize_string(),
+                b' ' | b'\t' => None,
+                _ => self.tokenize_symbols(char, &mut tokens),
+            };
 
             if let Some(token) = token {
                 tokens.push(token);
             }
-
-            self.next_token();
         }
-
         tokens.push(Token::new(Types::EOF, None, self.line, self.column));
         tokens
     }
 
-    fn check_char(&mut self, char: u8) -> Option<Token> {
-        self.column += self.index - self.prev_index;
-        self.prev_index = self.index;
-
-        if b'0' <= char && char <= b'9' {
-            return Some(self.check_number());
-        } else if b'A' <= char && char <= b'Z' || b'a' <= char && char <= b'z' || char == b'_' {
-            return Some(self.check_identifier());
-        } else if char == b' ' || char == b'\t' {
-            return None;
-        } else if char == b'"' || char == b'\'' {
-            return Some(self.check_string());
-        }
-
+    fn tokenize_symbols(&mut self, char: u8, tokens: &mut Vec<Token>) -> Option<Token> {
         return Some(Token::new(
             match char {
                 b'+' => Types::OPERATOR(Operator::PLUS),
@@ -100,18 +129,17 @@ impl Lexer {
                 b';' => Types::DELIMITER(Delimiter::SEMICOLON),
                 b'(' => Types::DELIMITER(Delimiter::LPAREN),
                 b')' => Types::DELIMITER(Delimiter::RPAREN),
-                b'{' => Types::DELIMITER(Delimiter::LBRACE),
-                b'}' => Types::DELIMITER(Delimiter::RBRACE),
                 b'[' => Types::DELIMITER(Delimiter::LBRACKET),
                 b']' => Types::DELIMITER(Delimiter::RBRACKET),
                 b'.' => Types::OPERATOR(Operator::DOT),
-                b'/' => return self.skip_comment(),
-                b'\n' => {
-                    self.line += 1;
-                    self.column = 0;
-                    Types::NL
+                b'{' => Types::DELIMITER(Delimiter::LBRACE),
+                b'}' => {
+                    self.pop_nl(tokens);
+                    Types::DELIMITER(Delimiter::RBRACE)
                 }
-                b'=' | b'<' | b'>' | b'!' | b'-' | b':' => self.check_multi_char_type(),
+                b'/' => return self.skip_comment(),
+                b'\n' => self.tokenize_nl(tokens)?,
+                b'=' | b'<' | b'>' | b'!' | b'-' | b':' => self.check_multi_char_type()?,
                 _ => lexer_error(char, "invalid character", self.line, self.column),
             },
             None,
@@ -121,10 +149,10 @@ impl Lexer {
     }
 
     fn skip_comment(&mut self) -> Option<Token> {
-        let second_char = self.content.as_bytes()[self.index + 1];
+        let second_char = self.content[self.index + 1];
 
         if second_char == b'/' {
-            while self.content.as_bytes()[self.index + 1] != b'\n' {
+            while self.peek_byte()? != b'\n' {
                 self.index += 1;
             }
             self.index += 2;
@@ -139,51 +167,47 @@ impl Lexer {
         ));
     }
 
-    fn check_multi_char_type(&mut self) -> Types {
-        let first_char = self.content.as_bytes()[self.index];
-        let second_char = self.content.as_bytes()[self.index + 1];
-
-        self.index += 1;
+    fn check_multi_char_type(&mut self) -> Option<Types> {
+        let first_char = self.current_byte();
+        let second_char = self.next_byte()?;
 
         match (first_char, second_char) {
-            (b'=', b'=') => return Types::OPERATOR(Operator::EQUAL),
-            (b'!', b'=') => return Types::OPERATOR(Operator::NOT_EQUAL),
-            (b'<', b'=') => return Types::OPERATOR(Operator::LESSER_EQUAL),
-            (b'>', b'=') => return Types::OPERATOR(Operator::GREATER_EQUAL),
-            (b'-', b'>') => return Types::OPERATOR(Operator::CAST),
-            (b':', b':') => return Types::OPERATOR(Operator::PATH),
-            _ => self.index -= 1,
+            (b'=', b'=') => return Some(Types::OPERATOR(Operator::EQUAL)),
+            (b'!', b'=') => return Some(Types::OPERATOR(Operator::NOT_EQUAL)),
+            (b'<', b'=') => return Some(Types::OPERATOR(Operator::LESSER_EQUAL)),
+            (b'>', b'=') => return Some(Types::OPERATOR(Operator::GREATER_EQUAL)),
+            (b'-', b'>') => return Some(Types::OPERATOR(Operator::CAST)),
+            (b':', b':') => return Some(Types::OPERATOR(Operator::PATH)),
+            _ => self.previous_byte(),
         };
 
         match first_char {
-            b'!' => Types::OPERATOR(Operator::NOT),
-            b'=' => Types::OPERATOR(Operator::ASSIGN),
-            b'<' => Types::OPERATOR(Operator::LESSER),
-            b'>' => Types::OPERATOR(Operator::GREATER),
-            b'-' => Types::OPERATOR(Operator::MINUS),
-            b':' => Types::OPERATOR(Operator::COLON),
+            b'!' => Some(Types::OPERATOR(Operator::NOT)),
+            b'=' => Some(Types::OPERATOR(Operator::ASSIGN)),
+            b'<' => Some(Types::OPERATOR(Operator::LESSER)),
+            b'>' => Some(Types::OPERATOR(Operator::GREATER)),
+            b'-' => Some(Types::OPERATOR(Operator::MINUS)),
+            b':' => Some(Types::OPERATOR(Operator::COLON)),
             _ => lexer_error(first_char, "invalid token", self.line, self.column),
         }
     }
 
-    fn check_identifier(&mut self) -> Token {
-        let start = self.index;
-        let mut end = start;
+    fn tokenize_identifier(&mut self) -> Option<Token> {
+        let mut size = 0;
 
-        let mut char = self.content.as_bytes()[self.index];
+        let mut char = self.current_byte();
 
         while b'0' <= char && char <= b'9'
             || b'a' <= char && char <= b'z'
             || b'A' <= char && char <= b'Z'
             || char == b'_'
         {
-            end += 1;
-            char = self.content.as_bytes()[end];
+            size += 1;
+            char = self.next_byte()?;
         }
+        self.previous_byte();
 
-        let result = self.content[start..end].to_string();
-
-        self.index = end - 1;
+        let result = self.get_relative_range(size);
 
         let (token_type, token_value) = match result.as_str() {
             "struct" => (Types::KEYWORD(Keyword::STRUCT), None),
@@ -211,7 +235,7 @@ impl Lexer {
             "false" => (Types::BOOL, Some("0".to_string())),
             "string" => (Types::DATATYPE(Datatype::STRING(0)), None),
             _ => {
-                if self.content.as_bytes()[self.index + 1] == b'(' {
+                if self.peek_byte()? == b'(' {
                     (Types::IDENTIFIER_FUNC, Some(result))
                 } else {
                     (Types::IDENTIFIER, Some(result))
@@ -219,47 +243,67 @@ impl Lexer {
             }
         };
 
-        Token::new(token_type, token_value, self.line, self.column)
+        Some(Token::new(token_type, token_value, self.line, self.column))
     }
 
-    fn check_number(&mut self) -> Token {
+    fn tokenize_number(&mut self) -> Option<Token> {
+        let mut size = 0;
+
+        let mut char = self.current_byte();
+
+        while (b'0' <= char && char <= b'9') || char == b'.' {
+            size += 1;
+            char = self.next_byte()?;
+        }
+        self.previous_byte();
+
+        let result = self.get_relative_range(size);
+
+        return Some(Token::new(
+            Types::NUMBER,
+            Some(result),
+            self.line,
+            self.column,
+        ));
+    }
+
+    fn tokenize_string(&mut self) -> Option<Token> {
         let start = self.index;
         let mut end = start;
 
-        let mut char = self.content.as_bytes()[self.index];
+        let mut char = self.next_byte()?;
 
-        while (b'0' <= char && char <= b'9') || char == b'.' {
+        while b'\'' != char && char != b'"' {
             end += 1;
-            char = self.content.as_bytes()[end];
+            char = self.next_byte()?;
         }
+        let result = self.get_range(start, end);
 
-        let result = self.content[start..end].to_string();
-
-        self.index = end - 1;
-
-        return Token::new(Types::NUMBER, Some(result), self.line, self.column);
-    }
-
-    fn check_string(&mut self) -> Token {
-        let start = self.index + 1;
-        let mut end = start;
-
-        let mut char = self.content.as_bytes()[start];
-
-        while 34 != char && char != 39 {
-            end += 1;
-            char = self.content.as_bytes()[end];
-        }
-
-        let result = self.content[start..end].to_string();
-
-        self.index = end;
-
-        return Token::new(
+        return Some(Token::new(
             Types::DATATYPE(Datatype::STRING(result.len())),
             Some(result),
             self.line,
             self.column,
-        );
+        ));
+    }
+
+    fn tokenize_nl(&mut self, token: &Vec<Token>) -> Option<Types> {
+        self.column = 0;
+        self.line += 1;
+        match token.last()?.r#type {
+            Types::NL => None,
+            Types::DELIMITER(Delimiter::COMMA) | Types::DELIMITER(Delimiter::LBRACE) => None,
+            _ => Some(Types::NL),
+        }
+    }
+
+    fn pop_nl(&mut self, tokens: &mut Vec<Token>) {
+        while let Some(token) = tokens.last() {
+            if token.r#type == Types::NL {
+                tokens.pop();
+            } else {
+                return;
+            }
+        }
     }
 }

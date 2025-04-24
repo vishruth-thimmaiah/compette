@@ -39,9 +39,6 @@ impl Iterator for Parser {
     fn next(&mut self) -> Option<Self::Item> {
         if self.index < self.tokens.len() {
             // Return the token at the current index and increment the index
-            if self.tokens[self.index].r#type == Types::NL {
-                self.skip_nl();
-            }
             let token = self.tokens[self.index].clone();
             self.index += 1;
             Some(token)
@@ -61,9 +58,6 @@ impl Parser {
     }
 
     pub(crate) fn peek(&mut self) -> Option<Token> {
-        if self.tokens[self.index].r#type == Types::NL {
-            self.skip_nl();
-        }
         self.tokens.get(self.index).cloned()
     }
 
@@ -133,15 +127,5 @@ impl Parser {
 
     pub fn parse(&mut self) -> Result<Vec<ASTNodes>> {
         self.parse_source()
-    }
-
-    fn skip_nl(&mut self) {
-        let Some(t) = self.current() else { return };
-        if SKIP_NL_FOR.contains(&t.r#type) {
-            self.index += 1;
-        }
-        if let Types::DELIMITER(Delimiter::RBRACE) = self.tokens[self.index + 1].r#type {
-            self.index += 1;
-        }
     }
 }

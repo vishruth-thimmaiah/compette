@@ -11,8 +11,6 @@ pub enum Types {
     NUMBER,
     BOOL,
     DATATYPE(Datatype),
-    //TODO: remove after porting to new parser
-    IMPORT_CALL,
 }
 
 #[allow(non_camel_case_types)]
@@ -76,15 +74,7 @@ pub enum Datatype {
     F64,
     BOOL,
     STRING(usize),
-    //TODO: remove after porting to new parser
-    ARRAY(Box<ArrayDetails>),
     NARRAY(Box<Datatype>, usize),
     CUSTOM(String),
     NONE,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct ArrayDetails {
-    pub datatype: Datatype,
-    pub length: u32,
 }
