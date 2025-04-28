@@ -133,6 +133,9 @@ impl<'a> Lexer<'a> {
                 b']' => Types::DELIMITER(Delimiter::RBRACKET),
                 b'.' => Types::OPERATOR(Operator::DOT),
                 b'{' => Types::DELIMITER(Delimiter::LBRACE),
+                b'^' => Types::OPERATOR(Operator::BITWISE_XOR),
+                b'&' => Types::OPERATOR(Operator::BITWISE_AND),
+                b'|' => Types::OPERATOR(Operator::BITWISE_OR),
                 b'}' => {
                     self.pop_nl(tokens);
                     Types::DELIMITER(Delimiter::RBRACE)
@@ -178,6 +181,8 @@ impl<'a> Lexer<'a> {
             (b'>', b'=') => return Some(Types::OPERATOR(Operator::GREATER_EQUAL)),
             (b'-', b'>') => return Some(Types::OPERATOR(Operator::CAST)),
             (b':', b':') => return Some(Types::OPERATOR(Operator::PATH)),
+            (b'>', b'>') => return Some(Types::OPERATOR(Operator::RSHIFT)),
+            (b'<', b'<') => return Some(Types::OPERATOR(Operator::LSHIFT)),
             _ => self.previous_byte(),
         };
 

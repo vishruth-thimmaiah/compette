@@ -146,6 +146,7 @@ impl<'ctx> CodeGen<'ctx> {
             Operator::MINUS => self.sub_binary_operation(&left_val, &right_val),
             Operator::MULTIPLY => self.mul_binary_operation(&left_val, &right_val),
             Operator::DIVIDE => self.div_binary_operation(&left_val, &right_val),
+            Operator::MODULO => self.mod_binary_operation(&left_val, &right_val),
             Operator::EQUAL
             | Operator::NOT_EQUAL
             | Operator::GREATER
@@ -154,6 +155,11 @@ impl<'ctx> CodeGen<'ctx> {
             | Operator::LESSER_EQUAL => self
                 .comp_binary_operation(operator, &left_val, &right_val)
                 .map(|v| v.into()),
+            Operator::BITWISE_AND => self.and_binary_operation(&left_val, &right_val),
+            Operator::BITWISE_OR => self.or_binary_operation(&left_val, &right_val),
+            Operator::BITWISE_XOR => self.xor_binary_operation(&left_val, &right_val),
+            Operator::LSHIFT => self.shl_binary_operation(&left_val, &right_val),
+            Operator::RSHIFT => self.shr_binary_operation(&left_val, &right_val),
             _ => todo!("Binary operator {:?} not implemented", operator),
         }
     }
@@ -462,6 +468,39 @@ entry:
   store i64 %2, ptr %d, align 4
   %d4 = load i64, ptr %d, align 4
   %3 = trunc i64 %d4 to i32
+  ret i32 %3
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_bitwise_operations() {
+        let data = "func main() i32 {
+    let i32 a = 3
+    let i32 b = 7
+
+    return a | b ^ b << 4 >> 2
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %a = alloca i32, align 4
+  store i32 3, ptr %a, align 4
+  %b = alloca i32, align 4
+  store i32 7, ptr %b, align 4
+  %a1 = load i32, ptr %a, align 4
+  %b2 = load i32, ptr %b, align 4
+  %b3 = load i32, ptr %b, align 4
+  %0 = shl i32 %b3, 4
+  %1 = lshr i32 %0, 2
+  %2 = xor i32 %b2, %1
+  %3 = or i32 %a1, %2
   ret i32 %3
 }
 "#

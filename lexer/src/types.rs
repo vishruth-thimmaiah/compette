@@ -23,6 +23,7 @@ pub enum Operator {
     MINUS,
     MULTIPLY,
     DIVIDE,
+    MODULO,
     EQUAL,
     LESSER,
     GREATER,
@@ -32,6 +33,11 @@ pub enum Operator {
     COLON,
     CAST, // ->
     PATH, // ::
+    BITWISE_AND,
+    BITWISE_OR,
+    BITWISE_XOR,
+    LSHIFT,
+    RSHIFT,
 }
 
 #[derive(Debug, PartialEq, Clone)]

@@ -134,10 +134,17 @@ impl Parser {
     }
 
     fn get_precedence(&self, operator: &Types) -> usize {
+        use Operator::*;
         match operator {
-            Types::OPERATOR(Operator::PLUS) | Types::OPERATOR(Operator::MINUS) => 1,
-            Types::OPERATOR(Operator::MULTIPLY) | Types::OPERATOR(Operator::DIVIDE) => 2,
-            Types::OPERATOR(Operator::CAST) => 3,
+            Types::OPERATOR(CAST) => 10,
+            Types::OPERATOR(MULTIPLY | DIVIDE | MODULO) => 8,
+            Types::OPERATOR(PLUS | MINUS) => 7,
+            Types::OPERATOR(LSHIFT | RSHIFT) => 6,
+            Types::OPERATOR(GREATER | GREATER_EQUAL | LESSER | LESSER_EQUAL) => 5,
+            Types::OPERATOR(EQUAL | NOT_EQUAL) => 4,
+            Types::OPERATOR(BITWISE_AND) => 3,
+            Types::OPERATOR(BITWISE_XOR) => 2,
+            Types::OPERATOR(BITWISE_OR) => 1,
             Types::DELIMITER(Delimiter::LPAREN) => 0,
             _ => unreachable!(),
         }
