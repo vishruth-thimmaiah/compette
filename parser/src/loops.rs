@@ -193,21 +193,19 @@ mod tests {
 
         assert_eq!(
             result,
-            vec![
-                ASTNodes::Function(Function {
-                    name: "main".to_string(),
-                    args: vec![],
-                    return_type: Some(Datatype::U32),
-                    body: Block {
-                        body: vec![ASTNodes::Loop(Loop {
-                            condition: None,
-                            body: Block {
-                                body: vec![ASTNodes::Break]
-                            }
-                        })]
-                    }
-                })
-            ]
+            vec![ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Some(Datatype::U32),
+                body: Block {
+                    body: vec![ASTNodes::Loop(Loop {
+                        condition: None,
+                        body: Block {
+                            body: vec![ASTNodes::Break]
+                        }
+                    })]
+                }
+            })]
         )
     }
 }

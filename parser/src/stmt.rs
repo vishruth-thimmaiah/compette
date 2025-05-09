@@ -29,6 +29,8 @@ impl Parser {
                 inner = Box::new(self.update_arr_datatype(*inner, arr.get(0).unwrap()));
                 dt = Datatype::NARRAY(inner, arr.len());
             }
+        } else if let Expression::String(string) = arr {
+            dt = Datatype::STRING(string.len());
         }
         dt
     }

@@ -58,19 +58,26 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         built_func: FunctionValue<'ctx>,
         stmt: &nodes::LetStmt,
-    ) -> Result<InstructionValue<'ctx>, CodeGenError> {
+    ) -> Result<PointerValue<'ctx>, CodeGenError> {
         let dt = self.parser_to_llvm_dt(&stmt.datatype);
         let expr = self.impl_expr(&stmt.value, built_func, dt)?;
 
-        let ptr = self
-            .builder
-            .build_alloca(dt, &stmt.name)
-            .map_err(CodeGenError::from_llvm_err)?;
-        self.var_ptrs.insert(&stmt.name, ptr, dt, stmt.mutable);
+        let ptr = if expr.is_pointer_value() {
+            expr.into_pointer_value()
+        } else {
+            let ptr = self
+                .builder
+                .build_alloca(dt, &stmt.name)
+                .map_err(CodeGenError::from_llvm_err)?;
 
-        self.builder
-            .build_store(ptr, expr)
-            .map_err(CodeGenError::from_llvm_err)
+            self.builder
+                .build_store(ptr, expr)
+                .map_err(CodeGenError::from_llvm_err)?;
+
+            ptr
+        };
+        self.var_ptrs.insert(&stmt.name, ptr, dt, stmt.mutable);
+        return Ok(ptr);
     }
 
     pub(crate) fn impl_assign_stmt(

@@ -20,7 +20,7 @@ impl<'ctx> CodeGen<'ctx> {
             Datatype::BOOL => self.context.bool_type().into(),
             Datatype::F32 => self.context.f32_type().into(),
             Datatype::F64 => self.context.f64_type().into(),
-            Datatype::STRING(_) => todo!(),
+            Datatype::STRING(size) => self.context.i8_type().array_type(*size as u32).into(),
             Datatype::NARRAY(dt, size) => {
                 self.parser_to_llvm_dt(dt).array_type(*size as u32).into()
             }

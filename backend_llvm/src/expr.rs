@@ -197,6 +197,12 @@ impl<'ctx> CodeGen<'ctx> {
         built_func: FunctionValue<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
         if let Some(var_data) = self.var_ptrs.get(&var.name) {
+            if matches!(
+                var_data.type_,
+                BasicTypeEnum::ArrayType(_) | BasicTypeEnum::StructType(_)
+            ) {
+                return Ok(var_data.ptr.into());
+            }
             self.builder
                 .build_load(var_data.type_, var_data.ptr, &var.name)
                 .map_err(CodeGenError::from_llvm_err)
