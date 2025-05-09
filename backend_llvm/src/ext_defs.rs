@@ -1,7 +1,7 @@
 use std::{cell::RefCell, collections::HashMap};
 
 use inkwell::{
-    context,
+    AddressSpace, context,
     types::{BasicTypeEnum, FunctionType},
     values::BasicValueEnum,
 };
@@ -32,17 +32,17 @@ impl<'ctx> Resolver<'ctx> {
         let func = match name {
             "__std__io__print" => StdLibFunc {
                 ptr: stdlib::io::__std__io__print as usize,
-                func: self
-                    .context
-                    .void_type()
-                    .fn_type(&[self.context.i8_type().into()], false),
+                func: self.context.void_type().fn_type(
+                    &[self.context.ptr_type(AddressSpace::default()).into()],
+                    false,
+                ),
             },
             "__std__io__println" => StdLibFunc {
                 ptr: stdlib::io::__std__io__println as usize,
-                func: self
-                    .context
-                    .void_type()
-                    .fn_type(&[self.context.i8_type().into()], false),
+                func: self.context.void_type().fn_type(
+                    &[self.context.ptr_type(AddressSpace::default()).into()],
+                    false,
+                ),
             },
             // Temporary funtion until format print is implemented
             "__std__io__printint" => StdLibFunc {

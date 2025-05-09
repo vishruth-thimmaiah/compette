@@ -352,7 +352,7 @@ entry:
   ret i32 0
 }
 
-declare void @__std__io__println(i8)
+declare void @__std__io__println(ptr)
 "#
         )
     }
