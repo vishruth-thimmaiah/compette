@@ -1,8 +1,8 @@
-use lexer::types::{Operator, Types};
+use lexer::types::{Keyword, Operator, Types};
 
 use crate::{
     Parser, Result,
-    nodes::{ImportCall, ImportDef},
+    nodes::{Extern, ImportCall, ImportDef},
 };
 
 impl Parser {
@@ -41,11 +41,26 @@ impl Parser {
             ident: Box::new(self.parse_complex_variable()?),
         });
     }
+
+    pub(crate) fn parse_extern(&mut self) -> Result<Extern> {
+        self.next_with_type(Types::KEYWORD(Keyword::FUNCTION))?;
+        let name = self.next_with_type(Types::IDENTIFIER_FUNC)?;
+        let args = self.parse_function_args()?;
+        let return_type = self.parse_datatype().ok();
+
+        Ok(Extern {
+            name: name.value.unwrap(),
+            args,
+            return_type,
+        })
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::nodes::{ASTNodes, Block, Expression, Function, FunctionCall, LetStmt, Literal};
+    use crate::nodes::{
+        ASTNodes, Block, Expression, Extern, Function, FunctionCall, LetStmt, Literal,
+    };
 
     use super::*;
     use lexer::{lexer::Lexer, types::Datatype};
@@ -106,6 +121,24 @@ mod tests {
                         mutable: false
                     })]
                 }
+            })]
+        );
+    }
+
+    #[test]
+    fn test_extern_func() {
+        let mut lexer = Lexer::new("extern func add(a u32, b u32) u32 ");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse().unwrap();
+        assert_eq!(
+            ast,
+            vec![ASTNodes::Extern(Extern {
+                name: "add".to_string(),
+                args: vec![
+                    ("a".to_string(), Datatype::U32),
+                    ("b".to_string(), Datatype::U32)
+                ],
+                return_type: Some(Datatype::U32),
             })]
         );
     }

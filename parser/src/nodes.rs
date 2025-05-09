@@ -22,6 +22,7 @@ pub enum ASTNodes {
     Token(Types),
     Variable(Variable),
     Break,
+    Extern(Extern),
 }
 
 #[derive(Debug, PartialEq)]
@@ -154,4 +155,11 @@ pub struct ImportCall {
 pub struct ArrayIndex {
     pub array_var: Box<ASTNodes>,
     pub index: Expression,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Extern {
+    pub name: String,
+    pub args: Vec<(String, Datatype)>,
+    pub return_type: Option<Datatype>,
 }

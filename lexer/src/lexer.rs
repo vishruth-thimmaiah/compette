@@ -218,6 +218,7 @@ impl<'a> Lexer<'a> {
             "struct" => (Types::KEYWORD(Keyword::STRUCT), None),
             "func" => (Types::KEYWORD(Keyword::FUNCTION), None),
             "import" => (Types::KEYWORD(Keyword::IMPORT), None),
+            "extern" => (Types::KEYWORD(Keyword::EXTERN), None),
             "let" => (Types::KEYWORD(Keyword::LET), None),
             "return" => (Types::KEYWORD(Keyword::RETURN), None),
             "if" => (Types::KEYWORD(Keyword::IF), None),

@@ -30,7 +30,7 @@ impl Parser {
         })
     }
 
-    fn parse_function_args(&mut self) -> Result<Vec<(String, Datatype)>> {
+    pub(crate) fn parse_function_args(&mut self) -> Result<Vec<(String, Datatype)>> {
         let mut args: Vec<(String, Datatype)> = vec![];
         self.next_with_type(Types::DELIMITER(Delimiter::LPAREN))?;
 

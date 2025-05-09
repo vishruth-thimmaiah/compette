@@ -55,6 +55,7 @@ pub enum Delimiter {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Keyword {
     IMPORT,
+    EXTERN,
     STRUCT,
     FUNCTION,
     LET,

@@ -144,6 +144,30 @@ impl<'ctx> CodeGen<'ctx> {
         self.import_resolver
             .get_builtin_function(callee.type_, &method.func.name)
     }
+
+    pub(crate) fn impl_extern_call(
+        &self,
+        ext: &nodes::Extern,
+    ) -> Result<FunctionValue<'ctx>, CodeGenError> {
+        let args = self.impl_function_args(&ext.args)?;
+
+        let func_type = if let Some(rt) = &ext.return_type {
+            let llvm_rt = self.parser_to_llvm_dt(&rt);
+            llvm_rt.fn_type(&args, false)
+        } else {
+            self.context.void_type().fn_type(&args, false)
+        };
+
+        let built_func = self
+            .module
+            .add_function(&ext.name, func_type, Some(Linkage::External));
+
+        for (index, arg) in built_func.get_param_iter().enumerate() {
+            arg.set_name(&ext.args[index].0);
+        }
+
+        Ok(built_func)
+    }
 }
 
 #[cfg(test)]
@@ -329,6 +353,33 @@ entry:
 }
 
 declare void @__std__io__println(i8)
+"#
+        )
+    }
+
+    #[test]
+    fn test_extern_func_call() {
+        let data = r#"
+
+extern func add(a u32, b u32) u32
+
+func main() u32 {
+    return 0
+}"#;
+
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+declare i32 @add(i32, i32)
+
+define i32 @main() {
+entry:
+  ret i32 0
+}
 "#
         )
     }

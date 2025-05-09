@@ -12,6 +12,7 @@ impl Parser {
         while let Some(token) = self.next() {
             let object = match token.r#type {
                 Types::NL => continue,
+                Types::KEYWORD(Keyword::EXTERN) => ASTNodes::Extern(self.parse_extern()?),
                 Types::KEYWORD(Keyword::IMPORT) => ASTNodes::ImportDef(self.parse_import_def()?),
                 Types::KEYWORD(Keyword::FUNCTION) => ASTNodes::Function(self.parse_function_def()?),
                 Types::KEYWORD(Keyword::STRUCT) => ASTNodes::StructDef(self.parse_struct_def()?),
