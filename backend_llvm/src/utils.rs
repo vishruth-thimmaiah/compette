@@ -1,4 +1,5 @@
 use inkwell::{
+    AddressSpace,
     types::{BasicType, BasicTypeEnum, FloatType},
     values::{ArrayValue, BasicValueEnum},
 };
@@ -21,6 +22,7 @@ impl<'ctx> CodeGen<'ctx> {
             Datatype::F32 => self.context.f32_type().into(),
             Datatype::F64 => self.context.f64_type().into(),
             Datatype::STRING(size) => self.context.i8_type().array_type(*size as u32).into(),
+            Datatype::CSTRING(_) => self.context.ptr_type(AddressSpace::default()).into(),
             Datatype::NARRAY(dt, size) => {
                 self.parser_to_llvm_dt(dt).array_type(*size as u32).into()
             }

@@ -74,7 +74,15 @@ impl<'ctx> CodeGen<'ctx> {
                     .collect::<Vec<_>>();
                 Ok(dt.const_named_struct(&struct_vals).into())
             }
+            Expression::String(str) if dt.is_pointer_type() => {
+                let string = self.context.const_string(str.as_bytes(), true);
+                let string_ptr = self.builder.build_alloca(string.get_type(), "").unwrap();
+                self.builder.build_store(string_ptr, string).unwrap();
+
+                Ok(string_ptr.into())
+            }
             Expression::String(str) => {
+                println!("dt: {:?}", dt);
                 let string = self.context.const_string(str.as_bytes(), false);
                 let string_ptr = self.builder.build_alloca(string.get_type(), "").unwrap();
                 self.builder.build_store(string_ptr, string).unwrap();
@@ -199,10 +207,13 @@ impl<'ctx> CodeGen<'ctx> {
         if let Some(var_data) = self.var_ptrs.get(&var.name) {
             if matches!(
                 var_data.type_,
-                BasicTypeEnum::ArrayType(_) | BasicTypeEnum::StructType(_)
+                BasicTypeEnum::ArrayType(_)
+                    | BasicTypeEnum::StructType(_)
+                    | BasicTypeEnum::PointerType(_)
             ) {
                 return Ok(var_data.ptr.into());
             }
+            println!("var_data: {:?}", var_data.type_);
             self.builder
                 .build_load(var_data.type_, var_data.ptr, &var.name)
                 .map_err(CodeGenError::from_llvm_err)

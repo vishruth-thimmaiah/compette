@@ -330,7 +330,8 @@ entry:
     fn test_imported_func_call() {
         let data = r#"
 func main() u32 {
-    std::io::println("Test")
+    let string s = "Test"
+    std::io::println(s)
     return 0
 }"#;
 

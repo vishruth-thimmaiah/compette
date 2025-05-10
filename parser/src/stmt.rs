@@ -30,7 +30,11 @@ impl Parser {
                 dt = Datatype::NARRAY(inner, arr.len());
             }
         } else if let Expression::String(string) = arr {
-            dt = Datatype::STRING(string.len());
+            if let Datatype::STRING(size) = dt {
+                dt = Datatype::STRING(string.len() + size);
+            } else {
+                dt = Datatype::CSTRING(string.len());
+            }
         }
         dt
     }

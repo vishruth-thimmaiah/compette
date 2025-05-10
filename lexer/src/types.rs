@@ -81,6 +81,7 @@ pub enum Datatype {
     F64,
     BOOL,
     STRING(usize),
+    CSTRING(usize),
     NARRAY(Box<Datatype>, usize),
     CUSTOM(String),
     NONE,
