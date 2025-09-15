@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+
 use parser::nodes::{
     ASTNodes, ArrayIndex, AssignStmt, Attr, Block, Conditional, Expression, Extern, ForLoop,
     Function, FunctionCall, ImportCall, ImportDef, LetStmt, Literal, Loop, Method, Return,
     StructDef, Types, Variable,
 };
 
-use crate::r#impl::PassData;
+use crate::r#impl::{PassData, Variables};
 
 pub trait PassTraversal<'a> {
     fn visit(&'a mut self, data: &PassData<'a>);
@@ -46,9 +48,11 @@ impl<'a> PassTraversal<'a> for Function {
 
 impl<'a> PassTraversal<'a> for Block {
     fn visit(&'a mut self, data: &PassData<'a>) {
+        data.vars.borrow_mut().push(HashMap::new());
         for node in self.body.iter_mut() {
             node.visit(data);
         }
+        data.vars.borrow_mut().pop();
     }
 }
 
@@ -85,7 +89,11 @@ impl<'a> PassTraversal<'a> for ImportCall {
 
 impl<'a> PassTraversal<'a> for LetStmt {
     fn visit(&'a mut self, data: &PassData<'a>) {
-        data.vars.borrow_mut().push(self);
+        data.vars
+            .borrow_mut()
+            .last_mut()
+            .unwrap()
+            .insert(&self.name, Variables::new(self));
     }
 }
 
