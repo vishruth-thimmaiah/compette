@@ -5,6 +5,7 @@ use build::{build, run};
 use inkwell::context::Context;
 use lexer::lexer::Lexer;
 use parser::Parser;
+use passes::r#impl::PassManager;
 
 mod args;
 mod build;
@@ -24,11 +25,14 @@ fn main() {
 
         let context = Context::create();
 
-        let parser = Parser::new(lexer.clone()).parse().unwrap();
+        let mut parser = Parser::new(lexer).parse().unwrap();
 
         if parsed_args.parser_opts.print_ast_output {
             println!("{:#?}", parser);
         }
+
+        let mut pass_manager = PassManager::new(&mut parser);
+        pass_manager.invoke();
 
         let codegen = CodeGen::new(&context, parser, parsed_args.compiler_opts.jit);
         codegen.codegen().unwrap();

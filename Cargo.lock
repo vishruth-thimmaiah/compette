@@ -102,6 +102,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "passes"
+version = "0.1.0"
+dependencies = [
+ "parser",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.94"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -145,6 +152,7 @@ dependencies = [
  "inkwell",
  "lexer",
  "parser",
+ "passes",
 ]
 
 [[package]]

@@ -1,4 +1,5 @@
-use lexer::types::{Datatype, Operator, Types};
+pub use lexer::types::Types;
+use lexer::types::{Datatype, Operator};
 
 #[derive(Debug, PartialEq)]
 pub enum ASTNodes {

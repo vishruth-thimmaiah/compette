@@ -6,6 +6,7 @@ members = [
 	"backend_llvm",
 	"stdlib",
 	"tests",
+	"passes",
 ]
 resolver = "3"
 
@@ -22,6 +23,7 @@ stdlib = { path = "./stdlib" }
 lexer = { path = "./lexer" }
 parser = { path = "./parser" }
 backend_llvm = { path = "./backend_llvm" }
+passes = { path = "./passes" }
 
 tests = { path = "./tests" }
 
