@@ -47,4 +47,19 @@ mod tests {
 
         assert_eq!(11, generate_result(content).unwrap());
     }
+
+    #[test]
+    fn test_for_loop_with_step() {
+        let content = r#"
+        func main() u32 { 
+            let u64[] array = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+            let u64! a = 0
+            loop range[::2] val, index = array {
+                a = a + index * val
+            }
+            return a -> u32
+        }"#;
+
+        assert_eq!(120, generate_result(content).unwrap());
+    }
 }

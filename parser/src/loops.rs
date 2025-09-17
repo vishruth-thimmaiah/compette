@@ -30,6 +30,19 @@ impl Parser {
     }
 
     pub(crate) fn parse_for_loop(&mut self) -> Result<ForLoop> {
+        let step = if self
+            .next_if_type(Types::DELIMITER(Delimiter::LBRACKET))
+            .is_some()
+        {
+            // TODO: take start and end indexes also
+            self.next_with_type(Types::OPERATOR(Operator::PATH))?;
+            let step = Some(self.parse_expression(vec![Types::DELIMITER(Delimiter::RBRACKET)])?);
+            self.next();
+            step
+        } else {
+            None
+        };
+        println!("{:?}", step);
         let value = self.parse_variable()?;
         self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
         let increment = self.parse_variable()?;
@@ -40,6 +53,7 @@ impl Parser {
             increment,
             iterator,
             body: self.parse_scoped_block()?,
+            step,
         })
     }
 }
@@ -158,6 +172,7 @@ mod tests {
                             right: None,
                             operator: None
                         },
+                        step: None,
                         body: Block {
                             body: vec![ASTNodes::AssignStmt(AssignStmt {
                                 name: Box::new(ASTNodes::Variable(Variable {
@@ -205,6 +220,64 @@ mod tests {
                         }
                     })]
                 }
+            })]
+        )
+    }
+
+    #[test]
+    fn test_parse_for_loop_with_step() {
+        let mut lexer =
+            Lexer::new("func main() u32 { loop range[::2] val, index = array { a = i * 2 } }");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse().unwrap();
+        assert_eq!(
+            ast,
+            vec![ASTNodes::Function(Function {
+                name: "main".to_string(),
+                args: vec![],
+                return_type: Some(Datatype::U32),
+                body: Block {
+                    body: vec![ASTNodes::ForLoop(ForLoop {
+                        value: Variable {
+                            name: "val".to_string(),
+                        },
+                        increment: Variable {
+                            name: "index".to_string(),
+                        },
+                        iterator: Expression::Simple {
+                            left: Box::new(ASTNodes::Variable(Variable {
+                                name: "array".to_string(),
+                            })),
+                            right: None,
+                            operator: None
+                        },
+                        step: Some(Expression::Simple {
+                            left: Box::new(ASTNodes::Literal(Literal {
+                                value: "2".to_string(),
+                                r#type: lexer::types::Types::NUMBER
+                            })),
+                            right: None,
+                            operator: None
+                        }),
+                        body: Block {
+                            body: vec![ASTNodes::AssignStmt(AssignStmt {
+                                name: Box::new(ASTNodes::Variable(Variable {
+                                    name: "a".to_string(),
+                                })),
+                                value: Expression::Simple {
+                                    left: Box::new(ASTNodes::Variable(Variable {
+                                        name: "i".to_string(),
+                                    })),
+                                    right: Some(Box::new(ASTNodes::Literal(Literal {
+                                        value: "2".to_string(),
+                                        r#type: lexer::types::Types::NUMBER
+                                    }))),
+                                    operator: Some(Operator::MULTIPLY)
+                                },
+                            })]
+                        }
+                    })]
+                },
             })]
         )
     }

@@ -775,6 +775,7 @@ fn test_parse_full_9() {
                             right: None,
                             operator: None
                         },
+                        step: None,
                         body: Block {
                             body: vec![ASTNodes::AssignStmt(AssignStmt {
                                 name: Box::new(ASTNodes::Variable(Variable {

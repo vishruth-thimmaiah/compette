@@ -99,13 +99,17 @@ impl<'ctx> CodeGen<'ctx> {
             .build_load(self.context.i64_type(), index_ptr, "")
             .map_err(CodeGenError::from_llvm_err)?;
 
+        let step =
+            stmt.step
+                .as_ref()
+                .map_or(Ok(self.context.i64_type().const_int(1, false)), |s| {
+                    self.impl_expr(&s, built_func, self.context.i64_type().into())
+                        .map(|v| v.into_int_value())
+                })?;
+
         let new_index = self
             .builder
-            .build_int_add(
-                index.into_int_value(),
-                self.context.i64_type().const_int(1, false),
-                "",
-            )
+            .build_int_add(index.into_int_value(), step, "")
             .map_err(CodeGenError::from_llvm_err)?;
 
         self.builder
@@ -316,6 +320,61 @@ else:                                             ; preds = %loop
   %3 = add i64 %a3, 1
   store i64 %3, ptr %a, align 4
   br label %loop_init
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_impl_for_loop_stmt_with_step() {
+        let data = "func main() u32 { 
+    let u64[] array = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    let u64! a = 0
+    loop range[::2] val, index = array {
+        a = index * val
+    }
+    return a -> u32
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %array = alloca [10 x i64], align 8
+  store [10 x i64] [i64 0, i64 1, i64 2, i64 3, i64 4, i64 5, i64 6, i64 7, i64 8, i64 9], ptr %array, align 4
+  %a = alloca i64, align 8
+  store i64 0, ptr %a, align 4
+  %index = alloca i64, align 8
+  store i64 0, ptr %index, align 4
+  br label %for_init
+
+for_init:                                         ; preds = %for_cond, %entry
+  %0 = load i64, ptr %index, align 4
+  %1 = icmp slt i64 %0, 10
+  %2 = getelementptr inbounds [10 x i64], ptr %array, i32 0, i64 %0
+  br i1 %1, label %for_body, label %for_cont
+
+for_body:                                         ; preds = %for_init
+  %index1 = load i64, ptr %index, align 4
+  %val = load i64, ptr %2, align 4
+  %3 = mul i64 %index1, %val
+  store i64 %3, ptr %a, align 4
+  br label %for_cond
+
+for_cond:                                         ; preds = %for_body
+  %4 = load i64, ptr %index, align 4
+  %5 = add i64 %4, 2
+  store i64 %5, ptr %index, align 4
+  br label %for_init
+
+for_cont:                                         ; preds = %for_init
+  %a2 = load i64, ptr %a, align 4
+  %6 = trunc i64 %a2 to i32
+  ret i32 %6
 }
 "#
         )

@@ -144,6 +144,7 @@ pub struct ForLoop {
     pub increment: Variable,
     pub iterator: Expression,
     pub body: Block,
+    pub step: Option<Expression>,
 }
 
 #[derive(Debug, PartialEq)]
