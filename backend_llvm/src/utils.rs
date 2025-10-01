@@ -26,6 +26,11 @@ impl<'ctx> CodeGen<'ctx> {
             Datatype::NARRAY(dt, size) => {
                 self.parser_to_llvm_dt(dt).array_type(*size as u32).into()
             }
+            Datatype::SIMD(dt, size) => match self.parser_to_llvm_dt(dt) {
+                BasicTypeEnum::IntType(it) => it.vec_type(*size as u32).into(),
+                BasicTypeEnum::FloatType(ft) => ft.vec_type(*size as u32).into(),
+                _ => unreachable!(),
+            },
             Datatype::CUSTOM(name) => self.struct_defs.get_struct_ptr(name).unwrap().into(),
             Datatype::NONE => unreachable!(),
         }

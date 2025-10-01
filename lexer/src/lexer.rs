@@ -241,6 +241,10 @@ impl<'a> Lexer<'a> {
             "false" => (Types::BOOL, Some("0".to_string())),
             "string" => (Types::DATATYPE(Datatype::STRING(0)), None),
             "cstring" => (Types::DATATYPE(Datatype::CSTRING(0)), None),
+            "simd" => (
+                Types::DATATYPE(Datatype::SIMD(Box::new(Datatype::U32), 0)),
+                None,
+            ),
             _ => {
                 if self.peek_byte()? == b'(' {
                     (Types::IDENTIFIER_FUNC, Some(result))

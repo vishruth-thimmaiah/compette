@@ -202,12 +202,30 @@ impl Parser {
 
     fn parse_cast(&mut self) -> Result<Datatype> {
         self.current_with_type(Types::OPERATOR(Operator::CAST))?;
+        // A temporary solution for parsing casts to simd
+        if let Types::DATATYPE(Datatype::SIMD(_, _)) = self.peek().unwrap().r#type {
+            self.next();
+            self.next_with_type(Types::DELIMITER(Delimiter::LPAREN))?;
+            let dt = self.parse_datatype()?;
+            self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
+            let size = self
+                .next()
+                .unwrap()
+                .value
+                .unwrap()
+                .parse::<usize>()
+                .unwrap();
+            self.next_with_type(Types::DELIMITER(Delimiter::RPAREN))?;
+            return Ok(Datatype::SIMD(Box::new(dt), size));
+        }
         return self.parse_datatype();
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::nodes::Variable;
+
     use super::*;
     use lexer::lexer::Lexer;
 
@@ -377,5 +395,26 @@ mod tests {
                 operator: Some(Operator::CAST)
             }
         );
+    }
+
+    #[test]
+    fn test_parse_cast_to_simd() {
+        let mut lexer = Lexer::new("array_var -> simd(u32, 4) ");
+        let mut parser = Parser::new(lexer.tokenize());
+        let ast = parser.parse_expression(vec![Types::EOF]).unwrap();
+
+        assert_eq!(
+            ast,
+            Expression::Simple {
+                left: Box::new(ASTNodes::Variable(Variable {
+                    name: "array_var".to_string()
+                })),
+                right: Some(Box::new(ASTNodes::Token(Types::DATATYPE(Datatype::SIMD(
+                    Box::new(Datatype::U32),
+                    4
+                ))))),
+                operator: Some(Operator::CAST)
+            },
+        )
     }
 }

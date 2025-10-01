@@ -83,6 +83,7 @@ pub enum Datatype {
     STRING(usize),
     CSTRING(usize),
     NARRAY(Box<Datatype>, usize),
+    SIMD(Box<Datatype>, usize),
     CUSTOM(String),
     NONE,
 }
