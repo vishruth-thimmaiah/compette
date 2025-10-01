@@ -1,6 +1,6 @@
 [workspace]
 members = [
-	"sloppee",
+	"compette",
 	"lexer",
 	"parser",
 	"backend_llvm",
@@ -11,7 +11,7 @@ members = [
 resolver = "3"
 
 [workspace.package]
-name = "sloppee"
+name = "compette"
 version = "0.1.0"
 edition = "2024"
 

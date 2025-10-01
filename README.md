@@ -1,11 +1,11 @@
-# Sloppee
+# Compette
 > [!WARNING]
 > This project is a W.I.P. The functionality and features may change or be incomplete.
 
 > [!WARNING]
 > This Project is only tested on linux.
 
-![Tests Workflow](https://github.com/vishruth-thimmaiah/sloppee/actions/workflows/rust_test.yml/badge.svg)
+![Tests Workflow](https://github.com/vishruth-thimmaiah/compette/actions/workflows/rust_test.yml/badge.svg)
 
 
 ## Installation
@@ -28,8 +28,8 @@ For more information, [click here](https://www.rust-lang.org/tools/install)
 
 ### 3. Clone the repo:
 ```bash
-git clone https://github.com/vishruth-thimmaiah/sloppee.git
-cd sloppee
+git clone https://github.com/vishruth-thimmaiah/compette.git
+cd compette
 ```
 
 ### Build the stdlib:
@@ -42,7 +42,7 @@ cargo build --release -p stdlib
 ```bash
 cargo build --release
 ```
-The compiler executable will be located at `target/release/sloppee`.
+The compiler executable will be located at `target/release/compette`.
 
 ### Run tests:
 ```bash
@@ -53,16 +53,16 @@ cargo test
 
 ### Run the compiler:
 ```bash
-sloppee [COMMAND] <file> [OPTIONS]
+compette [COMMAND] <file> [OPTIONS]
 ```
 
 ### List Commands:
 ```bash
-sloppee --help
+compette --help
 ```
 
 ## Syntax
-Examples can be found at [```examples/```](https://github.com/vishruth-thimmaiah/sloppee/tree/master/examples).
+Examples can be found at [```examples/```](https://github.com/vishruth-thimmaiah/compette/tree/master/examples).
 
 ### hello world:
 ```

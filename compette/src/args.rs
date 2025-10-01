@@ -38,7 +38,7 @@ impl Default for Args {
 }
 
 const HELP_STRING: &str = r#"
-Usage: sloppee [COMMAND] <file> [OPTIONS]
+Usage: compette [COMMAND] <file> [OPTIONS]
 
 Commands:
     build                   Build the project
@@ -58,7 +58,7 @@ fn show_help() {
 }
 
 fn show_usage() {
-    eprintln!("Usage: sloppee [COMMAND] <file> [OPTIONS]");
+    eprintln!("Usage: compette [COMMAND] <file> [OPTIONS]");
     exit(1);
 }
 

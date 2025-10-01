@@ -1,4 +1,4 @@
-# Contributing to Sloppee
+# Contributing to Compette
 
 First off, thanks for taking the time to contribute! ❤️
 
@@ -36,14 +36,14 @@ your appreciation, which we would also be very happy about:
 ## I Have a Question
 
 Before you ask a question, it is best to search for existing 
-[Issues](https://github.com/vishruth-thimmaiah/sloppee/issues) that might 
+[Issues](https://github.com/vishruth-thimmaiah/compette/issues) that might 
 help you. In case you have found a suitable issue and still need 
 clarification, you can write your question in this issue. It is also 
 advisable to search the internet for answers first.
 
 If you then still feel the need to ask a question and need clarification, we recommend the following:
 
-- Open an [Issue](https://github.com/vishruth-thimmaiah/sloppee/issues/new).
+- Open an [Issue](https://github.com/vishruth-thimmaiah/compette/issues/new).
 - Provide as much context as you can about what you're running into.
 - Provide project and platform versions (bun, cargo), depending on what seems relevant.
 
@@ -74,7 +74,7 @@ e.g. using incompatible environment components/versions. If you are looking for 
  might want to check [this section](#i-have-a-question)).
 - To see if other users have experienced (and potentially already solved) the same 
 issue you are having, check if there is not already a bug report 
-existing for your bug or error in the [bug tracker](https://github.com/vishruth-thimmaiah/sloppee/issues?q=label%3Abug).
+existing for your bug or error in the [bug tracker](https://github.com/vishruth-thimmaiah/compette/issues?q=label%3Abug).
 - Also make sure to search the internet (including Stack Overflow) to see
  if users outside of the GitHub community have discussed the issue.
 - Collect information about the bug:
@@ -94,7 +94,7 @@ public. Instead sensitive bugs must be sent by email to <>.
 
 We use GitHub issues to track bugs and errors. If you run into an issue with the project:
 
-- Open an [Issue](https://github.com/vishruth-thimmaiah/sloppee/issues/new).
+- Open an [Issue](https://github.com/vishruth-thimmaiah/compette/issues/new).
  (Since we can't be sure at this point whether it is a bug or not, we 
 ask you not to talk about a bug yet and not to label the issue.)
 - Explain the behavior you would expect and the actual behavior.
@@ -130,7 +130,7 @@ related suggestions.
 #### Before Submitting an Enhancement
 
 - Make sure that you are using the latest version.
-- Perform a [search](https://github.com/vishruth-thimmaiah/sloppee/issues) to see if 
+- Perform a [search](https://github.com/vishruth-thimmaiah/compette/issues) to see if 
 the enhancement has already been suggested. If it has, add a comment to 
 the existing issue instead of opening a new one.
 - Find out whether 
@@ -144,7 +144,7 @@ library.
 <!-- omit in toc -->
 #### How Do I Submit a Good Enhancement Suggestion?
 
-Enhancement suggestions are tracked as [GitHub issues](https://github.com/vishruth-thimmaiah/sloppee/issues).
+Enhancement suggestions are tracked as [GitHub issues](https://github.com/vishruth-thimmaiah/compette/issues).
 
 - Use a **clear and descriptive title** for the issue to identify the suggestion.
 - Provide a **step-by-step description of the suggested enhancement** in as many details as possible.
