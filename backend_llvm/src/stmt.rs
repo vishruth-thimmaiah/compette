@@ -120,7 +120,13 @@ impl<'ctx> CodeGen<'ctx> {
     ) -> Result<Variable<'ctx>, CodeGenError> {
         let mut array_var = self.resolve_var(built_func, &index.array_var)?;
         let index = self.impl_expr(&index.index, built_func, self.context.i32_type().into())?;
-        let inner_dt = array_var.type_.into_array_type().get_element_type();
+        let inner_dt = if let BasicTypeEnum::ArrayType(at) = array_var.type_ {
+            at.get_element_type()
+        } else if let BasicTypeEnum::VectorType(vt) = array_var.type_ {
+            vt.get_element_type()
+        } else {
+            unreachable!()
+        };
         let ptr = unsafe {
             self.builder
                 .build_in_bounds_gep(

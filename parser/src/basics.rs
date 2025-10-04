@@ -14,6 +14,23 @@ impl Parser {
         } else {
             return Err(ParserError::default());
         };
+
+        // A temporary solution for parsing casts to simd
+        if let Datatype::SIMD(_, _) = dt {
+            self.next_with_type(Types::OPERATOR(Operator::LESSER))?;
+            let dt = self.parse_datatype()?;
+            self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
+            let size = self
+                .next()
+                .unwrap()
+                .value
+                .unwrap()
+                .parse::<usize>()
+                .unwrap();
+            self.next_with_type(Types::OPERATOR(Operator::GREATER))?;
+            return Ok(Datatype::SIMD(Box::new(dt), size));
+        }
+
         while self
             .next_if_type(Types::DELIMITER(Delimiter::LBRACKET))
             .is_some()

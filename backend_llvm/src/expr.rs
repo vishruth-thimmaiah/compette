@@ -1,7 +1,7 @@
 use inkwell::{
     AddressSpace,
     types::{BasicType, BasicTypeEnum},
-    values::{BasicValueEnum, FunctionValue},
+    values::{BasicValue, BasicValueEnum, FunctionValue},
 };
 use lexer::types::{Operator, Types};
 use parser::nodes::{ASTNodes, Expression, Literal, Variable};
@@ -213,7 +213,6 @@ impl<'ctx> CodeGen<'ctx> {
             ) {
                 return Ok(var_data.ptr.into());
             }
-            println!("var_data: {:?}", var_data.type_);
             self.builder
                 .build_load(var_data.type_, var_data.ptr, &var.name)
                 .map_err(CodeGenError::from_llvm_err)
@@ -319,7 +318,21 @@ impl<'ctx> CodeGen<'ctx> {
             {
                 cast_fn(inkwell::values::InstructionOpcode::Trunc)
             }
-            _ => todo!(),
+            (BasicTypeEnum::PointerType(_), BasicTypeEnum::VectorType(v)) => {
+                let vector = self
+                    .builder
+                    .build_load(v, left_expr.into_pointer_value(), "")
+                    .map_err(CodeGenError::from_llvm_err)?;
+                _ = vector.as_instruction_value().unwrap().set_alignment(
+                    match v.get_element_type() {
+                        BasicTypeEnum::IntType(it) => it.get_bit_width() / 8 as u32,
+                        BasicTypeEnum::FloatType(ft) => self.get_float_size(ft) as u32,
+                        _ => unreachable!(),
+                    },
+                );
+                Ok(vector)
+            }
+            _ => todo!("{} to {}", left_type, cast_to),
         }
     }
 }
@@ -519,6 +532,34 @@ entry:
   %2 = xor i32 %b2, %1
   %3 = or i32 %a1, %2
   ret i32 %3
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_impl_cast_to_simd() {
+        let data = "func main() i32 {
+    let u32[] arr = [1, 2, 3, 4]
+    let simd<u32, 4> vec = arr -> simd<u32, 4>
+    return vec[0]
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %arr = alloca [4 x i32], align 4
+  store [4 x i32] [i32 1, i32 2, i32 3, i32 4], ptr %arr, align 4
+  %0 = load <4 x i32>, ptr %arr, align 4
+  %vec = alloca <4 x i32>, align 16
+  store <4 x i32> %0, ptr %vec, align 16
+  %1 = getelementptr inbounds <4 x i32>, ptr %vec, i32 0, i32 0
+  %2 = load i32, ptr %1, align 4
+  ret i32 %2
 }
 "#
         )
