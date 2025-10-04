@@ -16,7 +16,7 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_int_add(left_int, right_int, "")
                 .unwrap()
                 .into())
-        } else {
+        } else if left.is_float_value() && right.is_float_value() {
             let left_float = left.into_float_value();
             let right_float = right.into_float_value();
             Ok(self
@@ -24,6 +24,16 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_float_add(left_float, right_float, "")
                 .unwrap()
                 .into())
+        } else if left.is_vector_value() && right.is_vector_value() {
+            let left_vec = left.into_vector_value();
+            let right_vec = right.into_vector_value();
+            Ok(self
+                .builder
+                .build_int_add(left_vec, right_vec, "")
+                .unwrap()
+                .into())
+        } else {
+            Err(CodeGenError::new("Invalid operands for addition"))
         }
     }
 
@@ -40,7 +50,7 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_int_sub(left_int, right_int, "")
                 .unwrap()
                 .into())
-        } else {
+        } else if left.is_float_value() && right.is_float_value() {
             let left_float = left.into_float_value();
             let right_float = right.into_float_value();
             Ok(self
@@ -48,6 +58,16 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_float_sub(left_float, right_float, "")
                 .unwrap()
                 .into())
+        } else if left.is_vector_value() && right.is_vector_value() {
+            let left_vec = left.into_vector_value();
+            let right_vec = right.into_vector_value();
+            Ok(self
+                .builder
+                .build_int_sub(left_vec, right_vec, "")
+                .unwrap()
+                .into())
+        } else {
+            Err(CodeGenError::new("Invalid operands for subtraction"))
         }
     }
 
@@ -64,7 +84,7 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_int_mul(left_int, right_int, "")
                 .unwrap()
                 .into())
-        } else {
+        } else if left.is_float_value() && right.is_float_value() {
             let left_float = left.into_float_value();
             let right_float = right.into_float_value();
             Ok(self
@@ -72,6 +92,16 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_float_mul(left_float, right_float, "")
                 .unwrap()
                 .into())
+        } else if left.is_vector_value() && right.is_vector_value() {
+            let left_vec = left.into_vector_value();
+            let right_vec = right.into_vector_value();
+            Ok(self
+                .builder
+                .build_int_mul(left_vec, right_vec, "")
+                .unwrap()
+                .into())
+        } else {
+            Err(CodeGenError::new("Invalid operands for multiplication"))
         }
     }
 
@@ -88,7 +118,7 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_int_signed_div(left_int, right_int, "")
                 .unwrap()
                 .into())
-        } else {
+        } else if left.is_float_value() && right.is_float_value() {
             let left_float = left.into_float_value();
             let right_float = right.into_float_value();
             Ok(self
@@ -96,6 +126,16 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_float_div(left_float, right_float, "")
                 .unwrap()
                 .into())
+        } else if left.is_vector_value() && right.is_vector_value() {
+            let left_vec = left.into_vector_value();
+            let right_vec = right.into_vector_value();
+            Ok(self
+                .builder
+                .build_int_signed_div(left_vec, right_vec, "")
+                .unwrap()
+                .into())
+        } else {
+            Err(CodeGenError::new("Invalid operands for division"))
         }
     }
 
@@ -112,7 +152,7 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_int_signed_rem(left_int, right_int, "")
                 .unwrap()
                 .into())
-        } else {
+        } else if left.is_float_value() && right.is_float_value() {
             let left_float = left.into_float_value();
             let right_float = right.into_float_value();
             Ok(self
@@ -120,6 +160,16 @@ impl<'ctx> CodeGen<'ctx> {
                 .build_float_rem(left_float, right_float, "")
                 .unwrap()
                 .into())
+        } else if left.is_vector_value() && right.is_vector_value() {
+            let left_vec = left.into_vector_value();
+            let right_vec = right.into_vector_value();
+            Ok(self
+                .builder
+                .build_int_signed_rem(left_vec, right_vec, "")
+                .unwrap()
+                .into())
+        } else {
+            Err(CodeGenError::new("Invalid operands for modulo"))
         }
     }
 }

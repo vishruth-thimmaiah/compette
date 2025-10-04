@@ -8,7 +8,7 @@ impl<'ctx> CodeGen<'ctx> {
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
-        if !left.is_int_value() || !right.is_int_value() {
+        if !(left.is_int_value() && right.is_int_value()) && !(left.is_vector_value() && right.is_vector_value()) {
             return Err(CodeGenError::new(
                 "Bitwise operations can only be performed on integers",
             ));
@@ -24,7 +24,7 @@ impl<'ctx> CodeGen<'ctx> {
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
-        if !left.is_int_value() || !right.is_int_value() {
+        if !(left.is_int_value() && right.is_int_value()) && !(left.is_vector_value() && right.is_vector_value()) {
             return Err(CodeGenError::new(
                 "Bitwise operations can only be performed on integers",
             ));
@@ -40,7 +40,7 @@ impl<'ctx> CodeGen<'ctx> {
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
-        if !left.is_int_value() || !right.is_int_value() {
+        if !(left.is_int_value() && right.is_int_value()) && !(left.is_vector_value() && right.is_vector_value()) {
             return Err(CodeGenError::new(
                 "Bitwise operations can only be performed on integers",
             ));
@@ -56,7 +56,7 @@ impl<'ctx> CodeGen<'ctx> {
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
-        if !left.is_int_value() || !right.is_int_value() {
+        if !(left.is_int_value() && right.is_int_value()) && !(left.is_vector_value() && right.is_vector_value()) {
             return Err(CodeGenError::new(
                 "Bitwise operations can only be performed on integers",
             ));
@@ -73,7 +73,7 @@ impl<'ctx> CodeGen<'ctx> {
         left: &BasicValueEnum<'ctx>,
         right: &BasicValueEnum<'ctx>,
     ) -> Result<BasicValueEnum<'ctx>, CodeGenError> {
-        if !left.is_int_value() || !right.is_int_value() {
+        if !(left.is_int_value() && right.is_int_value()) && !(left.is_vector_value() && right.is_vector_value()) {
             return Err(CodeGenError::new(
                 "Bitwise operations can only be performed on integers",
             ));

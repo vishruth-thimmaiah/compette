@@ -18,13 +18,15 @@ impl<'ctx> CodeGen<'ctx> {
                 .builder
                 .build_int_compare(ip, left_int, right_int, "")
                 .unwrap())
-        } else {
+        } else if left.is_float_value() && right.is_float_value() {
             let left_float = left.into_float_value();
             let right_float = right.into_float_value();
             Ok(self
                 .builder
                 .build_float_compare(fp, left_float, right_float, "")
                 .unwrap())
+        } else {
+            Err(CodeGenError::new("Invalid operands for comparison"))
         }
     }
 

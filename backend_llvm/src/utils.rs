@@ -1,7 +1,7 @@
 use inkwell::{
     AddressSpace,
-    types::{BasicType, BasicTypeEnum, FloatType},
-    values::{ArrayValue, BasicValueEnum},
+    types::{BasicType, BasicTypeEnum, FloatType, VectorType},
+    values::{ArrayValue, BasicValueEnum, VectorValue},
 };
 use lexer::types::Datatype;
 
@@ -79,6 +79,31 @@ impl<'ctx> CodeGen<'ctx> {
                     .collect::<Vec<_>>(),
             ),
         }
+    }
+
+    pub(crate) fn dt_to_vector(
+        &self,
+        dt: &BasicTypeEnum<'ctx>,
+        values: Vec<BasicValueEnum<'ctx>>,
+    ) -> VectorValue<'ctx> {
+        let a: Vec<BasicValueEnum> = match dt {
+            BasicTypeEnum::IntType(_) => values
+                .iter()
+                .map(|v| v.into_int_value().into())
+                .collect::<Vec<_>>(),
+
+            BasicTypeEnum::FloatType(_) => values
+                .iter()
+                .map(|v| v.into_float_value().into())
+                .collect::<Vec<_>>(),
+
+            BasicTypeEnum::PointerType(_) => values
+                .iter()
+                .map(|v| v.into_pointer_value().into())
+                .collect::<Vec<_>>(),
+            _ => unreachable!(),
+        };
+        VectorType::const_vector(&a)
     }
 
     pub(crate) fn get_float_size(&self, dt: FloatType<'ctx>) -> u32 {

@@ -45,12 +45,24 @@ impl<'ctx> CodeGen<'ctx> {
             Expression::Array(arr) if dt.is_array_type() => {
                 let dt = dt.into_array_type();
                 let inner_dt = dt.get_element_type();
-                inner_dt.as_basic_type_enum();
                 let mut array_val = vec![];
                 for value in arr {
                     array_val.push(self.impl_expr(value, built_func, inner_dt)?);
                 }
                 return Ok(self.dt_to_array(&inner_dt, array_val).into());
+            }
+            Expression::Array(arr) if dt.is_vector_type() => {
+                let dt = dt.into_vector_type();
+                let inner_dt = dt.get_element_type();
+                let vec_size = dt.get_size() as usize;
+                if vec_size != arr.len() || vec_size % 2 != 0 {
+                    return Err(CodeGenError::new("Invalid vector size"));
+                }
+                let mut array_val = vec![];
+                for value in arr {
+                    array_val.push(self.impl_expr(value, built_func, inner_dt)?);
+                }
+                return Ok(self.dt_to_vector(&inner_dt, array_val).into());
             }
             Expression::Struct(fields) if dt.is_struct_type() => {
                 let mut struct_vals = vec![None; fields.len()];
@@ -82,7 +94,6 @@ impl<'ctx> CodeGen<'ctx> {
                 Ok(string_ptr.into())
             }
             Expression::String(str) => {
-                println!("dt: {:?}", dt);
                 let string = self.context.const_string(str.as_bytes(), false);
                 let string_ptr = self.builder.build_alloca(string.get_type(), "").unwrap();
                 self.builder.build_store(string_ptr, string).unwrap();
@@ -558,6 +569,39 @@ entry:
   %vec = alloca <4 x i32>, align 16
   store <4 x i32> %0, ptr %vec, align 16
   %1 = getelementptr inbounds <4 x i32>, ptr %vec, i32 0, i32 0
+  %2 = load i32, ptr %1, align 4
+  ret i32 %2
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_simd_vector_ops() {
+        let data = "func main() i32 {
+    let simd<u32, 4> vec = [1, 2, 3, 4]
+    let simd<u32, 4> vec2 = [5, 6, 7, 8]
+    let simd<u32, 4> vec3 = vec + vec2
+    return vec3[2]
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %vec = alloca <4 x i32>, align 16
+  store <4 x i32> <i32 1, i32 2, i32 3, i32 4>, ptr %vec, align 16
+  %vec2 = alloca <4 x i32>, align 16
+  store <4 x i32> <i32 5, i32 6, i32 7, i32 8>, ptr %vec2, align 16
+  %vec1 = load <4 x i32>, ptr %vec, align 16
+  %vec22 = load <4 x i32>, ptr %vec2, align 16
+  %0 = add <4 x i32> %vec1, %vec22
+  %vec3 = alloca <4 x i32>, align 16
+  store <4 x i32> %0, ptr %vec3, align 16
+  %1 = getelementptr inbounds <4 x i32>, ptr %vec3, i32 0, i32 2
   %2 = load i32, ptr %1, align 4
   ret i32 %2
 }
