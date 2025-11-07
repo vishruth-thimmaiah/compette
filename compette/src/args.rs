@@ -6,6 +6,7 @@ pub struct Args {
     pub compiler_opts: CodeGenArgs,
     pub path: Option<String>,
     pub dry_run: bool,
+    pub opt: bool,
 }
 
 #[derive(Debug)]
@@ -33,6 +34,7 @@ impl Default for Args {
             },
             path: None,
             dry_run: false,
+            opt: false,
         }
     }
 }
@@ -50,6 +52,7 @@ Options:
     --print-lexer-output    Print the lexer output
     --print-ast-output      Print the ast output
     --dry-run               Run without invoking LLVM
+    -O                      Optimize the code
 "#;
 
 fn show_help() {
@@ -103,6 +106,7 @@ pub fn parse_args(args: &Vec<String>) -> Args {
                     exit(1);
                 }
             }
+            "-O" => result.opt = true,
             _ => (),
         }
     }

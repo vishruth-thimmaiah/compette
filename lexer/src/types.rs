@@ -87,3 +87,33 @@ pub enum Datatype {
     CUSTOM(String),
     NONE,
 }
+
+impl Datatype {
+    pub fn is_trivial(&self) -> bool {
+        match self {
+            Datatype::U8 | Datatype::U16 | Datatype::U32 | Datatype::U64 => true,
+            Datatype::I8 | Datatype::I16 | Datatype::I32 | Datatype::I64 => true,
+            Datatype::F32 | Datatype::F64 => true,
+            Datatype::BOOL => true,
+            _ => false,
+        }
+    }
+
+    pub fn get_size(&self) -> usize {
+        match self {
+            Datatype::U8 | Datatype::I8 => 1,
+            Datatype::U16 | Datatype::I16 => 2,
+            Datatype::U32 | Datatype::I32 => 4,
+            Datatype::U64 | Datatype::I64 => 8,
+            Datatype::F32 => 4,
+            Datatype::F64 => 8,
+            Datatype::BOOL => 1,
+            Datatype::STRING(s) => *s,
+            Datatype::CSTRING(s) => *s,
+            Datatype::NARRAY(ty, s) => ty.get_size() * s,
+            Datatype::SIMD(ty, s) => ty.get_size() * s,
+            Datatype::CUSTOM(_) => unimplemented!(),
+            Datatype::NONE => 0,
+        }
+    }
+}

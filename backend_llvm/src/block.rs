@@ -5,12 +5,12 @@ use crate::{CodeGen, CodeGenError};
 
 impl<'ctx> CodeGen<'ctx> {
     pub(crate) fn codegen_block(
-        &self,
+        &'_ self,
         block: &Block,
         built_func: FunctionValue<'ctx>,
         basic_block: BasicBlock<'ctx>,
         next_block: Option<BasicBlock<'ctx>>,
-    ) -> Result<BasicBlock, CodeGenError> {
+    ) -> Result<BasicBlock<'_>, CodeGenError> {
         self.builder.position_at_end(basic_block);
 
         for node in &block.body {

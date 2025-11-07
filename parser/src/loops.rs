@@ -42,7 +42,6 @@ impl Parser {
         } else {
             None
         };
-        println!("{:?}", step);
         let value = self.parse_variable()?;
         self.next_with_type(Types::DELIMITER(Delimiter::COMMA))?;
         let increment = self.parse_variable()?;

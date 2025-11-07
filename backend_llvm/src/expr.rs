@@ -1,6 +1,6 @@
 use inkwell::{
     AddressSpace,
-    types::{BasicType, BasicTypeEnum},
+    types::{BasicTypeEnum},
     values::{BasicValue, BasicValueEnum, FunctionValue},
 };
 use lexer::types::{Operator, Types};

@@ -27,12 +27,14 @@ fn main() {
 
         let mut parser = Parser::new(lexer).parse().unwrap();
 
+        let mut pass_manager = PassManager::new(&mut parser);
+        if parsed_args.opt {
+            pass_manager.invoke();
+        }
+
         if parsed_args.parser_opts.print_ast_output {
             println!("{:#?}", parser);
         }
-
-        let mut pass_manager = PassManager::new(&mut parser);
-        pass_manager.invoke();
 
         let codegen = CodeGen::new(&context, parser, parsed_args.compiler_opts.jit);
         codegen.codegen().unwrap();

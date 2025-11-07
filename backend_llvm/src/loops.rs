@@ -46,8 +46,15 @@ impl<'ctx> CodeGen<'ctx> {
             unimplemented!()
         };
 
-        let iter_type = iter.type_.into_array_type();
-        let iter_inner_type = iter_type.get_element_type();
+        let (iter_inner_type, iter_size) = if iter.type_.is_array_type() {
+            let iter_type = iter.type_.into_array_type();
+            (iter_type.get_element_type(), iter_type.len())
+        } else if iter.type_.is_vector_type() {
+            let iter_type = iter.type_.into_vector_type();
+            (iter_type.get_element_type(), iter_type.get_size())
+        } else {
+            unimplemented!()
+        };
 
         let index = self
             .builder
@@ -60,14 +67,14 @@ impl<'ctx> CodeGen<'ctx> {
             &self
                 .context
                 .i64_type()
-                .const_int(iter_type.len() as u64, false)
+                .const_int(iter_size as u64, false)
                 .into(),
         )?;
 
         let value_instance = unsafe {
             self.builder
                 .build_in_bounds_gep(
-                    iter_type,
+                    iter.type_,
                     iter.ptr,
                     &[self.context.i32_type().const_zero(), index.into_int_value()],
                     "",

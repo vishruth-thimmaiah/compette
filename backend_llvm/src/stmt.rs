@@ -81,10 +81,10 @@ impl<'ctx> CodeGen<'ctx> {
     }
 
     pub(crate) fn impl_assign_stmt(
-        &self,
+        &'_ self,
         built_func: FunctionValue<'ctx>,
         stmt: &nodes::AssignStmt,
-    ) -> Result<InstructionValue, CodeGenError> {
+    ) -> Result<InstructionValue<'_>, CodeGenError> {
         let var = self.resolve_var(built_func, &stmt.name).and_then(|op| {
             op.mutable
                 .then_some(op)
