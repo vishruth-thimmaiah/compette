@@ -12,6 +12,7 @@ use parser::nodes::ASTNodes;
 use stmt::Variables;
 use structs::StructDefs;
 
+mod asm;
 mod block;
 mod cond;
 mod expr;

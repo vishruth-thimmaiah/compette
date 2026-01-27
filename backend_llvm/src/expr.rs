@@ -1,6 +1,6 @@
 use inkwell::{
     AddressSpace,
-    types::{BasicTypeEnum},
+    types::BasicTypeEnum,
     values::{BasicValue, BasicValueEnum, FunctionValue},
 };
 use lexer::types::{Operator, Types};
@@ -345,6 +345,13 @@ impl<'ctx> CodeGen<'ctx> {
             }
             _ => todo!("{} to {}", left_type, cast_to),
         }
+    }
+
+    pub(crate) fn impl_const_string(&self, node: &Expression) -> Result<String, CodeGenError> {
+        if let Expression::String(str) = node {
+            return Ok(str.clone());
+        }
+        return Err(CodeGenError::new("Invalid const string"));
     }
 }
 

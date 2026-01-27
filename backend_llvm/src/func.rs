@@ -1,4 +1,5 @@
 use inkwell::{
+    AddressSpace,
     module::Linkage,
     types::{BasicMetadataTypeEnum, BasicType},
     values::{BasicValueEnum, FunctionValue, InstructionValue},
@@ -71,6 +72,12 @@ impl<'ctx> CodeGen<'ctx> {
         built_func: FunctionValue<'ctx>,
         func_call: &nodes::FunctionCall,
     ) -> Result<Option<BasicValueEnum<'ctx>>, CodeGenError> {
+        if (func_call.name == "inline_asm") && func_call.args.len() == 2 {
+            return self.impl_inline_asm(
+                self.impl_const_string(&func_call.args[0])?,
+                self.impl_const_string(&func_call.args[1])?,
+            );
+        }
         let func = self
             .module
             .get_function(&func_call.name)
