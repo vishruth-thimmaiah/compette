@@ -1,4 +1,8 @@
-use std::{error::Error, fmt::Display, path::{Path, PathBuf}};
+use std::{
+    error::Error,
+    fmt::Display,
+    path::{Path, PathBuf},
+};
 
 use ext_defs::Resolver;
 use inkwell::{
@@ -130,17 +134,24 @@ impl<'ctx> CodeGen<'ctx> {
     }
 }
 
-pub fn run_with_jit(modules: &Module) -> Option<i32> {
-    // let main_module = modules
-    //     .iter()
-    //     .find(|m| m.get_function("main").is_some())
-    //     .unwrap_or_else(|| panic!("No main function found"));
+pub fn run_with_jit(codegens: &[CodeGen]) -> Option<i32> {
+    let modules = codegens.iter().map(|cg| &cg.module).collect::<Vec<_>>();
+    let main_module = modules
+        .iter()
+        .find(|m| m.get_function("main").is_some())
+        .unwrap_or_else(|| panic!("No main function found"));
 
-    let execution_engine = modules
+    let execution_engine = main_module
         .create_jit_execution_engine(OptimizationLevel::Default)
         .unwrap();
 
-    let function = modules.get_function("main").unwrap();
+    for codegen in codegens {
+        if codegen.module.get_function("main").is_none() {
+            execution_engine.add_module(&codegen.module).unwrap();
+        }
+    }
+
+    let function = main_module.get_function("main").unwrap();
     let result = unsafe { execution_engine.run_function_as_main(function, &[]) };
     return Some(result);
 }

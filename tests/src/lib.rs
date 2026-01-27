@@ -14,5 +14,6 @@ pub fn generate_result(contents: &str) -> Option<i32> {
     let context = Context::create();
     let codegen = CodeGen::new(&context, parser);
     codegen.codegen().unwrap();
-    return run_with_jit(&codegen.module);
+    let cgns = [codegen];
+    return run_with_jit(&cgns);
 }

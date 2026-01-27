@@ -4,7 +4,7 @@ use std::{path::Path, process::exit};
 pub struct Args {
     pub parser_opts: ParserArgs,
     pub compiler_opts: CodeGenArgs,
-    pub path: Option<String>,
+    pub paths: Vec<String>,
     pub dry_run: bool,
     pub opt: bool,
     pub emit_llvm: bool,
@@ -33,7 +33,7 @@ impl Default for Args {
                 jit: false,
                 run: false,
             },
-            path: None,
+            paths: vec![],
             dry_run: false,
             opt: false,
             emit_llvm: false,
@@ -82,17 +82,6 @@ pub fn parse_args(args: &Vec<String>) -> Args {
         None => show_usage(),
     }
 
-    if let Some(path) = args.get(2) {
-        if !Path::new(path).exists() {
-            eprintln!("File does not exist");
-            exit(1);
-        }
-        result.path = Some(path.to_string());
-    } else {
-        eprintln!("No file provided");
-        exit(1);
-    }
-
     if args.len() < 3 {
         return result;
     }
@@ -111,7 +100,13 @@ pub fn parse_args(args: &Vec<String>) -> Args {
             }
             "--emit-llvm" => result.emit_llvm = true,
             "-O" => result.opt = true,
-            _ => (),
+            _ => {
+                if !arg.starts_with("-") {
+                    if let Some(path) = Path::new(&arg).canonicalize().ok() {
+                        result.paths.push(path.to_string_lossy().to_string());
+                    }
+                }
+            },
         }
     }
     result

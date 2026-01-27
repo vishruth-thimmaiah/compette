@@ -15,13 +15,13 @@ fn create_start_file(path: PathBuf) -> Result<PathBuf, std::io::Error> {
     Ok(path.with_extension("o"))
 }
 
-pub fn build(source: PathBuf) -> Result<PathBuf, ()> {
-    let start_file = create_start_file(source.with_file_name("start").with_extension("s"));
-    let out_file = PathBuf::from(".build/").join(source.file_stem().unwrap());
+pub fn build(source: &[PathBuf]) -> Result<PathBuf, ()> {
+    let start_file = create_start_file(source[0].with_file_name("start").with_extension("s"));
+    let out_file = PathBuf::from(".build/").join(source[0].file_stem().unwrap());
 
     let clang_build = Command::new("ld")
         .arg(start_file.unwrap())
-        .arg(&source)
+        .args(source)
         .arg("-o")
         .arg(&out_file)
         .output();
