@@ -1,6 +1,6 @@
 use inkwell::context::Context;
 
-use backend_llvm::CodeGen;
+use backend_llvm::{CodeGen, run_with_jit};
 use lexer::lexer::Lexer;
 use parser::Parser;
 
@@ -12,7 +12,7 @@ pub fn generate_result(contents: &str) -> Option<i32> {
     let lexer = Lexer::new(&contents).tokenize();
     let parser = Parser::new(lexer).parse().unwrap();
     let context = Context::create();
-    let codegen = CodeGen::new(&context, parser, true);
+    let codegen = CodeGen::new(&context, parser);
     codegen.codegen().unwrap();
-    return codegen.run_with_jit();
+    return run_with_jit(&codegen.module);
 }

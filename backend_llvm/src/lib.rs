@@ -1,11 +1,11 @@
-use std::{error::Error, fmt::Display, path::PathBuf};
+use std::{error::Error, fmt::Display, path::{Path, PathBuf}};
 
 use ext_defs::Resolver;
 use inkwell::{
     OptimizationLevel,
     builder::{Builder, BuilderError},
     context::Context,
-    execution_engine::ExecutionEngine,
+    execution_engine::{self, ExecutionEngine},
     module::Module,
     targets::InitializationConfig,
 };
@@ -29,7 +29,6 @@ pub struct CodeGen<'ctx> {
     pub context: &'ctx Context,
     pub builder: Builder<'ctx>,
     pub module: Module<'ctx>,
-    pub execution_engine: Option<ExecutionEngine<'ctx>>,
     pub tokens: Vec<ASTNodes>,
 
     pub struct_defs: StructDefs<'ctx>,
@@ -38,19 +37,13 @@ pub struct CodeGen<'ctx> {
 }
 
 impl<'ctx> CodeGen<'ctx> {
-    pub fn new(context: &'ctx Context, tokens: Vec<ASTNodes>, with_jit: bool) -> Self {
+    pub fn new(context: &'ctx Context, tokens: Vec<ASTNodes>) -> Self {
         let builder = context.create_builder();
         let module = context.create_module("main");
-        let execution_engine = with_jit.then(|| {
-            module
-                .create_jit_execution_engine(OptimizationLevel::Default)
-                .unwrap()
-        });
         Self {
             context,
             builder,
             module,
-            execution_engine,
             tokens,
 
             struct_defs: StructDefs::default(),
@@ -135,13 +128,21 @@ impl<'ctx> CodeGen<'ctx> {
 
         Ok(obj_path)
     }
+}
 
-    pub fn run_with_jit(&self) -> Option<i32> {
-        let function = self.module.get_function("main").unwrap();
-        let exec_engine = self.execution_engine.as_ref().unwrap();
-        let result = unsafe { exec_engine.run_function_as_main(function, &[]) };
-        return Some(result);
-    }
+pub fn run_with_jit(modules: &Module) -> Option<i32> {
+    // let main_module = modules
+    //     .iter()
+    //     .find(|m| m.get_function("main").is_some())
+    //     .unwrap_or_else(|| panic!("No main function found"));
+
+    let execution_engine = modules
+        .create_jit_execution_engine(OptimizationLevel::Default)
+        .unwrap();
+
+    let function = modules.get_function("main").unwrap();
+    let result = unsafe { execution_engine.run_function_as_main(function, &[]) };
+    return Some(result);
 }
 
 #[derive(Debug)]
@@ -181,7 +182,7 @@ pub(crate) fn get_codegen_for_string(code: &str) -> Result<String, CodeGenError>
         return Err(CodeGenError::new(&format!("Failed to parse: {}", err)));
     }
     let parser = parser.unwrap();
-    let codegen = CodeGen::new(&context, parser, false);
+    let codegen = CodeGen::new(&context, parser);
     codegen.codegen()?;
     Ok(codegen.generate_ir_string())
 }

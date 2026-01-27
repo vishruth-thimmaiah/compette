@@ -117,9 +117,10 @@ impl<'ctx> CodeGen<'ctx> {
             let func = self
                 .module
                 .add_function(&path, func_attrs.func, Some(Linkage::External));
-            self.execution_engine
-                .as_ref()
-                .map(|exec| exec.add_global_mapping(&func, func_attrs.ptr));
+            // let _ = self
+            //     .jit
+            //     .iter()
+            //     .map(|x| x.add_global_mapping(&func, func_attrs.ptr));
             func
         };
 

@@ -1,6 +1,6 @@
 use std::{env::args, fs};
 
-use backend_llvm::CodeGen;
+use backend_llvm::{CodeGen, run_with_jit};
 use build::{build, run};
 use inkwell::context::Context;
 use lexer::lexer::Lexer;
@@ -36,14 +36,15 @@ fn main() {
             println!("{:#?}", parser);
         }
 
-        let codegen = CodeGen::new(&context, parser, parsed_args.compiler_opts.jit);
+        let codegen = CodeGen::new(&context, parser);
         codegen.codegen().unwrap();
 
         parsed_args
             .compiler_opts
             .jit
             .then(|| {
-                let exit_code = codegen.run_with_jit();
+                // let exit_code = codegen.run_with_jit();
+                let exit_code = run_with_jit(&codegen.module);
                 println!("Exit Code: {}", exit_code.unwrap());
             })
             .or_else(|| {
