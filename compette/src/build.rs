@@ -17,17 +17,18 @@ fn create_start_file(path: PathBuf) -> Result<PathBuf, std::io::Error> {
 
 pub fn build(source: PathBuf) -> Result<PathBuf, ()> {
     let start_file = create_start_file(source.with_file_name("start").with_extension("s"));
+    let out_file = PathBuf::from(".build/").join(source.file_stem().unwrap());
 
     let clang_build = Command::new("ld")
         .arg(start_file.unwrap())
         .arg(&source)
         .arg("-o")
-        .arg(&source.with_extension(""))
+        .arg(&out_file)
         .output();
 
     if let Ok(output) = clang_build {
         if output.status.success() {
-            Ok(source.with_extension(""))
+            Ok(out_file)
         } else {
             eprintln!(
                 "> Error [{}] while building the binary:\n{}",
