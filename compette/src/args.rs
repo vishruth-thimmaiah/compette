@@ -1,10 +1,13 @@
-use std::{path::Path, process::exit};
+use std::{
+    path::{Path, PathBuf},
+    process::exit,
+};
 
 #[derive(Debug)]
 pub struct Args {
     pub parser_opts: ParserArgs,
     pub compiler_opts: CodeGenArgs,
-    pub paths: Vec<String>,
+    pub paths: Vec<PathBuf>,
     pub dry_run: bool,
     pub opt: bool,
     pub emit_llvm: bool,
@@ -103,10 +106,10 @@ pub fn parse_args(args: &Vec<String>) -> Args {
             _ => {
                 if !arg.starts_with("-") {
                     if let Some(path) = Path::new(&arg).canonicalize().ok() {
-                        result.paths.push(path.to_string_lossy().to_string());
+                        result.paths.push(path);
                     }
                 }
-            },
+            }
         }
     }
     result

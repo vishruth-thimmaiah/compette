@@ -41,9 +41,9 @@ pub struct CodeGen<'ctx> {
 }
 
 impl<'ctx> CodeGen<'ctx> {
-    pub fn new(context: &'ctx Context, tokens: Vec<ASTNodes>) -> Self {
+    pub fn new(context: &'ctx Context, tokens: Vec<ASTNodes>, path: &str) -> Self {
         let builder = context.create_builder();
-        let module = context.create_module("main");
+        let module = context.create_module(path);
         Self {
             context,
             builder,
@@ -193,7 +193,7 @@ pub(crate) fn get_codegen_for_string(code: &str) -> Result<String, CodeGenError>
         return Err(CodeGenError::new(&format!("Failed to parse: {}", err)));
     }
     let parser = parser.unwrap();
-    let codegen = CodeGen::new(&context, parser);
+    let codegen = CodeGen::new(&context, parser, "main");
     codegen.codegen()?;
     Ok(codegen.generate_ir_string())
 }
