@@ -49,4 +49,40 @@ entry:
 "#
         )
     }
+
+    #[test]
+    fn test_codegen_asm_with_const() {
+        let data = "
+let string message = \"Test\"
+func main() {
+    inline_asm(\"mov rax, 1
+    mov rdi, 1
+    lea rsi, message[rip]
+    mov rdx, 4
+    syscall
+    mov rax, 60
+    xor rdi, rdi
+    syscall\",
+\"~{dirflag},~{fpsr},~{flags}\")
+
+}";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        println!("{}", result);
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+@message = global [4 x i8] c"Test"
+
+define void @main() {
+entry:
+  call void asm sideeffect inteldialect "mov rax, 1\0A    mov rdi, 1\0A    lea rsi, message[rip]\0A    mov rdx, 4\0A    syscall\0A    mov rax, 60\0A    xor rdi, rdi\0A    syscall", "~{dirflag},~{fpsr},~{flags}"()
+  ret void
+}
+"#
+        )
+    }
 }
