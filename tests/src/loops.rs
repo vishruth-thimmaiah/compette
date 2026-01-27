@@ -13,7 +13,7 @@ mod tests {
             return a
         }"#;
 
-        assert_eq!(10, generate_result(content).unwrap());
+        assert_eq!(10, generate_result(&[content]).unwrap());
     }
 
     #[test]
@@ -28,7 +28,7 @@ mod tests {
             return 0
         }"#;
 
-        assert_eq!(1, generate_result(content).unwrap());
+        assert_eq!(1, generate_result(&[content]).unwrap());
     }
 
     #[test]
@@ -45,7 +45,7 @@ mod tests {
             return a
         }"#;
 
-        assert_eq!(11, generate_result(content).unwrap());
+        assert_eq!(11, generate_result(&[content]).unwrap());
     }
 
     #[test]
@@ -60,6 +60,6 @@ mod tests {
             return a -> u32
         }"#;
 
-        assert_eq!(120, generate_result(content).unwrap());
+        assert_eq!(120, generate_result(&[content]).unwrap());
     }
 }

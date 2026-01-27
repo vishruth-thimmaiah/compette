@@ -13,7 +13,7 @@ mod tests {
             }
         }"#;
 
-        assert_eq!(1, generate_result(contents).unwrap());
+        assert_eq!(1, generate_result(&[contents]).unwrap());
     }
 
     #[test]
@@ -32,7 +32,7 @@ mod tests {
             }
         }"#;
 
-        assert_eq!(3, generate_result(contents).unwrap());
+        assert_eq!(3, generate_result(&[contents]).unwrap());
     }
 
     #[test]
@@ -45,7 +45,7 @@ mod tests {
             return 0
         }"#;
 
-        assert_eq!(1, generate_result(contents).unwrap());
+        assert_eq!(1, generate_result(&[contents]).unwrap());
     }
 
     #[test]
@@ -60,7 +60,7 @@ mod tests {
             return 0
         }"#;
 
-        assert_eq!(2, generate_result(contents).unwrap());
+        assert_eq!(2, generate_result(&[contents]).unwrap());
     }
 
     #[test]
@@ -73,7 +73,7 @@ mod tests {
             return 0
         }"#;
 
-        assert_eq!(0, generate_result(contents).unwrap());
+        assert_eq!(0, generate_result(&[contents]).unwrap());
     }
 
     #[test]
@@ -90,6 +90,6 @@ mod tests {
             return 0
         }"#;
 
-        assert_eq!(2, generate_result(contents).unwrap());
+        assert_eq!(2, generate_result(&[contents]).unwrap());
     }
 }
