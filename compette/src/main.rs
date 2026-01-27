@@ -47,9 +47,10 @@ fn main() {
                 println!("Exit Code: {}", exit_code.unwrap());
             })
             .or_else(|| {
-                let ir = codegen.ir_as_string();
-                let output = build(path.into(), ir).unwrap();
-                parsed_args.compiler_opts.run.then(|| run(output))
+                let obj_path = codegen.generate_obj(path.into(), parsed_args.emit_llvm);
+                let output = build(obj_path.unwrap()).unwrap();
+                parsed_args.compiler_opts.run.then(|| run(output));
+                Some(())
             });
     }
 }

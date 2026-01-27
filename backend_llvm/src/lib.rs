@@ -1,4 +1,4 @@
-use std::{error::Error, fmt::Display};
+use std::{error::Error, fmt::Display, path::PathBuf};
 
 use ext_defs::Resolver;
 use inkwell::{
@@ -7,6 +7,7 @@ use inkwell::{
     context::Context,
     execution_engine::ExecutionEngine,
     module::Module,
+    targets::InitializationConfig,
 };
 use parser::nodes::ASTNodes;
 use stmt::Variables;
@@ -42,7 +43,7 @@ impl<'ctx> CodeGen<'ctx> {
         let module = context.create_module("main");
         let execution_engine = with_jit.then(|| {
             module
-                .create_jit_execution_engine(OptimizationLevel::None)
+                .create_jit_execution_engine(OptimizationLevel::Default)
                 .unwrap()
         });
         Self {
@@ -82,8 +83,57 @@ impl<'ctx> CodeGen<'ctx> {
         Ok(())
     }
 
-    pub fn ir_as_string(&self) -> String {
-        self.module.print_to_string().to_string()
+    pub fn generate_ir_string(&self) -> String {
+        return self.module.print_to_string().to_string();
+    }
+
+    pub fn generate_ir(&self, path: PathBuf) -> Result<(), CodeGenError> {
+        self.module.print_to_file(&path).unwrap();
+        Ok(())
+    }
+
+    pub fn generate_obj(&self, path: PathBuf, emit_llvm: bool) -> Result<PathBuf, CodeGenError> {
+        let dir = PathBuf::from(".build/");
+        if !dir.exists() {
+            std::fs::create_dir(&dir).unwrap();
+        }
+
+        if emit_llvm {
+            let ir_path = dir.join("ir/");
+            if !ir_path.exists() {
+                std::fs::create_dir(&ir_path).unwrap();
+            }
+            self.generate_ir(ir_path.join(path.file_stem().unwrap()).with_extension("ll"))
+                .unwrap();
+        }
+
+        let mut obj_path = dir.join("obj/");
+        if !obj_path.exists() {
+            std::fs::create_dir_all(&obj_path).unwrap();
+        }
+
+        obj_path = obj_path.join(path.file_stem().unwrap()).with_extension("o");
+
+        inkwell::targets::Target::initialize_all(&InitializationConfig::default());
+        let triple = inkwell::targets::TargetMachine::get_default_triple();
+
+        let target = inkwell::targets::Target::from_triple(&triple).unwrap();
+        let machine = target
+            .create_target_machine(
+                &triple,
+                "",
+                "",
+                inkwell::OptimizationLevel::Default,
+                inkwell::targets::RelocMode::Default,
+                inkwell::targets::CodeModel::Default,
+            )
+            .unwrap();
+
+        machine
+            .write_to_file(&self.module, inkwell::targets::FileType::Object, &obj_path)
+            .unwrap();
+
+        Ok(obj_path)
     }
 
     pub fn run_with_jit(&self) -> Option<i32> {
@@ -133,5 +183,5 @@ pub(crate) fn get_codegen_for_string(code: &str) -> Result<String, CodeGenError>
     let parser = parser.unwrap();
     let codegen = CodeGen::new(&context, parser, false);
     codegen.codegen()?;
-    Ok(codegen.ir_as_string())
+    Ok(codegen.generate_ir_string())
 }

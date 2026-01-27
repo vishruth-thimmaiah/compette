@@ -1,47 +1,33 @@
-use std::{fs, path::PathBuf, process::Command};
+use std::{path::PathBuf, process::Command};
 
-#[cfg(debug_assertions)]
-const STDLIB_PATH: &'static str = "target/debug/libstdlib.a";
-#[cfg(not(debug_assertions))]
-const STDLIB_PATH: &'static str = ".build/stdlib.a";
+const START_FILE: &[u8] = include_bytes!("../start_x86.s");
 
-fn output_path() -> PathBuf {
-    let path = PathBuf::from(".build/");
-    if !path.exists() {
-        fs::create_dir(&path).unwrap();
-    }
-    path
-}
-
-fn llvm_ir_path() -> PathBuf {
-    let path = output_path().join("ir/");
-    if !path.exists() {
-        fs::create_dir(&path).unwrap();
-    }
-    path
-}
-
-fn output_binary_path() -> PathBuf {
-    output_path().join("output")
-}
-
-pub fn build(source: PathBuf, ir: String) -> Result<PathBuf, ()> {
-    let dir = llvm_ir_path();
-    let path = dir.join(source.file_stem().unwrap()).with_extension("ll");
-    let output_path = output_binary_path();
-
-    fs::write(&path, ir).unwrap();
-
-    let clang_build = Command::new("clang")
-        .arg(path)
-        .arg(STDLIB_PATH)
+fn create_start_file(path: PathBuf) -> Result<PathBuf, std::io::Error> {
+    let _ = std::fs::write(&path, START_FILE);
+    let gas_build = Command::new("as")
         .arg("-o")
-        .arg(&output_path)
+        .arg(&path.with_extension("o"))
+        .arg(&path)
+        .output();
+
+    gas_build.unwrap();
+
+    Ok(path.with_extension("o"))
+}
+
+pub fn build(source: PathBuf) -> Result<PathBuf, ()> {
+    let start_file = create_start_file(source.with_file_name("start").with_extension("s"));
+
+    let clang_build = Command::new("ld")
+        .arg(start_file.unwrap())
+        .arg(&source)
+        .arg("-o")
+        .arg(&source.with_extension(""))
         .output();
 
     if let Ok(output) = clang_build {
         if output.status.success() {
-            Ok(output_path)
+            Ok(source.with_extension(""))
         } else {
             eprintln!(
                 "> Error [{}] while building the binary:\n{}",

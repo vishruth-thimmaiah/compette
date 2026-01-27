@@ -7,6 +7,7 @@ pub struct Args {
     pub path: Option<String>,
     pub dry_run: bool,
     pub opt: bool,
+    pub emit_llvm: bool,
 }
 
 #[derive(Debug)]
@@ -35,6 +36,7 @@ impl Default for Args {
             path: None,
             dry_run: false,
             opt: false,
+            emit_llvm: false,
         }
     }
 }
@@ -51,6 +53,7 @@ Options:
     --help, -h              Show this help message
     --print-lexer-output    Print the lexer output
     --print-ast-output      Print the ast output
+    --emit-llvm             Emit LLVM IR
     --dry-run               Run without invoking LLVM
     -O                      Optimize the code
 "#;
@@ -106,6 +109,7 @@ pub fn parse_args(args: &Vec<String>) -> Args {
                     exit(1);
                 }
             }
+            "--emit-llvm" => result.emit_llvm = true,
             "-O" => result.opt = true,
             _ => (),
         }
