@@ -80,6 +80,23 @@ impl<'ctx> CodeGen<'ctx> {
         return Ok(ptr);
     }
 
+    pub(crate) fn impl_global_let_stmt(
+        &self,
+        stmt: &nodes::LetStmt,
+    ) -> Result<PointerValue<'ctx>, CodeGenError> {
+        let dt = self.parser_to_llvm_dt(&stmt.datatype);
+        let expr = self
+            .impl_const_string(&stmt.value)
+            .map_err(|_| todo!("Suuport for non const strings"));
+
+        let global = self.module.add_global(dt, None, &stmt.name);
+        global.set_initializer(&self.context.const_string(expr.unwrap().as_bytes(), false));
+
+        self.var_ptrs
+            .insert(&stmt.name, global.as_pointer_value(), dt, stmt.mutable);
+        return Ok(global.as_pointer_value());
+    }
+
     pub(crate) fn impl_assign_stmt(
         &'_ self,
         built_func: FunctionValue<'ctx>,
@@ -270,6 +287,28 @@ entry:
   %2 = getelementptr inbounds [2 x i32], ptr %1, i32 0, i32 0
   %3 = load i32, ptr %2, align 4
   ret i32 %3
+}
+"#
+        )
+    }
+
+    #[test]
+    fn test_codegen_global_let_stmt() {
+        let data = "
+let string s = \"Test\"
+func main() { }";
+        let result = crate::get_codegen_for_string(data).unwrap();
+
+        assert_eq!(
+            result,
+            r#"; ModuleID = 'main'
+source_filename = "main"
+
+@s = global [4 x i8] c"Test"
+
+define void @main() {
+entry:
+  ret void
 }
 "#
         )

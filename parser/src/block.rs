@@ -16,6 +16,7 @@ impl Parser {
                 Types::KEYWORD(Keyword::IMPORT) => ASTNodes::ImportDef(self.parse_import_def()?),
                 Types::KEYWORD(Keyword::FUNCTION) => ASTNodes::Function(self.parse_function_def()?),
                 Types::KEYWORD(Keyword::STRUCT) => ASTNodes::StructDef(self.parse_struct_def()?),
+                Types::KEYWORD(Keyword::LET) => ASTNodes::LetStmt(self.parse_statement()?),
                 Types::EOF => break,
                 _ => return Err(ParserError::unimplemented(token)),
             };

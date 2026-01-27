@@ -73,6 +73,9 @@ impl<'ctx> CodeGen<'ctx> {
                 ASTNodes::Extern(ext) => {
                     self.impl_extern_call(ext)?;
                 }
+                ASTNodes::LetStmt(let_stmt) => {
+                    self.impl_global_let_stmt(let_stmt)?;
+                }
                 _ => unreachable!(),
             };
         }
